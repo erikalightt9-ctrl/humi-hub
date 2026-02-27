@@ -1,0 +1,369 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum CourseSlug {
+  MEDICAL_VA
+  REAL_ESTATE_VA
+  US_BOOKKEEPING_VA
+}
+
+enum EnrollmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum EmploymentStatus {
+  EMPLOYED_FULL_TIME
+  EMPLOYED_PART_TIME
+  SELF_EMPLOYED
+  UNEMPLOYED
+  STUDENT
+  FREELANCER
+}
+
+enum ToolFamiliarity {
+  QUICKBOOKS
+  CRM
+  EHR
+  MICROSOFT_OFFICE
+  GOOGLE_WORKSPACE
+  SLACK
+  ZOOM
+  TRELLO
+  ASANA
+  SALESFORCE
+  HUBSPOT
+  OTHER
+}
+
+enum QuestionType {
+  MCQ
+  TRUE_FALSE
+  SHORT_ANSWER
+}
+
+enum SubmissionStatus {
+  PENDING
+  GRADED
+  RETURNED
+}
+
+enum BadgeType {
+  FIRST_LESSON
+  QUIZ_MASTER
+  COURSE_COMPLETER
+  TOP_CONTRIBUTOR
+  ASSIGNMENT_STAR
+  FORUM_STARTER
+}
+
+model Course {
+  id            String       @id @default(cuid())
+  slug          CourseSlug   @unique
+  title         String
+  description   String       @db.Text
+  durationWeeks Int
+  price         Decimal      @db.Decimal(10, 2)
+  outcomes      String[]
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  enrollments   Enrollment[]
+  lessons       Lesson[]
+  quizzes       Quiz[]
+  certificates  Certificate[]
+  threads       ForumThread[]
+  assignments   Assignment[]
+
+  @@map("courses")
+}
+
+model Enrollment {
+  id                    String            @id @default(cuid())
+  status                EnrollmentStatus  @default(PENDING)
+  fullName              String
+  dateOfBirth           DateTime          @db.Date
+  email                 String            @unique
+  contactNumber         String
+  address               String            @db.Text
+  educationalBackground String            @db.Text
+  workExperience        String            @db.Text
+  employmentStatus      EmploymentStatus
+  technicalSkills       String[]
+  toolsFamiliarity      ToolFamiliarity[]
+  whyEnroll             String            @db.Text
+  courseId              String
+  course                Course            @relation(fields: [courseId], references: [id])
+  ipAddress             String?
+  emailConfirmedAt      DateTime?
+  statusUpdatedAt       DateTime?
+  statusUpdatedBy       String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  student               Student?
+
+  @@index([status])
+  @@index([courseId])
+  @@index([createdAt])
+  @@map("enrollments")
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("admins")
+}
+
+model Student {
+  id           String   @id @default(cuid())
+  enrollmentId String   @unique
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  enrollment   Enrollment         @relation(fields: [enrollmentId], references: [id])
+  completions  LessonCompletion[]
+  attempts     QuizAttempt[]
+  certificates Certificate[]
+  threads      ForumThread[]
+  posts        ForumPost[]
+  submissions  Submission[]
+  badges       StudentBadge[]
+  points       PointTransaction[]
+
+  @@index([email])
+  @@map("students")
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  courseId    String
+  title       String
+  content     String   @db.Text
+  order       Int
+  durationMin Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  course      Course             @relation(fields: [courseId], references: [id])
+  completions LessonCompletion[]
+
+  @@index([courseId, order])
+  @@map("lessons")
+}
+
+model LessonCompletion {
+  id          String   @id @default(cuid())
+  studentId   String
+  lessonId    String
+  completedAt DateTime @default(now())
+  student     Student  @relation(fields: [studentId], references: [id])
+  lesson      Lesson   @relation(fields: [lessonId], references: [id])
+
+  @@unique([studentId, lessonId])
+  @@map("lesson_completions")
+}
+
+model Quiz {
+  id           String         @id @default(cuid())
+  courseId     String
+  title        String
+  description  String?
+  passingScore Int            @default(70)
+  isPublished  Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  course       Course         @relation(fields: [courseId], references: [id])
+  questions    QuizQuestion[]
+  attempts     QuizAttempt[]
+
+  @@index([courseId])
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id            String       @id @default(cuid())
+  quizId        String
+  type          QuestionType
+  question      String
+  options       String[]
+  correctAnswer String
+  points        Int          @default(10)
+  order         Int
+  quiz          Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers       QuizAnswer[]
+
+  @@index([quizId, order])
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id          String       @id @default(cuid())
+  studentId   String
+  quizId      String
+  score       Int
+  passed      Boolean
+  completedAt DateTime     @default(now())
+  student     Student      @relation(fields: [studentId], references: [id])
+  quiz        Quiz         @relation(fields: [quizId], references: [id])
+  answers     QuizAnswer[]
+
+  @@index([studentId, quizId])
+  @@map("quiz_attempts")
+}
+
+model QuizAnswer {
+  id         String       @id @default(cuid())
+  attemptId  String
+  questionId String
+  answer     String
+  isCorrect  Boolean
+  attempt    QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question   QuizQuestion @relation(fields: [questionId], references: [id])
+
+  @@map("quiz_answers")
+}
+
+model Certificate {
+  id         String   @id @default(cuid())
+  studentId  String
+  courseId   String
+  issuedAt   DateTime @default(now())
+  certNumber String   @unique @default(cuid())
+  student    Student  @relation(fields: [studentId], references: [id])
+  course     Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([studentId, courseId])
+  @@map("certificates")
+}
+
+model ForumThread {
+  id        String      @id @default(cuid())
+  courseId  String
+  studentId String
+  title     String
+  createdAt DateTime    @default(now())
+  course    Course      @relation(fields: [courseId], references: [id])
+  student   Student     @relation(fields: [studentId], references: [id])
+  posts     ForumPost[]
+
+  @@index([courseId])
+  @@map("forum_threads")
+}
+
+model ForumPost {
+  id        String      @id @default(cuid())
+  threadId  String
+  studentId String
+  content   String      @db.Text
+  parentId  String?
+  createdAt DateTime    @default(now())
+  thread    ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  student   Student     @relation(fields: [studentId], references: [id])
+  parent    ForumPost?  @relation("Replies", fields: [parentId], references: [id])
+  replies   ForumPost[] @relation("Replies")
+
+  @@index([threadId])
+  @@map("forum_posts")
+}
+
+model Assignment {
+  id           String       @id @default(cuid())
+  courseId     String
+  title        String
+  instructions String       @db.Text
+  dueDate      DateTime?
+  maxPoints    Int          @default(100)
+  isPublished  Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+  course       Course       @relation(fields: [courseId], references: [id])
+  submissions  Submission[]
+
+  @@index([courseId])
+  @@map("assignments")
+}
+
+model Submission {
+  id           String           @id @default(cuid())
+  assignmentId String
+  studentId    String
+  filePath     String
+  fileName     String
+  fileSize     Int
+  status       SubmissionStatus @default(PENDING)
+  grade        Int?
+  feedback     String?          @db.Text
+  submittedAt  DateTime         @default(now())
+  gradedAt     DateTime?
+  assignment   Assignment       @relation(fields: [assignmentId], references: [id])
+  student      Student          @relation(fields: [studentId], references: [id])
+
+  @@unique([assignmentId, studentId])
+  @@index([assignmentId])
+  @@map("submissions")
+}
+
+model Badge {
+  id          String        @id @default(cuid())
+  type        BadgeType     @unique
+  name        String
+  description String
+  icon        String
+  students    StudentBadge[]
+
+  @@map("badges")
+}
+
+model StudentBadge {
+  id        String   @id @default(cuid())
+  studentId String
+  badgeId   String
+  earnedAt  DateTime @default(now())
+  student   Student  @relation(fields: [studentId], references: [id])
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+
+  @@unique([studentId, badgeId])
+  @@map("student_badges")
+}
+
+model PointTransaction {
+  id        String   @id @default(cuid())
+  studentId String
+  points    Int
+  reason    String
+  createdAt DateTime @default(now())
+  student   Student  @relation(fields: [studentId], references: [id])
+
+  @@index([studentId])
+  @@map("point_transactions")
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@map("contact_messages")
+}
+
+model RateLimitAttempt {
+  id        String   @id @default(cuid())
+  ip        String
+  endpoint  String
+  createdAt DateTime @default(now())
+
+  @@index([ip, endpoint, createdAt])
+  @@map("rate_limit_attempts")
+}
