@@ -1,19 +1,7 @@
-import OpenAI from "openai";
+import type OpenAI from "openai";
 import { buildSystemPrompt } from "@/lib/chat-context";
+import { createChatStream } from "@/lib/services/openai.service";
 import type { ChatMessage } from "@/lib/validations/chat.schema";
-
-let _openai: OpenAI | null = null;
-
-function getOpenAI(): OpenAI {
-  if (!_openai) {
-    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  }
-  return _openai;
-}
-
-const MODEL = "gpt-4o-mini";
-const MAX_TOKENS = 300;
-const TEMPERATURE = 0.7;
 
 export async function streamChatResponse(
   messages: ChatMessage[]
@@ -28,13 +16,7 @@ export async function streamChatResponse(
     })),
   ];
 
-  const stream = await getOpenAI().chat.completions.create({
-    model: MODEL,
-    messages: openaiMessages,
-    max_tokens: MAX_TOKENS,
-    temperature: TEMPERATURE,
-    stream: true,
-  });
+  const stream = await createChatStream(openaiMessages, { maxTokens: 300 });
 
   const encoder = new TextEncoder();
 

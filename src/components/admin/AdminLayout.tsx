@@ -21,6 +21,9 @@ import {
   UserCog,
   CalendarDays,
   CalendarClock,
+  Brain,
+  Rocket,
+  Briefcase,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -39,6 +42,9 @@ const navItems = [
   { href: "/admin/communications", label: "Communications", icon: MessageSquare },
   { href: "/admin/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/admin/reports", label: "Reports", icon: FileBarChart },
+  { href: "/admin/ai-insights", label: "AI Insights", icon: Brain },
+  { href: "/admin/control-tower", label: "Control Tower", icon: Rocket },
+  { href: "/admin/job-postings", label: "Job Postings", icon: Briefcase },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

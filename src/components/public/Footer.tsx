@@ -28,6 +28,7 @@ export function Footer() {
                 { href: "/courses", label: "Courses" },
                 { href: "/enroll", label: "Enroll Now" },
                 { href: "/contact", label: "Contact" },
+                { href: "/verify", label: "Verify Certificate" },
               ].map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="hover:text-white transition-colors">

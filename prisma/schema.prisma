@@ -197,6 +197,7 @@ model Student {
   accessGranted      Boolean              @default(false)
   accessExpiry       DateTime?
   notes              String?              @db.Text
+  portfolioPublic    Boolean              @default(false)
   createdAt          DateTime             @default(now())
   enrollment   Enrollment         @relation(fields: [enrollmentId], references: [id])
   schedule     Schedule?          @relation(fields: [scheduleId], references: [id])
@@ -209,6 +210,10 @@ model Student {
   badges       StudentBadge[]
   points       PointTransaction[]
   attendance   AttendanceRecord[]
+  careerScores   CareerReadinessScore[]
+  simulations    SimulationSession[]
+  interviews     InterviewSession[]
+  jobMatches     JobMatch[]
 
   @@index([email])
   @@index([paymentStatus])
@@ -495,4 +500,102 @@ model CalendarEvent {
   @@index([date])
   @@index([courseId])
   @@map("calendar_events")
+}
+
+model CareerReadinessScore {
+  id              String   @id @default(cuid())
+  studentId       String
+  communication   Int
+  accuracy        Int
+  speed           Int
+  reliability     Int
+  technicalSkills Int
+  professionalism Int
+  overallScore    Int
+  aiSummary       String   @db.Text
+  evaluatedAt     DateTime @default(now())
+  student         Student  @relation(fields: [studentId], references: [id])
+
+  @@index([studentId])
+  @@map("career_readiness_scores")
+}
+
+model SimulationSession {
+  id               String   @id @default(cuid())
+  studentId        String
+  scenario         String
+  courseSlug        String
+  messages         Json     @default("[]")
+  status           String   @default("active")
+  communicationScore Int?
+  problemSolvingScore Int?
+  professionalismScore Int?
+  overallScore     Int?
+  aiFeedback       String?  @db.Text
+  createdAt        DateTime @default(now())
+  completedAt      DateTime?
+  student          Student  @relation(fields: [studentId], references: [id])
+
+  @@index([studentId])
+  @@index([status])
+  @@map("simulation_sessions")
+}
+
+model InterviewSession {
+  id                   String    @id @default(cuid())
+  studentId            String
+  role                 String
+  courseSlug            String
+  questions            Json      @default("[]")
+  status               String    @default("active")
+  overallScore         Int?
+  communicationScore   Int?
+  knowledgeScore       Int?
+  problemSolvingScore  Int?
+  professionalismScore Int?
+  aiFeedback           String?   @db.Text
+  createdAt            DateTime  @default(now())
+  completedAt          DateTime?
+  student              Student   @relation(fields: [studentId], references: [id])
+
+  @@index([studentId])
+  @@index([status])
+  @@map("interview_sessions")
+}
+
+model JobPosting {
+  id           String      @id @default(cuid())
+  title        String
+  company      String
+  description  String      @db.Text
+  requirements String[]
+  skills       String[]
+  courseSlug    CourseSlug?
+  location     String
+  type         String
+  salaryRange  String?
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  matches      JobMatch[]
+
+  @@index([isActive])
+  @@index([courseSlug])
+  @@map("job_postings")
+}
+
+model JobMatch {
+  id           String     @id @default(cuid())
+  studentId    String
+  jobPostingId String
+  matchScore   Int
+  aiReasoning  String     @db.Text
+  matchedAt    DateTime   @default(now())
+  student      Student    @relation(fields: [studentId], references: [id])
+  jobPosting   JobPosting @relation(fields: [jobPostingId], references: [id])
+
+  @@unique([studentId, jobPostingId])
+  @@index([studentId])
+  @@index([jobPostingId])
+  @@map("job_matches")
 }

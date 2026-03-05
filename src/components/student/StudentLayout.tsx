@@ -11,8 +11,18 @@ import {
   FileCheck,
   MessageSquare,
   Trophy,
+  Bot,
   Award,
   CalendarDays,
+  UserCircle,
+  Target,
+  Sparkles,
+  Zap,
+  Briefcase,
+  Users,
+  Mic,
+  Activity,
+  Search,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,8 +42,18 @@ function buildNavItems(courseId: string): ReadonlyArray<NavItem> {
     { href: `/student/courses/${courseId}/assignments`, label: "Assignments", icon: FileCheck },
     { href: `/student/courses/${courseId}/forum`, label: "Forum", icon: MessageSquare },
     { href: `/student/courses/${courseId}/leaderboard`, label: "Leaderboard", icon: Trophy },
+    { href: "/student/ai-practice", label: "AI Practice", icon: Bot },
     { href: "/student/certificates", label: "Certificates", icon: Award },
     { href: "/student/calendar", label: "Calendar", icon: CalendarDays },
+    { href: "/student/portfolio", label: "Portfolio", icon: UserCircle },
+    { href: "/student/career-readiness", label: "Career Score", icon: Target },
+    { href: "/student/ai-assessments", label: "AI Review", icon: Sparkles },
+    { href: "/student/ai-tasks", label: "Task Generator", icon: Zap },
+    { href: "/student/business-assistant", label: "Biz Assistant", icon: Briefcase },
+    { href: "/student/ai-simulator", label: "VA Simulator", icon: Users },
+    { href: "/student/ai-interviews", label: "Mock Interview", icon: Mic },
+    { href: "/student/work-pace", label: "Work Pace", icon: Activity },
+    { href: "/student/job-matches", label: "Job Matches", icon: Search },
   ];
 }
 

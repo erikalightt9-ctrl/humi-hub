@@ -12,6 +12,7 @@ const navLinks = [
   { href: "/about", label: "About" },
   { href: "/courses", label: "Courses" },
   { href: "/contact", label: "Contact" },
+  { href: "/verify", label: "Verify" },
 ];
 
 export function Navbar() {
