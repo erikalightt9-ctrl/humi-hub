@@ -17,7 +17,7 @@ export default async function AdminCalendarPage() {
     prisma.course.findMany({ select: { id: true, title: true }, orderBy: { title: "asc" } }),
   ]);
 
-  const calendarItems = calendarEvents.map((e) => ({
+  const calendarItems = calendarEvents.map((e: typeof calendarEvents[number]) => ({
     id: e.id,
     title: e.title,
     description: e.description,
