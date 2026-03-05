@@ -5,6 +5,7 @@ import { HeroSection } from "@/components/public/HeroSection";
 import { VAaiSection } from "@/components/public/VAaiSection";
 import { CourseCard } from "@/components/public/CourseCard";
 import { WhyChooseUs } from "@/components/public/WhyChooseUs";
+import { TestimonialsSection } from "@/components/public/TestimonialsSection";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 
@@ -61,6 +62,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <TestimonialsSection />
 
       <WhyChooseUs />
 

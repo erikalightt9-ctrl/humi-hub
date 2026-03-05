@@ -26,6 +26,7 @@ export function Footer() {
                 { href: "/", label: "Home" },
                 { href: "/about", label: "About Us" },
                 { href: "/courses", label: "Courses" },
+                { href: "/jobs", label: "Job Board" },
                 { href: "/enroll", label: "Enroll Now" },
                 { href: "/contact", label: "Contact" },
                 { href: "/verify", label: "Verify Certificate" },

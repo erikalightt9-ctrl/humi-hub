@@ -599,3 +599,20 @@ model JobMatch {
   @@index([jobPostingId])
   @@map("job_matches")
 }
+
+model Testimonial {
+  id           String   @id @default(cuid())
+  name         String
+  role         String
+  company      String
+  content      String   @db.Text
+  rating       Int      @default(5)
+  avatarUrl    String?
+  isPublished  Boolean  @default(false)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isPublished, displayOrder])
+  @@map("testimonials")
+}

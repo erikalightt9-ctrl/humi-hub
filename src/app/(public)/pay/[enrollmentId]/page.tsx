@@ -6,6 +6,7 @@ import { LogIn } from "lucide-react";
 import { findEnrollmentById } from "@/lib/repositories/enrollment.repository";
 import { findPaymentsByEnrollment } from "@/lib/repositories/payment.repository";
 import { PaymentUploadForm } from "./PaymentUploadForm";
+import { PayOnlineButton } from "./PayOnlineButton";
 
 export const metadata: Metadata = { title: "Submit Payment | VA Training Center" };
 
@@ -150,6 +151,15 @@ export default async function PaymentPage({
                     )}
                   </div>
                 )}
+              </div>
+
+              {/* Online Payment */}
+              <PayOnlineButton enrollmentId={enrollmentId} />
+
+              <div className="flex items-center gap-3 my-6">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-sm text-gray-400 font-medium">or pay manually</span>
+                <div className="flex-1 h-px bg-gray-200" />
               </div>
 
               <PaymentUploadForm enrollmentId={enrollmentId} />

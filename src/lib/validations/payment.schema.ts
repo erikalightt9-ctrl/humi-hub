@@ -16,5 +16,10 @@ export const verifyPaymentSchema = z.object({
   approved: z.boolean(),
 });
 
+export const createCheckoutSchema = z.object({
+  enrollmentId: z.string().min(1, "Enrollment ID is required"),
+});
+
 export type PaymentProofInput = z.infer<typeof paymentProofSchema>;
 export type VerifyPaymentInput = z.infer<typeof verifyPaymentSchema>;
+export type CreateCheckoutInput = z.infer<typeof createCheckoutSchema>;

@@ -24,6 +24,7 @@ import {
   Brain,
   Rocket,
   Briefcase,
+  MessageSquareQuote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ const navItems = [
   { href: "/admin/ai-insights", label: "AI Insights", icon: Brain },
   { href: "/admin/control-tower", label: "Control Tower", icon: Rocket },
   { href: "/admin/job-postings", label: "Job Postings", icon: Briefcase },
+  { href: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

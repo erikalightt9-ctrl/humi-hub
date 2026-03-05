@@ -53,6 +53,25 @@ export async function findPaymentById(id: string): Promise<PaymentWithEnrollment
   });
 }
 
+export async function findPaymentByReferenceNumber(
+  referenceNumber: string
+): Promise<PaymentWithEnrollment | null> {
+  return prisma.payment.findFirst({
+    where: { referenceNumber },
+    include: {
+      enrollment: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          referenceCode: true,
+          course: { select: { id: true, title: true, price: true } },
+        },
+      },
+    },
+  });
+}
+
 export async function findPaymentsByEnrollment(enrollmentId: string): Promise<Payment[]> {
   return prisma.payment.findMany({
     where: { enrollmentId },
