@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { verifyWebhookSignature } from "@/lib/services/paymongo.service";
-import { sendEmailVerification } from "@/lib/services/notification.service";
-import { generateEmailVerificationToken } from "@/lib/services/verification.service";
+import { sendPaymentConfirmed } from "@/lib/services/notification.service";
+import {
+  generateTemporaryPassword,
+  studentExists,
+} from "@/lib/services/student-auth.service";
 import type { EnrollmentStatus } from "@prisma/client";
 
 interface PayMongoWebhookEvent {
@@ -23,8 +27,8 @@ interface PayMongoWebhookEvent {
 }
 
 /**
- * Complete a PayMongo payment: mark as PAID, update to PAYMENT_VERIFIED,
- * and send email verification link.
+ * Complete a PayMongo payment: mark as PAID, auto-create student account,
+ * and send login email with credentials.
  */
 async function completePaymentViaWebhook(paymentId: string): Promise<void> {
   const payment = await prisma.payment.findUnique({
@@ -49,8 +53,35 @@ async function completePaymentViaWebhook(paymentId: string): Promise<void> {
   }
 
   const { enrollment } = payment;
+  const coursePrice = Number(enrollment.course.price);
 
-  // Atomic transaction: update payment + enrollment status to PAYMENT_VERIFIED
+  // Check if student already exists (idempotent guard)
+  const alreadyExists = await studentExists(enrollment.id);
+  if (alreadyExists) {
+    await prisma.$transaction([
+      prisma.payment.update({
+        where: { id: paymentId },
+        data: { status: "PAID", paidAt: new Date() },
+      }),
+      prisma.enrollment.update({
+        where: { id: enrollment.id },
+        data: {
+          status: "ENROLLED" as EnrollmentStatus,
+          paymentStatus: "PAID",
+          statusUpdatedAt: new Date(),
+        },
+      }),
+    ]);
+    return;
+  }
+
+  // Generate credentials for the new student
+  const tempPassword = generateTemporaryPassword();
+  const passwordHash = await bcrypt.hash(tempPassword, 12);
+  const accessExpiry = new Date();
+  accessExpiry.setDate(accessExpiry.getDate() + 90);
+
+  // Atomic transaction: update payment + enrollment + create student
   await prisma.$transaction([
     prisma.payment.update({
       where: { id: paymentId },
@@ -59,22 +90,33 @@ async function completePaymentViaWebhook(paymentId: string): Promise<void> {
     prisma.enrollment.update({
       where: { id: enrollment.id },
       data: {
-        status: "PAYMENT_VERIFIED" as EnrollmentStatus,
+        status: "ENROLLED" as EnrollmentStatus,
         paymentStatus: "PAID",
         statusUpdatedAt: new Date(),
       },
     }),
+    prisma.student.create({
+      data: {
+        enrollmentId: enrollment.id,
+        email: enrollment.email.toLowerCase(),
+        name: enrollment.fullName,
+        passwordHash,
+        paymentStatus: "PAID",
+        amountPaid: coursePrice,
+        accessGranted: true,
+        accessExpiry,
+      },
+    }),
   ]);
 
-  // Generate email verification token and send verification email (fire-and-forget)
-  const token = await generateEmailVerificationToken(enrollment.id);
-  const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-
-  sendEmailVerification({
+  // Send payment confirmed email with credentials (fire-and-forget)
+  sendPaymentConfirmed({
     name: enrollment.fullName,
     email: enrollment.email,
     courseTitle: enrollment.course.title,
-    verificationUrl: `${baseUrl}/api/verify-email/${token}`,
+    amount: `PHP ${coursePrice.toLocaleString()}`,
+    paymentMethod: "PayMongo Online Payment",
+    temporaryPassword: tempPassword,
   });
 }
 
@@ -105,24 +147,20 @@ export async function POST(request: NextRequest) {
 
     // Only process successful checkout payments
     if (eventType !== "checkout_session.payment.paid") {
-      // Acknowledge other events without processing
       return NextResponse.json(
         { success: true, data: null, error: null },
         { status: 200 }
       );
     }
 
-    // Extract the checkout session ID — used as referenceNumber on our Payment record
     const checkoutSessionId = event.data.attributes.data.id;
     const referenceNumber =
       event.data.attributes.data.attributes.reference_number;
 
-    // Find our payment record by the checkout session ID stored as referenceNumber
     const payment = await prisma.payment.findFirst({
       where: { referenceNumber: checkoutSessionId, method: "PAYMONGO" },
     });
 
-    // Fallback: try finding by enrollment ID (reference_number in PayMongo)
     const resolvedPayment =
       payment ??
       (await prisma.payment.findFirst({
@@ -139,14 +177,12 @@ export async function POST(request: NextRequest) {
         "[Webhook] No matching payment found for checkout session:",
         checkoutSessionId
       );
-      // Return 200 to prevent PayMongo from retrying
       return NextResponse.json(
         { success: true, data: null, error: null },
         { status: 200 }
       );
     }
 
-    // Already processed — idempotent
     if (resolvedPayment.status === "PAID") {
       return NextResponse.json(
         { success: true, data: null, error: null },
@@ -162,7 +198,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (err) {
     console.error("[POST /api/payments/webhook]", err);
-    // Return 200 to prevent infinite retries; log the error for investigation
     return NextResponse.json(
       { success: true, data: null, error: null },
       { status: 200 }

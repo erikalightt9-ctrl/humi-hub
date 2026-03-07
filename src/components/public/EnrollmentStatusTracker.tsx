@@ -61,8 +61,6 @@ const STATUS_ORDER: readonly string[] = [
   "PENDING",
   "PAYMENT_SUBMITTED",
   "PAYMENT_VERIFIED",
-  "EMAIL_VERIFIED",
-  "APPROVED",
   "ENROLLED",
 ] as const;
 
@@ -75,7 +73,7 @@ const STEPS: readonly StepDefinition[] = [
   {
     key: "PAYMENT_SUBMITTED",
     label: "Payment Submitted",
-    description: "Your payment has been submitted for verification",
+    description: "Your payment proof has been submitted for verification",
   },
   {
     key: "PAYMENT_VERIFIED",
@@ -83,19 +81,9 @@ const STEPS: readonly StepDefinition[] = [
     description: "Your payment has been confirmed by our team",
   },
   {
-    key: "EMAIL_VERIFIED",
-    label: "Email Verified",
-    description: "Your email address has been verified",
-  },
-  {
-    key: "APPROVED",
-    label: "Approved",
-    description: "Your application has been approved",
-  },
-  {
     key: "ENROLLED",
-    label: "Account Activated",
-    description: "Your student account is active and ready to use",
+    label: "Active Student",
+    description: "Your student account is active — check your email for login credentials",
   },
 ] as const;
 

@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 import {
   findEnrollmentById,
 } from "@/lib/repositories/enrollment.repository";
+import { generateTemporaryPassword, studentExists } from "@/lib/services/student-auth.service";
 import {
-  generateEmailVerificationToken,
-  generateActivationToken,
-} from "@/lib/services/verification.service";
-import {
-  sendEmailVerification,
-  sendAccountActivation,
+  sendEnrollmentApproved,
   sendEnrollmentRejected,
 } from "@/lib/services/notification.service";
 import { prisma } from "@/lib/prisma";
@@ -84,61 +81,62 @@ export async function PATCH(
     const adminId = token.id as string;
 
     // ── APPROVED ──────────────────────────────────────────────────
+    // Admin approves → auto-create student account → send login email
     if (result.data.status === "APPROVED") {
       const isFree = coursePrice <= 0;
-      const base = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
-      // FREE COURSE from PENDING: skip to PAYMENT_VERIFIED → send email verification
-      if (isFree && existing.status === "PENDING") {
+      // Check idempotency — skip if student already exists
+      const alreadyExists = await studentExists(id);
+      if (alreadyExists) {
         await prisma.enrollment.update({
           where: { id },
           data: {
-            status: "PAYMENT_VERIFIED" as EnrollmentStatus,
-            paymentStatus: "PAID",
+            status: "ENROLLED" as EnrollmentStatus,
             statusUpdatedAt: new Date(),
             statusUpdatedBy: adminId,
           },
         });
-
-        const emailToken = await generateEmailVerificationToken(id);
-
-        sendEmailVerification({
-          name: existing.fullName,
-          email: existing.email,
-          courseTitle,
-          verificationUrl: `${base}/api/verify-email/${emailToken}`,
-        });
-
         const updated = await findEnrollmentById(id);
         return NextResponse.json({ success: true, data: updated, error: null });
       }
 
-      // Guard: only allow approval from EMAIL_VERIFIED status (paid courses)
-      if (existing.status !== "EMAIL_VERIFIED" && !isFree) {
-        return NextResponse.json(
-          { success: false, data: null, error: "Enrollment must have email verified before approval" },
-          { status: 400 }
-        );
-      }
+      // Generate credentials for the new student
+      const tempPassword = generateTemporaryPassword();
+      const passwordHash = await bcrypt.hash(tempPassword, 12);
+      const accessExpiry = new Date();
+      accessExpiry.setDate(accessExpiry.getDate() + 90);
 
-      // Generate activation token → send activation email
-      const activationToken = await generateActivationToken(id);
+      // Atomic transaction: update enrollment + create student
+      await prisma.$transaction([
+        prisma.enrollment.update({
+          where: { id },
+          data: {
+            status: "ENROLLED" as EnrollmentStatus,
+            paymentStatus: isFree ? "PAID" : existing.paymentStatus,
+            statusUpdatedAt: new Date(),
+            statusUpdatedBy: adminId,
+          },
+        }),
+        prisma.student.create({
+          data: {
+            enrollmentId: id,
+            email: existing.email.toLowerCase(),
+            name: existing.fullName,
+            passwordHash,
+            paymentStatus: "PAID",
+            amountPaid: isFree ? 0 : coursePrice,
+            accessGranted: true,
+            accessExpiry,
+          },
+        }),
+      ]);
 
-      await prisma.enrollment.update({
-        where: { id },
-        data: {
-          status: "APPROVED" as EnrollmentStatus,
-          statusUpdatedAt: new Date(),
-          statusUpdatedBy: adminId,
-        },
-      });
-
-      sendAccountActivation({
+      // Send login email with credentials (fire-and-forget)
+      sendEnrollmentApproved({
         name: existing.fullName,
         email: existing.email,
         courseTitle,
-        activationUrl: `${base}/activate/${activationToken}`,
-        statusTrackingUrl: `${base}/enrollment-status/${id}`,
+        temporaryPassword: tempPassword,
       });
 
       const updated = await findEnrollmentById(id);
@@ -166,7 +164,7 @@ export async function PATCH(
       return NextResponse.json({ success: true, data: updated, error: null });
     }
 
-    // ── PENDING (revert) ──────────────────────────────────────────
+    // ── OTHER STATUS CHANGES (PENDING revert, etc.) ──────────────
     const updated = await prisma.enrollment.update({
       where: { id },
       data: {

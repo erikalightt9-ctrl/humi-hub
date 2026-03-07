@@ -44,29 +44,27 @@ export default async function PaymentPage({
           {isPaid ? (
             <div className="text-center py-8">
               <div className="text-5xl mb-4">&#9989;</div>
-              <h2 className="text-xl font-bold text-green-700 mb-2">Payment Received!</h2>
+              <h2 className="text-xl font-bold text-green-700 mb-2">Payment Confirmed!</h2>
               <p className="text-gray-600">
-                Your payment for <strong>{enrollment.course.title}</strong> has been submitted.
-                Please check your email for next steps.
+                Your payment for <strong>{enrollment.course.title}</strong> has been verified.
+                Check your email for login credentials.
               </p>
               <Link
-                href={`/enrollment-status/${enrollmentId}`}
+                href="/student/login"
                 className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <LogIn className="h-4 w-4" />
+                Go to Student Dashboard
+              </Link>
+              <Link
+                href={`/enrollment-status/${enrollmentId}`}
+                className="inline-flex items-center gap-2 mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
               >
                 <ClipboardList className="h-4 w-4" />
                 Track My Enrollment Status
               </Link>
-              {enrollment.status === "ENROLLED" && (
-                <Link
-                  href="/student/login"
-                  className="inline-flex items-center gap-2 mt-3 px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <LogIn className="h-4 w-4" />
-                  Go to Student Dashboard
-                </Link>
-              )}
               <p className="text-xs text-gray-400 mt-3">
-                You can track your enrollment progress using the link above.
+                Use the credentials sent to your email to log in.
               </p>
             </div>
           ) : hasPendingPayment ? (
