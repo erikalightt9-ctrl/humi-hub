@@ -6,6 +6,21 @@ A full-stack Learning Management System (LMS) built for training Filipino profes
 
 ---
 
+## Platform Overview
+
+```
+va-training-center/
+│
+├── platform/
+│   ├── marketing-site/        # Landing page, about, contact, testimonials
+│   ├── learning-system/       # Courses, lessons, quizzes, assignments, forums
+│   ├── career-platform/       # Job board, job matching, portfolio, certificates
+│   ├── ai-training-lab/       # AI simulator, interviews, assessments, tasks, business assistant
+│   └── operations-system/     # Enrollment pipeline, payments, schedules, attendance, analytics
+```
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
