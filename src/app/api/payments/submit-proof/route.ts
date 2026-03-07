@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { paymentProofSchema } from "@/lib/validations/payment.schema";
 import { handleProofUpload, submitPaymentProof } from "@/lib/services/payment.service";
 import { findEnrollmentById } from "@/lib/repositories/enrollment.repository";
+import { prisma } from "@/lib/prisma";
+import type { EnrollmentStatus } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,9 +48,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (enrollment.status !== "APPROVED") {
+    if (enrollment.status !== "PENDING" && enrollment.status !== "APPROVED") {
       return NextResponse.json(
-        { success: false, data: null, error: "Enrollment must be approved before payment" },
+        { success: false, data: null, error: "Enrollment is not in a valid state for payment" },
         { status: 400 }
       );
     }
@@ -74,6 +76,15 @@ export async function POST(request: NextRequest) {
       proofFilePath: filePath,
       proofFileName: fileName,
       paidAt: result.data.paidAt ? new Date(result.data.paidAt) : undefined,
+    });
+
+    // Update enrollment status to PAYMENT_SUBMITTED
+    await prisma.enrollment.update({
+      where: { id: enrollmentId },
+      data: {
+        status: "PAYMENT_SUBMITTED" as EnrollmentStatus,
+        statusUpdatedAt: new Date(),
+      },
     });
 
     return NextResponse.json(

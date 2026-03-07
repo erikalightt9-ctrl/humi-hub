@@ -4,8 +4,10 @@ import {
   createEnrollment,
   countEnrollmentsByEmail,
 } from "@/lib/repositories/enrollment.repository";
-import { sendConfirmationEmail } from "@/lib/email/send-confirmation";
-import { sendNewEnrollmentAdminNotification } from "@/lib/services/notification.service";
+import {
+  sendEnrollmentConfirmationWithPayment,
+  sendNewEnrollmentAdminNotification,
+} from "@/lib/services/notification.service";
 import type { EnrollmentFormData } from "@/lib/validations/enrollment.schema";
 import type { Enrollment } from "@prisma/client";
 
@@ -84,9 +86,32 @@ export async function processEnrollment(
   // Create enrollment
   const enrollment = await createEnrollment({ ...sanitized, ipAddress });
 
-  // Send confirmation email to enrollee (non-blocking)
-  sendConfirmationEmail(enrollment).catch((err) => {
-    console.error("[Email] Failed to send confirmation:", err);
+  // Fetch course title for the confirmation email
+  const course = await prisma.course.findUnique({
+    where: { id: enrollment.courseId },
+    select: { title: true },
+  });
+  const courseTitle = course?.title ?? "Selected Course";
+  const base = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const submittedAt = enrollment.createdAt.toLocaleDateString("en-PH", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  // Send enrollment confirmation with payment instructions (non-blocking)
+  sendEnrollmentConfirmationWithPayment({
+    fullName: enrollment.fullName,
+    email: enrollment.email,
+    courseTitle,
+    enrollmentId: enrollment.id,
+    submittedAt,
+    paymentUrl: `${base}/pay/${enrollment.id}`,
+    statusTrackingUrl: `${base}/enrollment-status/${enrollment.id}`,
+  }).catch((err) => {
+    console.error("[Email] Failed to send enrollment confirmation:", err);
   });
 
   // Notify admin(s) about new enrollment (non-blocking)

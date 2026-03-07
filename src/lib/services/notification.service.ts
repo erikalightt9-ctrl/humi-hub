@@ -17,6 +17,9 @@ import { ForumReplyEmail } from "@/lib/email/templates/forum-reply";
 import { PaymentInstructionsEmail } from "@/lib/email/templates/payment-instructions";
 import { AdminReviewReminderEmail } from "@/lib/email/templates/admin-review-reminder";
 import { NewEnrollmentAdminEmail } from "@/lib/email/templates/new-enrollment-admin";
+import { EmailVerificationEmail } from "@/lib/email/templates/email-verification";
+import { AccountActivationEmail } from "@/lib/email/templates/account-activation";
+import { EnrollmentConfirmationWithPaymentEmail } from "@/lib/email/templates/enrollment-confirmation-with-payment";
 
 const FROM_NAME = process.env.EMAIL_FROM_NAME ?? "VA Training Center";
 const FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS ?? process.env.GMAIL_USER ?? "noreply@vatrainingcenter.com";
@@ -483,5 +486,78 @@ export async function sendNewEnrollmentAdminNotification(opts: {
 
   await Promise.all(
     opts.adminEmails.map((email) => sendEmail(email, subject, html))
+  );
+}
+
+export async function sendEmailVerification(opts: {
+  name: string;
+  email: string;
+  courseTitle: string;
+  verificationUrl: string;
+}): Promise<void> {
+  const html = await render(
+    EmailVerificationEmail({
+      name: opts.name,
+      courseTitle: opts.courseTitle,
+      verificationUrl: opts.verificationUrl,
+      expiresInHours: 24,
+    })
+  );
+
+  await sendEmail(
+    opts.email,
+    `Verify Your Email — ${opts.courseTitle} | VA Training Center`,
+    html
+  );
+}
+
+export async function sendAccountActivation(opts: {
+  name: string;
+  email: string;
+  courseTitle: string;
+  activationUrl: string;
+  statusTrackingUrl: string;
+}): Promise<void> {
+  const html = await render(
+    AccountActivationEmail({
+      name: opts.name,
+      courseTitle: opts.courseTitle,
+      activationUrl: opts.activationUrl,
+      statusTrackingUrl: opts.statusTrackingUrl,
+      expiresInHours: 48,
+    })
+  );
+
+  await sendEmail(
+    opts.email,
+    `Create Your Password — ${opts.courseTitle} | VA Training Center`,
+    html
+  );
+}
+
+export async function sendEnrollmentConfirmationWithPayment(opts: {
+  fullName: string;
+  email: string;
+  courseTitle: string;
+  enrollmentId: string;
+  submittedAt: string;
+  paymentUrl: string;
+  statusTrackingUrl: string;
+}): Promise<void> {
+  const html = await render(
+    EnrollmentConfirmationWithPaymentEmail({
+      fullName: opts.fullName,
+      courseTitle: opts.courseTitle,
+      enrollmentId: opts.enrollmentId,
+      submittedAt: opts.submittedAt,
+      paymentUrl: opts.paymentUrl,
+      statusTrackingUrl: opts.statusTrackingUrl,
+    })
+  );
+
+  await sendEmail(
+    opts.email,
+    `Application Received — Complete Payment | ${opts.courseTitle}`,
+    html
   );
 }

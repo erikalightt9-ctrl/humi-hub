@@ -14,6 +14,9 @@ enum CourseSlug {
 
 enum EnrollmentStatus {
   PENDING
+  PAYMENT_SUBMITTED
+  PAYMENT_VERIFIED
+  EMAIL_VERIFIED
   APPROVED
   REJECTED
   ENROLLED
@@ -135,14 +138,18 @@ model Enrollment {
   courseId              String
   course                Course            @relation(fields: [courseId], references: [id])
   ipAddress             String?
-  emailConfirmedAt      DateTime?
-  statusUpdatedAt       DateTime?
-  statusUpdatedBy       String?
-  referenceCode         String?           @unique
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-  student               Student?
-  payments              Payment[]
+  emailConfirmedAt         DateTime?
+  emailVerificationToken   String?           @unique
+  emailTokenExpiresAt      DateTime?
+  activationToken          String?           @unique
+  activationTokenExpiresAt DateTime?
+  statusUpdatedAt          DateTime?
+  statusUpdatedBy          String?
+  referenceCode            String?           @unique
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
+  student                  Student?
+  payments                 Payment[]
 
   @@index([status])
   @@index([courseId])

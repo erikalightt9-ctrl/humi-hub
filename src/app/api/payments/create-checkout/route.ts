@@ -27,10 +27,10 @@ export async function POST(request: NextRequest) {
       return jsonError("Enrollment not found", 404);
     }
 
-    // Only allow checkout for APPROVED enrollments awaiting payment
-    if (enrollment.status !== "APPROVED") {
+    // Allow checkout for PENDING and APPROVED enrollments
+    if (enrollment.status !== "PENDING" && enrollment.status !== "APPROVED") {
       return jsonError(
-        "Enrollment must be approved before payment can be processed",
+        "Enrollment is not in a valid state for payment",
         400
       );
     }

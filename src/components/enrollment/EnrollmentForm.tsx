@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { enrollmentSchema, type EnrollmentFormData } from "@/lib/validations/enrollment.schema";
@@ -18,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle2, AlertCircle, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertCircle, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Course } from "@prisma/client";
 
 const STEP_LABELS = ["Personal", "Professional", "Statement", "Review"];
@@ -36,8 +37,9 @@ interface EnrollmentFormProps {
 }
 
 export function EnrollmentForm({ courses }: EnrollmentFormProps) {
+  const router = useRouter();
   const [step, setStep] = useState(1);
-  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
   const form = useForm<EnrollmentFormData>({
@@ -59,7 +61,7 @@ export function EnrollmentForm({ courses }: EnrollmentFormProps) {
     mode: "onTouched",
   });
 
-  const { handleSubmit, control, getValues, reset } = form;
+  const { handleSubmit, control, reset } = form;
 
   // Persist to sessionStorage
   useEffect(() => {
@@ -118,32 +120,19 @@ export function EnrollmentForm({ courses }: EnrollmentFormProps) {
       }
 
       sessionStorage.removeItem(STORAGE_KEY);
-      setStatus("success");
+
+      // Redirect to payment page (new flow: pay immediately after enrollment)
+      const enrollmentId = json.data?.id;
+      if (enrollmentId) {
+        router.push(`/pay/${enrollmentId}`);
+      } else {
+        router.push("/enrollment-status/" + (json.data?.id ?? ""));
+      }
     } catch {
       setStatus("error");
       setErrorMsg("A network error occurred. Please check your connection and try again.");
     }
   };
-
-  if (status === "success") {
-    return (
-      <div className="bg-green-50 border border-green-200 rounded-2xl p-10 text-center">
-        <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Submitted!</h2>
-        <p className="text-gray-600 mb-6 max-w-md mx-auto">
-          Thank you for applying! A confirmation email has been sent to{" "}
-          <strong>{getValues("email")}</strong>. Our admissions team will review your application
-          and get back to you within 3–5 business days.
-        </p>
-        <p className="text-sm text-gray-500">
-          Reference your email for your application ID. Questions? Contact us at{" "}
-          <a href="mailto:info@vatrainingcenter.com" className="text-blue-600 underline">
-            info@vatrainingcenter.com
-          </a>
-        </p>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>

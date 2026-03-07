@@ -1,14 +1,14 @@
 import { writeFile } from "fs/promises";
 import { join } from "path";
-import bcrypt from "bcryptjs";
 import {
   createPayment,
   verifyPayment,
   findPaymentById,
 } from "@/lib/repositories/payment.repository";
 import { prisma } from "@/lib/prisma";
-import { sendPaymentConfirmed } from "@/lib/services/notification.service";
-import { generateTemporaryPassword, studentExists } from "@/lib/services/student-auth.service";
+import { sendPaymentConfirmed, sendEmailVerification } from "@/lib/services/notification.service";
+import { studentExists } from "@/lib/services/student-auth.service";
+import { generateEmailVerificationToken } from "@/lib/services/verification.service";
 import type { Payment, EnrollmentStatus } from "@prisma/client";
 
 const ALLOWED_PROOF_TYPES = [
@@ -78,16 +78,14 @@ export async function approvePayment(
   if (!fullPayment) return;
 
   const { enrollment } = fullPayment;
-  const coursePrice = Number(enrollment.course.price);
 
-  // 3. Check idempotency — skip student creation if already exists
+  // 3. Check idempotency — if student already exists, just update status
   const alreadyExists = await studentExists(enrollment.id);
   if (alreadyExists) {
-    // Edge case: just ensure enrollment status is ENROLLED
     await prisma.enrollment.update({
       where: { id: enrollment.id },
       data: {
-        status: "ENROLLED" as EnrollmentStatus,
+        status: "PAYMENT_VERIFIED" as EnrollmentStatus,
         paymentStatus: "PAID",
         statusUpdatedAt: new Date(),
         statusUpdatedBy: adminId,
@@ -96,45 +94,28 @@ export async function approvePayment(
     return;
   }
 
-  // 4. Generate credentials for the new student
-  const tempPassword = generateTemporaryPassword();
-  const passwordHash = await bcrypt.hash(tempPassword, 12);
-  const accessExpiry = new Date();
-  accessExpiry.setDate(accessExpiry.getDate() + 90);
+  // 4. Update enrollment to PAYMENT_VERIFIED + paymentStatus PAID
+  await prisma.enrollment.update({
+    where: { id: enrollment.id },
+    data: {
+      status: "PAYMENT_VERIFIED" as EnrollmentStatus,
+      paymentStatus: "PAID",
+      statusUpdatedAt: new Date(),
+      statusUpdatedBy: adminId,
+    },
+  });
 
-  // 5. Atomic transaction: update enrollment + create student
-  await prisma.$transaction([
-    prisma.enrollment.update({
-      where: { id: enrollment.id },
-      data: {
-        status: "ENROLLED" as EnrollmentStatus,
-        paymentStatus: "PAID",
-        statusUpdatedAt: new Date(),
-        statusUpdatedBy: adminId,
-      },
-    }),
-    prisma.student.create({
-      data: {
-        enrollmentId: enrollment.id,
-        email: enrollment.email.toLowerCase(),
-        name: enrollment.fullName,
-        passwordHash,
-        paymentStatus: "PAID",
-        amountPaid: coursePrice,
-        accessGranted: true,
-        accessExpiry,
-      },
-    }),
-  ]);
+  // 5. Generate email verification token and send verification email
+  const token = await generateEmailVerificationToken(enrollment.id);
+  const verificationUrl = `${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/api/verify-email/${token}`;
 
-  // 6. Send payment confirmed email with credentials
-  sendPaymentConfirmed({
+  sendEmailVerification({
     name: enrollment.fullName,
     email: enrollment.email,
     courseTitle: enrollment.course.title,
-    amount: `PHP ${coursePrice.toLocaleString()}`,
-    paymentMethod: fullPayment.method,
-    temporaryPassword: tempPassword,
+    verificationUrl,
+  }).catch((err) => {
+    console.error("[Email] Failed to send email verification:", err);
   });
 }
 
