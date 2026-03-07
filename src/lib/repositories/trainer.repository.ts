@@ -8,6 +8,7 @@ interface CreateTrainerData {
   readonly email: string;
   readonly phone?: string | null;
   readonly bio?: string | null;
+  readonly photoUrl?: string | null;
   readonly specializations?: ReadonlyArray<string>;
 }
 
@@ -16,6 +17,7 @@ interface UpdateTrainerData {
   readonly email?: string;
   readonly phone?: string | null;
   readonly bio?: string | null;
+  readonly photoUrl?: string | null;
   readonly specializations?: ReadonlyArray<string>;
   readonly isActive?: boolean;
 }
@@ -96,6 +98,7 @@ export async function createTrainer(
       email: data.email,
       phone: data.phone ?? null,
       bio: data.bio ?? null,
+      photoUrl: data.photoUrl ?? null,
       specializations: data.specializations
         ? [...data.specializations]
         : [],
@@ -113,6 +116,7 @@ export async function updateTrainer(
   if (data.email !== undefined) updatePayload.email = data.email;
   if (data.phone !== undefined) updatePayload.phone = data.phone;
   if (data.bio !== undefined) updatePayload.bio = data.bio;
+  if (data.photoUrl !== undefined) updatePayload.photoUrl = data.photoUrl;
   if (data.isActive !== undefined) updatePayload.isActive = data.isActive;
   if (data.specializations !== undefined) {
     updatePayload.specializations = [...data.specializations];

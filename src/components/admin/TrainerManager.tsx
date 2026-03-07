@@ -13,6 +13,8 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
+  Camera,
+  ImageOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +51,7 @@ interface Trainer {
   readonly email: string;
   readonly phone: string | null;
   readonly bio: string | null;
+  readonly photoUrl: string | null;
   readonly specializations: ReadonlyArray<string>;
   readonly isActive: boolean;
   readonly createdAt: string;
@@ -69,6 +72,7 @@ interface FormState {
   readonly email: string;
   readonly phone: string;
   readonly bio: string;
+  readonly photoUrl: string;
   readonly specializations: ReadonlyArray<string>;
 }
 
@@ -81,8 +85,11 @@ const INITIAL_FORM_STATE: FormState = {
   email: "",
   phone: "",
   bio: "",
+  photoUrl: "",
   specializations: [],
 };
+
+const MAX_PHOTO_SIZE_BYTES = 500_000; // ~500KB
 
 const TRAINER_ROLES = [
   { value: "instructor", label: "Instructor" },
@@ -186,6 +193,8 @@ export function TrainerManager() {
   const [email, setEmail] = useState(INITIAL_FORM_STATE.email);
   const [phone, setPhone] = useState(INITIAL_FORM_STATE.phone);
   const [bio, setBio] = useState(INITIAL_FORM_STATE.bio);
+  const [photoUrl, setPhotoUrl] = useState(INITIAL_FORM_STATE.photoUrl);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [specializations, setSpecializations] = useState<
     ReadonlyArray<string>
   >(INITIAL_FORM_STATE.specializations);
@@ -265,6 +274,8 @@ export function TrainerManager() {
     setEmail(INITIAL_FORM_STATE.email);
     setPhone(INITIAL_FORM_STATE.phone);
     setBio(INITIAL_FORM_STATE.bio);
+    setPhotoUrl(INITIAL_FORM_STATE.photoUrl);
+    setPhotoPreview(null);
     setSpecializations(INITIAL_FORM_STATE.specializations);
     setEditingId(null);
     setFormError(null);
@@ -280,6 +291,8 @@ export function TrainerManager() {
     setEmail(trainer.email);
     setPhone(trainer.phone ?? "");
     setBio(trainer.bio ?? "");
+    setPhotoUrl(trainer.photoUrl ?? "");
+    setPhotoPreview(trainer.photoUrl ?? null);
     setSpecializations(trainer.specializations);
     setEditingId(trainer.id);
     setFormError(null);
@@ -311,6 +324,35 @@ export function TrainerManager() {
   /*  Submit create / update                                           */
   /* ---------------------------------------------------------------- */
 
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setFormError("Please select an image file (JPG, PNG, etc.)");
+      return;
+    }
+
+    if (file.size > MAX_PHOTO_SIZE_BYTES) {
+      setFormError("Photo must be smaller than 500KB. Please resize it.");
+      return;
+    }
+
+    setFormError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setPhotoUrl(dataUrl);
+      setPhotoPreview(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removePhoto() {
+    setPhotoUrl("");
+    setPhotoPreview(null);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -321,6 +363,7 @@ export function TrainerManager() {
       email: email.trim(),
       phone: phone.trim() || undefined,
       bio: bio.trim() || undefined,
+      photoUrl: photoUrl || null,
       specializations: specializations.length > 0
         ? [...specializations]
         : undefined,
@@ -537,6 +580,53 @@ export function TrainerManager() {
               </div>
             )}
 
+            {/* Photo Upload */}
+            <div>
+              <Label>Trainer Photo</Label>
+              <div className="flex items-center gap-4 mt-1">
+                {photoPreview ? (
+                  <div className="relative">
+                    <img
+                      src={photoPreview}
+                      alt="Preview"
+                      className="h-20 w-20 rounded-full object-cover border-2 border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={removePhoto}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
+                      title="Remove photo"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
+                    <Camera className="h-6 w-6 text-gray-400" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <label
+                    htmlFor="trainer-photo"
+                    className="inline-flex items-center gap-1.5 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                    {photoPreview ? "Change Photo" : "Upload Photo"}
+                  </label>
+                  <input
+                    id="trainer-photo"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="hidden"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    JPG, PNG · Max 500KB
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Name & Email */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -660,7 +750,21 @@ export function TrainerManager() {
               >
                 {/* Card header */}
                 <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
+                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                    {/* Trainer Photo */}
+                    {trainer.photoUrl ? (
+                      <img
+                        src={trainer.photoUrl}
+                        alt={trainer.name}
+                        className="h-14 w-14 rounded-full object-cover border-2 border-gray-200 shrink-0"
+                      />
+                    ) : (
+                      <div className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center shrink-0 border-2 border-gray-200">
+                        <UserCog className="h-6 w-6 text-blue-400" />
+                      </div>
+                    )}
+
+                    <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-gray-900 truncate">
                         {trainer.name}
@@ -715,6 +819,7 @@ export function TrainerManager() {
                         {trainer.bio}
                       </p>
                     )}
+                    </div>
                   </div>
 
                   {/* Action buttons */}

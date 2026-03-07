@@ -14,6 +14,11 @@ export const createTrainerSchema = z.object({
     .string()
     .max(2000, "Bio must be 2000 characters or fewer")
     .optional(),
+  photoUrl: z
+    .string()
+    .max(500000, "Photo is too large")
+    .optional()
+    .nullable(),
   specializations: z
     .array(z.string().min(1, "Specialization cannot be empty"))
     .optional(),

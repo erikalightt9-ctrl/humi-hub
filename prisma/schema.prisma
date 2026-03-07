@@ -657,6 +657,7 @@ model Trainer {
   email           String          @unique
   phone           String?
   bio             String?         @db.Text
+  photoUrl        String?         @db.Text
   specializations String[]
   isActive        Boolean         @default(true)
   createdAt       DateTime        @default(now())
