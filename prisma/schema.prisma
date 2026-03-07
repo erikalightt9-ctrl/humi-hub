@@ -220,6 +220,7 @@ model Student {
   jobMatches     JobMatch[]
   employerFeedback  EmployerFeedback[]
   mentorshipRequests MentorshipRequest[]
+  emailPracticeSessions EmailPracticeSession[]
 
   @@index([email])
   @@index([paymentStatus])
@@ -717,4 +718,33 @@ model MentorshipRequest {
   @@index([studentId])
   @@index([trainerId])
   @@map("mentorship_requests")
+}
+
+model EmailPracticeSession {
+  id                    String   @id @default(cuid())
+  studentId             String
+  courseSlug             String
+  scenarioType          String
+  scenarioPrompt        String   @db.Text
+  senderRole            String
+  recipientRole         String
+  studentEmail          String?  @db.Text
+  toneScore             Int?
+  clarityScore          Int?
+  completenessScore     Int?
+  grammarScore          Int?
+  industryLanguageScore Int?
+  overallScore          Int?
+  aiFeedback            String?  @db.Text
+  suggestedVersion      String?  @db.Text
+  strengths             Json?
+  improvements          Json?
+  status                String   @default("pending")
+  createdAt             DateTime @default(now())
+  evaluatedAt           DateTime?
+  student               Student  @relation(fields: [studentId], references: [id])
+
+  @@index([studentId])
+  @@index([status])
+  @@map("email_practice_sessions")
 }

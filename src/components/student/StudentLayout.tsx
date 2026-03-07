@@ -32,6 +32,8 @@ import {
   MessagesSquare,
   Heart,
   Settings,
+  Mail,
+  BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -70,6 +72,8 @@ function buildNavGroups(courseId: string): ReadonlyArray<NavGroup> {
         { href: "/student/ai-assessments", label: "AI Review", icon: Target },
         { href: "/student/ai-interviews", label: "Mock Interviews", icon: Mic },
         { href: "/student/business-assistant", label: "Biz Assistant", icon: Briefcase },
+        { href: "/student/ai-email-practice", label: "Email Practice", icon: Mail },
+        { href: "/student/ai-feedback-engine", label: "Feedback Engine", icon: BarChart2 },
       ],
     },
     {
