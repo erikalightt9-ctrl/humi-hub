@@ -221,6 +221,8 @@ model Student {
   employerFeedback  EmployerFeedback[]
   mentorshipRequests MentorshipRequest[]
   emailPracticeSessions EmailPracticeSession[]
+  jobApplications       JobApplication[]
+  verifiedSkills        VerifiedSkill[]
 
   @@index([email])
   @@index([paymentStatus])
@@ -584,9 +586,11 @@ model JobPosting {
   type         String
   salaryRange  String?
   isActive     Boolean     @default(true)
+  isInternship Boolean     @default(false)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   matches      JobMatch[]
+  applications JobApplication[]
 
   @@index([isActive])
   @@index([courseSlug])
@@ -673,6 +677,26 @@ model CourseResource {
   @@map("course_resources")
 }
 
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  SHORTLISTED
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum SkillType {
+  COMMUNICATION
+  TECHNICAL
+  TIME_MANAGEMENT
+  PROBLEM_SOLVING
+  PROFESSIONALISM
+  ACCURACY
+  TOOL_PROFICIENCY
+  CLIENT_MANAGEMENT
+}
+
 enum FeedbackCategory {
   COMMUNICATION
   TECHNICAL_SKILLS
@@ -747,4 +771,37 @@ model EmailPracticeSession {
   @@index([studentId])
   @@index([status])
   @@map("email_practice_sessions")
+}
+
+model JobApplication {
+  id           String            @id @default(cuid())
+  studentId    String
+  jobPostingId String
+  coverLetter  String            @db.Text
+  status       ApplicationStatus @default(PENDING)
+  adminNotes   String?           @db.Text
+  appliedAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  student      Student           @relation(fields: [studentId], references: [id])
+  jobPosting   JobPosting        @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, jobPostingId])
+  @@index([studentId])
+  @@index([jobPostingId])
+  @@index([status])
+  @@map("job_applications")
+}
+
+model VerifiedSkill {
+  id         String    @id @default(cuid())
+  studentId  String
+  skillType  SkillType
+  level      Int
+  evidence   String    @db.Text
+  verifiedAt DateTime  @default(now())
+  student    Student   @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, skillType])
+  @@index([studentId])
+  @@map("verified_skills")
 }

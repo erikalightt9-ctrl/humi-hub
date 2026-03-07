@@ -34,6 +34,8 @@ const programsItems: readonly NavDropdownItem[] = [
 
 const studentsItems: readonly NavDropdownItem[] = [
   { href: "/career-placement", label: "Career Placement", description: "Jobs & placement support" },
+  { href: "/employer-dashboard", label: "Hire Our VAs", description: "Browse top graduates" },
+  { href: "/student-ranking", label: "Student Ranking", description: "Top-performing students" },
   { href: "/student-success", label: "Student Success", description: "Graduate stories & outcomes" },
   { href: "/community", label: "Community", description: "Connect with fellow VAs" },
   { href: "/resources", label: "Resources", description: "Free tools & guides" },

@@ -25,6 +25,8 @@ import {
   Rocket,
   Briefcase,
   MessageSquareQuote,
+  Trophy,
+  ClipboardCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -46,6 +48,8 @@ const navItems = [
   { href: "/admin/ai-insights", label: "AI Insights", icon: Brain },
   { href: "/admin/control-tower", label: "Control Tower", icon: Rocket },
   { href: "/admin/job-postings", label: "Job Postings", icon: Briefcase },
+  { href: "/admin/job-applications", label: "Job Applications", icon: ClipboardCheck },
+  { href: "/admin/student-ranking", label: "Student Ranking", icon: Trophy },
   { href: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];

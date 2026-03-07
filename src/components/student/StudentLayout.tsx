@@ -34,6 +34,9 @@ import {
   Settings,
   Mail,
   BarChart2,
+  ShieldCheck,
+  Building2,
+  Laptop,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -85,6 +88,9 @@ function buildNavGroups(courseId: string): ReadonlyArray<NavGroup> {
         { href: "/student/portfolio", label: "Portfolio", icon: UserCircle },
         { href: "/student/career-readiness", label: "Career Readiness", icon: Target },
         { href: "/student/employer-feedback", label: "Employer Feedback", icon: Star },
+        { href: "/student/skill-verification", label: "Skill Verification", icon: ShieldCheck },
+        { href: "/student/internship-program", label: "Internships", icon: Building2 },
+        { href: "/student/freelance", label: "Freelance", icon: Laptop },
       ],
     },
     {
