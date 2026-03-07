@@ -26,6 +26,13 @@ export interface RecentActivity {
   readonly href: string;
 }
 
+export interface PresentStudent {
+  readonly id: string;
+  readonly studentName: string;
+  readonly courseTitle: string;
+  readonly clockIn: string;
+}
+
 // ---------------------------------------------------------------------------
 // Queries
 // ---------------------------------------------------------------------------
@@ -140,4 +147,28 @@ export async function getRecentActivity(
   return activities
     .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
     .slice(0, limit);
+}
+
+export async function getCurrentlyPresent(): Promise<ReadonlyArray<PresentStudent>> {
+  const records = await prisma.attendanceRecord.findMany({
+    where: { clockOut: null },
+    include: {
+      student: {
+        select: {
+          name: true,
+          enrollment: {
+            select: { course: { select: { title: true } } },
+          },
+        },
+      },
+    },
+    orderBy: { clockIn: "desc" },
+  });
+
+  return records.map((r) => ({
+    id: r.id,
+    studentName: r.student.name,
+    courseTitle: r.student.enrollment.course.title,
+    clockIn: r.clockIn.toISOString(),
+  }));
 }

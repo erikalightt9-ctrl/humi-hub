@@ -27,6 +27,7 @@ import {
   getRevenueSnapshot,
   getEnrollmentPipeline,
   getRecentActivity,
+  getCurrentlyPresent,
 } from "@/lib/repositories/dashboard.repository";
 
 export const metadata: Metadata = { title: "Dashboard | HUMI+ Admin" };
@@ -67,7 +68,7 @@ const ACTIVITY_COLORS: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 export default async function AdminDashboardPage() {
-  const [stats, presentNow, scheduleStats, upcomingSchedules, revenue, pipeline, recentActivity] =
+  const [stats, presentNow, scheduleStats, upcomingSchedules, revenue, pipeline, recentActivity, presentStudents] =
     await Promise.all([
       getAnalyticsStats(),
       getPresentNowCount(),
@@ -76,6 +77,7 @@ export default async function AdminDashboardPage() {
       getRevenueSnapshot(),
       getEnrollmentPipeline(),
       getRecentActivity(10),
+      getCurrentlyPresent(),
     ]);
 
   return (
@@ -147,23 +149,72 @@ export default async function AdminDashboardPage() {
       {/* Enrollment Pipeline */}
       <EnrollmentPipeline pipeline={pipeline} />
 
-      {/* Present Now banner */}
-      <Link
-        href="/admin/attendance"
-        className="block mb-6 bg-green-50 border border-green-200 rounded-xl p-4 hover:bg-green-100 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <div className="bg-green-100 rounded-lg p-2">
+      {/* Live Attendance Section */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-gray-900 flex items-center gap-2">
             <ClipboardCheck className="h-5 w-5 text-green-600" />
+            Live Attendance
+          </h2>
+          <Link
+            href="/admin/attendance"
+            className="text-sm text-blue-600 hover:underline"
+          >
+            View full records →
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+            <p className="text-2xl font-bold text-green-700">{presentNow}</p>
+            <p className="text-xs font-medium text-green-600">Present Now</p>
           </div>
-          <div>
-            <p className="text-sm font-semibold text-green-800">
-              {presentNow} {presentNow === 1 ? "student" : "students"} present now
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+            <p className="text-2xl font-bold text-gray-700">
+              {stats.approvedCount - presentNow > 0
+                ? stats.approvedCount - presentNow
+                : 0}
             </p>
-            <p className="text-xs text-green-600">Click to view live attendance →</p>
+            <p className="text-xs font-medium text-gray-500">Not Clocked In</p>
           </div>
         </div>
-      </Link>
+
+        {presentStudents.length > 0 ? (
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {presentStudents.map((student) => (
+              <div
+                key={student.id}
+                className="flex items-center justify-between p-3 bg-green-50 rounded-lg"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="relative flex h-2.5 w-2.5 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {student.studentName}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {student.courseTitle}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-green-700 font-mono shrink-0 ml-3">
+                  {new Date(student.clockIn).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400 text-center py-4">
+            No students clocked in right now.
+          </p>
+        )}
+      </div>
 
       {/* Two column layout for course breakdown + activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

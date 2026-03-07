@@ -105,6 +105,11 @@ export function ClockInWidget() {
       const json = await res.json();
 
       if (!json.success) {
+        // 409 = conflict (already clocked in/out) — auto-recover by re-syncing
+        if (res.status === 409) {
+          await fetchStatus();
+          return;
+        }
         setError(json.error ?? "Something went wrong");
         return;
       }
