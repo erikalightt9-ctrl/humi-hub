@@ -13,11 +13,12 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
-  Camera,
-  ImageOff,
+  Star,
+  Users,
+  Award,
+  Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -26,10 +27,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TrainerForm } from "@/components/admin/TrainerForm";
+import { TrainerAccessPanel } from "@/components/admin/TrainerAccessPanel";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
+
+type TierValue = "BASIC" | "PROFESSIONAL" | "PREMIUM";
 
 interface CourseAssignment {
   readonly id: string;
@@ -53,10 +58,21 @@ interface Trainer {
   readonly bio: string | null;
   readonly photoUrl: string | null;
   readonly specializations: ReadonlyArray<string>;
+  readonly tier: TierValue;
+  readonly credentials: string | null;
+  readonly certifications: ReadonlyArray<string>;
+  readonly industryExperience: string | null;
+  readonly yearsOfExperience: number;
+  readonly averageRating: string | number | null;
+  readonly totalRatings: number;
+  readonly accessGranted: boolean;
   readonly isActive: boolean;
   readonly createdAt: string;
   readonly updatedAt: string;
-  readonly _count?: { readonly courses: number };
+  readonly _count?: {
+    readonly courses: number;
+    readonly students: number;
+  };
   readonly courses?: ReadonlyArray<CourseAssignment>;
 }
 
@@ -67,29 +83,23 @@ interface Course {
   readonly isActive: boolean;
 }
 
-interface FormState {
-  readonly name: string;
-  readonly email: string;
-  readonly phone: string;
-  readonly bio: string;
-  readonly photoUrl: string;
-  readonly specializations: ReadonlyArray<string>;
-}
-
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const INITIAL_FORM_STATE: FormState = {
-  name: "",
-  email: "",
-  phone: "",
-  bio: "",
-  photoUrl: "",
-  specializations: [],
+const TIER_BADGE_STYLES: Readonly<
+  Record<TierValue, { readonly bg: string; readonly text: string }>
+> = {
+  BASIC: { bg: "bg-gray-100", text: "text-gray-700" },
+  PROFESSIONAL: { bg: "bg-blue-100", text: "text-blue-700" },
+  PREMIUM: { bg: "bg-amber-100", text: "text-amber-700" },
 };
 
-const MAX_PHOTO_SIZE_BYTES = 500_000; // ~500KB
+const TIER_LABELS: Readonly<Record<TierValue, string>> = {
+  BASIC: "Basic",
+  PROFESSIONAL: "Professional",
+  PREMIUM: "Premium",
+};
 
 const TRAINER_ROLES = [
   { value: "instructor", label: "Instructor" },
@@ -99,77 +109,33 @@ const TRAINER_ROLES = [
 ] as const;
 
 /* ------------------------------------------------------------------ */
-/*  Specialization Tag Input                                           */
+/*  Star Rating Display                                                */
 /* ------------------------------------------------------------------ */
 
-function SpecializationTags({
-  tags,
-  onAdd,
-  onRemove,
+function StarRating({
+  rating,
+  count,
 }: {
-  readonly tags: ReadonlyArray<string>;
-  readonly onAdd: (tag: string) => void;
-  readonly onRemove: (index: number) => void;
+  readonly rating: string | number | null;
+  readonly count: number;
 }) {
-  const [input, setInput] = useState("");
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault();
-      const trimmed = input.trim();
-      if (trimmed && !tags.includes(trimmed)) {
-        onAdd(trimmed);
-        setInput("");
-      }
-    }
+  const numRating = rating ? Number(rating) : 0;
+  if (count === 0) {
+    return (
+      <span className="text-xs text-gray-400 inline-flex items-center gap-1">
+        <Star className="h-3 w-3" />
+        No ratings
+      </span>
+    );
   }
-
-  function handleAddClick() {
-    const trimmed = input.trim();
-    if (trimmed && !tags.includes(trimmed)) {
-      onAdd(trimmed);
-      setInput("");
-    }
-  }
-
   return (
-    <div>
-      <div className="flex flex-wrap gap-1.5 mb-2">
-        {tags.map((tag, idx) => (
-          <span
-            key={tag}
-            className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs inline-flex items-center gap-1"
-          >
-            {tag}
-            <button
-              type="button"
-              onClick={() => onRemove(idx)}
-              className="text-blue-400 hover:text-blue-700 ml-0.5"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        ))}
-      </div>
-      <div className="flex gap-2">
-        <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type and press Enter to add"
-          className="flex-1"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleAddClick}
-          disabled={!input.trim()}
-        >
-          Add
-        </Button>
-      </div>
-    </div>
+    <span className="inline-flex items-center gap-1 text-xs">
+      <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+      <span className="font-medium text-gray-700">
+        {numRating.toFixed(1)}
+      </span>
+      <span className="text-gray-400">({count})</span>
+    </span>
   );
 }
 
@@ -185,21 +151,9 @@ export function TrainerManager() {
 
   // Form state
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [editingTrainer, setEditingTrainer] = useState<Trainer | null>(null);
 
-  const [name, setName] = useState(INITIAL_FORM_STATE.name);
-  const [email, setEmail] = useState(INITIAL_FORM_STATE.email);
-  const [phone, setPhone] = useState(INITIAL_FORM_STATE.phone);
-  const [bio, setBio] = useState(INITIAL_FORM_STATE.bio);
-  const [photoUrl, setPhotoUrl] = useState(INITIAL_FORM_STATE.photoUrl);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [specializations, setSpecializations] = useState<
-    ReadonlyArray<string>
-  >(INITIAL_FORM_STATE.specializations);
-
-  // Expanded trainer for course assignments
+  // Expanded trainer for details + course assignments
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [expandedTrainer, setExpandedTrainer] = useState<Trainer | null>(null);
   const [expandedLoading, setExpandedLoading] = useState(false);
@@ -210,7 +164,7 @@ export function TrainerManager() {
   const [assigning, setAssigning] = useState(false);
 
   /* ---------------------------------------------------------------- */
-  /*  Fetch trainers                                                   */
+  /*  Data fetching                                                    */
   /* ---------------------------------------------------------------- */
 
   const fetchTrainers = useCallback(async () => {
@@ -233,11 +187,9 @@ export function TrainerManager() {
     try {
       const res = await fetch("/api/admin/courses");
       const json = await res.json();
-      if (json.success) {
-        setCourses(json.data);
-      }
+      if (json.success) setCourses(json.data);
     } catch {
-      // Courses are supplementary; do not block main flow
+      /* Courses are supplementary */
     }
   }, []);
 
@@ -246,20 +198,14 @@ export function TrainerManager() {
     fetchCourses();
   }, [fetchTrainers, fetchCourses]);
 
-  /* ---------------------------------------------------------------- */
-  /*  Fetch single trainer for expanded view                           */
-  /* ---------------------------------------------------------------- */
-
   const fetchTrainerDetail = useCallback(async (id: string) => {
     setExpandedLoading(true);
     try {
       const res = await fetch(`/api/admin/trainers/${id}`);
       const json = await res.json();
-      if (json.success) {
-        setExpandedTrainer(json.data);
-      }
+      if (json.success) setExpandedTrainer(json.data);
     } catch {
-      // Silently fail for expansion
+      /* silent */
     } finally {
       setExpandedLoading(false);
     }
@@ -269,43 +215,28 @@ export function TrainerManager() {
   /*  Form helpers                                                     */
   /* ---------------------------------------------------------------- */
 
-  function resetForm() {
-    setName(INITIAL_FORM_STATE.name);
-    setEmail(INITIAL_FORM_STATE.email);
-    setPhone(INITIAL_FORM_STATE.phone);
-    setBio(INITIAL_FORM_STATE.bio);
-    setPhotoUrl(INITIAL_FORM_STATE.photoUrl);
-    setPhotoPreview(null);
-    setSpecializations(INITIAL_FORM_STATE.specializations);
-    setEditingId(null);
-    setFormError(null);
-  }
-
   function openCreateForm() {
-    resetForm();
+    setEditingTrainer(null);
     setShowForm(true);
   }
 
   function openEditForm(trainer: Trainer) {
-    setName(trainer.name);
-    setEmail(trainer.email);
-    setPhone(trainer.phone ?? "");
-    setBio(trainer.bio ?? "");
-    setPhotoUrl(trainer.photoUrl ?? "");
-    setPhotoPreview(trainer.photoUrl ?? null);
-    setSpecializations(trainer.specializations);
-    setEditingId(trainer.id);
-    setFormError(null);
+    setEditingTrainer(trainer);
     setShowForm(true);
   }
 
   function closeForm() {
-    resetForm();
     setShowForm(false);
+    setEditingTrainer(null);
+  }
+
+  async function handleFormSave() {
+    closeForm();
+    await fetchTrainers();
   }
 
   /* ---------------------------------------------------------------- */
-  /*  Toggle expanded trainer                                          */
+  /*  Toggle expanded                                                  */
   /* ---------------------------------------------------------------- */
 
   function toggleExpand(trainerId: string) {
@@ -317,83 +248,6 @@ export function TrainerManager() {
       setSelectedCourseId("");
       setSelectedRole("instructor");
       fetchTrainerDetail(trainerId);
-    }
-  }
-
-  /* ---------------------------------------------------------------- */
-  /*  Submit create / update                                           */
-  /* ---------------------------------------------------------------- */
-
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      setFormError("Please select an image file (JPG, PNG, etc.)");
-      return;
-    }
-
-    if (file.size > MAX_PHOTO_SIZE_BYTES) {
-      setFormError("Photo must be smaller than 500KB. Please resize it.");
-      return;
-    }
-
-    setFormError(null);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      setPhotoUrl(dataUrl);
-      setPhotoPreview(dataUrl);
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function removePhoto() {
-    setPhotoUrl("");
-    setPhotoPreview(null);
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    setFormError(null);
-
-    const body = {
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone.trim() || undefined,
-      bio: bio.trim() || undefined,
-      photoUrl: photoUrl || null,
-      specializations: specializations.length > 0
-        ? [...specializations]
-        : undefined,
-    };
-
-    try {
-      const url = editingId
-        ? `/api/admin/trainers/${editingId}`
-        : "/api/admin/trainers";
-      const method = editingId ? "PATCH" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      const json = await res.json();
-
-      if (!json.success) {
-        setFormError(json.error ?? "Something went wrong");
-        return;
-      }
-
-      closeForm();
-      await fetchTrainers();
-    } catch {
-      setFormError("Failed to save trainer. Please try again.");
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -424,7 +278,9 @@ export function TrainerManager() {
   /* ---------------------------------------------------------------- */
 
   async function handleDelete(id: string) {
-    if (!confirm("Deactivate this trainer? They will be marked as inactive.")) {
+    if (
+      !confirm("Deactivate this trainer? They will be marked as inactive.")
+    ) {
       return;
     }
 
@@ -433,12 +289,10 @@ export function TrainerManager() {
         method: "DELETE",
       });
       const json = await res.json();
-
       if (!json.success) {
         setError(json.error ?? "Failed to deactivate");
         return;
       }
-
       await fetchTrainers();
     } catch {
       setError("Failed to deactivate trainer.");
@@ -503,16 +357,23 @@ export function TrainerManager() {
     }
   }
 
-  /* ---------------------------------------------------------------- */
-  /*  Derive available courses for assignment dropdown                  */
-  /* ---------------------------------------------------------------- */
-
   function getAvailableCourses(): ReadonlyArray<Course> {
     if (!expandedTrainer?.courses) return courses;
     const assignedIds = new Set(
       expandedTrainer.courses.map((ct) => ct.courseId),
     );
     return courses.filter((c) => !assignedIds.has(c.id));
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Access update callback                                           */
+  /* ---------------------------------------------------------------- */
+
+  async function handleAccessUpdate() {
+    await fetchTrainers();
+    if (expandedId) {
+      await fetchTrainerDetail(expandedId);
+    }
   }
 
   /* ---------------------------------------------------------------- */
@@ -563,160 +424,11 @@ export function TrainerManager() {
 
       {/* Add / Edit Form */}
       {showForm && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">
-              {editingId ? "Edit Trainer" : "New Trainer"}
-            </h3>
-            <Button variant="ghost" size="sm" onClick={closeForm}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {formError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">
-                {formError}
-              </div>
-            )}
-
-            {/* Photo Upload */}
-            <div>
-              <Label>Trainer Photo</Label>
-              <div className="flex items-center gap-4 mt-1">
-                {photoPreview ? (
-                  <div className="relative">
-                    <img
-                      src={photoPreview}
-                      alt="Preview"
-                      className="h-20 w-20 rounded-full object-cover border-2 border-gray-200"
-                    />
-                    <button
-                      type="button"
-                      onClick={removePhoto}
-                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
-                      title="Remove photo"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
-                    <Camera className="h-6 w-6 text-gray-400" />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <label
-                    htmlFor="trainer-photo"
-                    className="inline-flex items-center gap-1.5 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
-                  >
-                    <Camera className="h-3.5 w-3.5" />
-                    {photoPreview ? "Change Photo" : "Upload Photo"}
-                  </label>
-                  <input
-                    id="trainer-photo"
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    className="hidden"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">
-                    JPG, PNG · Max 500KB
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Name & Email */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="tr-name">Name *</Label>
-                <Input
-                  id="tr-name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Dr. Ana Reyes"
-                  maxLength={100}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="tr-email">Email *</Label>
-                <Input
-                  id="tr-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="trainer@example.com"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Phone */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="tr-phone">Phone</Label>
-                <Input
-                  id="tr-phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+63 912 345 6789"
-                  maxLength={20}
-                />
-              </div>
-            </div>
-
-            {/* Bio */}
-            <div>
-              <Label htmlFor="tr-bio">Bio</Label>
-              <textarea
-                id="tr-bio"
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Brief professional bio..."
-                maxLength={2000}
-                rows={3}
-                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              />
-            </div>
-
-            {/* Specializations */}
-            <div>
-              <Label>Specializations</Label>
-              <SpecializationTags
-                tags={specializations}
-                onAdd={(tag) =>
-                  setSpecializations([...specializations, tag])
-                }
-                onRemove={(idx) =>
-                  setSpecializations(
-                    specializations.filter((_, i) => i !== idx),
-                  )
-                }
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={closeForm}
-                disabled={saving}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving
-                  ? "Saving..."
-                  : editingId
-                    ? "Update Trainer"
-                    : "Create Trainer"}
-              </Button>
-            </div>
-          </form>
-        </div>
+        <TrainerForm
+          editingTrainer={editingTrainer}
+          onSave={handleFormSave}
+          onCancel={closeForm}
+        />
       )}
 
       {/* Trainers List */}
@@ -729,7 +441,8 @@ export function TrainerManager() {
             No Trainers Yet
           </h2>
           <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
-            Add trainers to manage instructor assignments and course coverage.
+            Add trainers to manage instructor assignments, tier levels, and
+            portal access.
           </p>
           <Button onClick={openCreateForm} className="gap-2">
             <Plus className="h-4 w-4" />
@@ -740,6 +453,7 @@ export function TrainerManager() {
         <div className="space-y-4">
           {trainers.map((trainer) => {
             const isExpanded = expandedId === trainer.id;
+            const tierStyle = TIER_BADGE_STYLES[trainer.tier] ?? TIER_BADGE_STYLES.BASIC;
 
             return (
               <div
@@ -765,60 +479,82 @@ export function TrainerManager() {
                     )}
 
                     <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-gray-900 truncate">
-                        {trainer.name}
-                      </h3>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
-                          trainer.isActive
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-500"
-                        }`}
-                      >
-                        {trainer.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-
-                    {/* Contact info */}
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-2">
-                      <span className="inline-flex items-center gap-1">
-                        <Mail className="h-3.5 w-3.5" />
-                        {trainer.email}
-                      </span>
-                      {trainer.phone && (
-                        <span className="inline-flex items-center gap-1">
-                          <Phone className="h-3.5 w-3.5" />
-                          {trainer.phone}
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h3 className="font-semibold text-gray-900 truncate">
+                          {trainer.name}
+                        </h3>
+                        {/* Tier badge */}
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full shrink-0 font-medium ${tierStyle.bg} ${tierStyle.text}`}
+                        >
+                          {TIER_LABELS[trainer.tier] ?? "Basic"}
                         </span>
-                      )}
-                      <span className="inline-flex items-center gap-1">
-                        <BookOpen className="h-3.5 w-3.5" />
-                        {trainer._count?.courses ?? 0} course
-                        {(trainer._count?.courses ?? 0) !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-
-                    {/* Specializations */}
-                    {trainer.specializations.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-2">
-                        {trainer.specializations.map((spec) => (
-                          <span
-                            key={spec}
-                            className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs"
-                          >
-                            {spec}
+                        {/* Active/Inactive badge */}
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
+                            trainer.isActive
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-100 text-gray-500"
+                          }`}
+                        >
+                          {trainer.isActive ? "Active" : "Inactive"}
+                        </span>
+                        {/* Access badge */}
+                        {trainer.accessGranted && (
+                          <span className="text-xs px-2 py-0.5 rounded-full shrink-0 bg-purple-100 text-purple-700">
+                            Portal Access
                           </span>
-                        ))}
+                        )}
                       </div>
-                    )}
 
-                    {/* Bio preview */}
-                    {trainer.bio && !isExpanded && (
-                      <p className="text-sm text-gray-500 line-clamp-2">
-                        {trainer.bio}
-                      </p>
-                    )}
+                      {/* Contact + stats row */}
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-2">
+                        <span className="inline-flex items-center gap-1">
+                          <Mail className="h-3.5 w-3.5" />
+                          {trainer.email}
+                        </span>
+                        {trainer.phone && (
+                          <span className="inline-flex items-center gap-1">
+                            <Phone className="h-3.5 w-3.5" />
+                            {trainer.phone}
+                          </span>
+                        )}
+                        <span className="inline-flex items-center gap-1">
+                          <BookOpen className="h-3.5 w-3.5" />
+                          {trainer._count?.courses ?? 0} course
+                          {(trainer._count?.courses ?? 0) !== 1 ? "s" : ""}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Users className="h-3.5 w-3.5" />
+                          {trainer._count?.students ?? 0} student
+                          {(trainer._count?.students ?? 0) !== 1 ? "s" : ""}
+                        </span>
+                        <StarRating
+                          rating={trainer.averageRating}
+                          count={trainer.totalRatings}
+                        />
+                      </div>
+
+                      {/* Specializations */}
+                      {trainer.specializations.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {trainer.specializations.map((spec) => (
+                            <span
+                              key={spec}
+                              className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs"
+                            >
+                              {spec}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Bio preview */}
+                      {trainer.bio && !isExpanded && (
+                        <p className="text-sm text-gray-500 line-clamp-2">
+                          {trainer.bio}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -848,7 +584,9 @@ export function TrainerManager() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleToggleActive(trainer)}
-                      title={trainer.isActive ? "Deactivate" : "Activate"}
+                      title={
+                        trainer.isActive ? "Deactivate" : "Activate"
+                      }
                       className={
                         trainer.isActive
                           ? "text-amber-600 hover:text-amber-800"
@@ -871,9 +609,9 @@ export function TrainerManager() {
                   </div>
                 </div>
 
-                {/* Expanded section: bio + course assignments */}
+                {/* ─── Expanded section ─── */}
                 {isExpanded && (
-                  <div className="mt-4 pt-4 border-t border-gray-100 space-y-4">
+                  <div className="mt-4 pt-4 border-t border-gray-100 space-y-5">
                     {/* Full bio */}
                     {trainer.bio && (
                       <div>
@@ -885,6 +623,75 @@ export function TrainerManager() {
                         </p>
                       </div>
                     )}
+
+                    {/* Professional details grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {trainer.credentials && (
+                        <div>
+                          <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                            <Award className="h-3 w-3" />
+                            Credentials / Degrees
+                          </h4>
+                          <p className="text-sm text-gray-600 whitespace-pre-line">
+                            {trainer.credentials}
+                          </p>
+                        </div>
+                      )}
+
+                      {trainer.industryExperience && (
+                        <div>
+                          <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                            <Briefcase className="h-3 w-3" />
+                            Industry Experience
+                          </h4>
+                          <p className="text-sm text-gray-600 whitespace-pre-line">
+                            {trainer.industryExperience}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Certifications */}
+                    {trainer.certifications.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">
+                          Certifications
+                        </h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {trainer.certifications.map((cert) => (
+                            <span
+                              key={cert}
+                              className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-xs"
+                            >
+                              {cert}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Years of experience */}
+                    {trainer.yearsOfExperience > 0 && (
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">
+                          Years of Experience
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          {trainer.yearsOfExperience} year
+                          {trainer.yearsOfExperience !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Portal Access Panel */}
+                    <TrainerAccessPanel
+                      trainerId={trainer.id}
+                      trainerName={trainer.name}
+                      trainerEmail={trainer.email}
+                      accessGranted={trainer.accessGranted}
+                      isActive={trainer.isActive}
+                      onUpdate={handleAccessUpdate}
+                    />
 
                     {/* Assigned courses */}
                     <div>
@@ -966,7 +773,10 @@ export function TrainerManager() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   {TRAINER_ROLES.map((r) => (
-                                    <SelectItem key={r.value} value={r.value}>
+                                    <SelectItem
+                                      key={r.value}
+                                      value={r.value}
+                                    >
                                       {r.label}
                                     </SelectItem>
                                   ))}
