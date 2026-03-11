@@ -7,6 +7,10 @@ import {
   revokeTrainerAccess,
   resetTrainerPassword,
 } from "@/lib/services/trainer-auth.service";
+import {
+  sendTrainerCredentialsEmail,
+  sendTrainerPasswordResetEmail,
+} from "@/lib/email/send-trainer-credentials";
 
 /* ------------------------------------------------------------------ */
 /*  POST — Admin: manage trainer portal access                          */
@@ -56,6 +60,16 @@ export async function POST(
     switch (action) {
       case "grant": {
         const result = await grantTrainerAccess(trainerId);
+
+        // Send credentials email to trainer (fire-and-forget)
+        sendTrainerCredentialsEmail({
+          name: trainer.name,
+          email: trainer.email,
+          temporaryPassword: result.temporaryPassword,
+        }).catch((emailErr) => {
+          console.error("[Grant Access] Failed to send email:", emailErr);
+        });
+
         return NextResponse.json({
           success: true,
           data: { temporaryPassword: result.temporaryPassword },
@@ -74,6 +88,16 @@ export async function POST(
 
       case "reset-password": {
         const result = await resetTrainerPassword(trainerId);
+
+        // Send password reset email to trainer (fire-and-forget)
+        sendTrainerPasswordResetEmail({
+          name: trainer.name,
+          email: trainer.email,
+          temporaryPassword: result.temporaryPassword,
+        }).catch((emailErr) => {
+          console.error("[Reset Password] Failed to send email:", emailErr);
+        });
+
         return NextResponse.json({
           success: true,
           data: { temporaryPassword: result.temporaryPassword },
