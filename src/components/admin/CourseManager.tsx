@@ -11,12 +11,16 @@ import {
   Users,
   FileText,
   Clock,
-  DollarSign,
   GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  SUPPORTED_CURRENCIES,
+  CURRENCY_SYMBOLS,
+  type CurrencyCode,
+} from "@/lib/validations/course.schema";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -38,6 +42,7 @@ interface Course {
   readonly description: string;
   readonly durationWeeks: number;
   readonly price: string;
+  readonly currency: string;
   readonly outcomes: ReadonlyArray<string>;
   readonly isActive: boolean;
   readonly createdAt: string;
@@ -51,6 +56,7 @@ interface FormState {
   readonly description: string;
   readonly durationWeeks: number;
   readonly price: number;
+  readonly currency: CurrencyCode;
   readonly outcomes: ReadonlyArray<string>;
   readonly isActive: boolean;
 }
@@ -71,6 +77,7 @@ const INITIAL_FORM_STATE: FormState = {
   description: "",
   durationWeeks: 8,
   price: 0,
+  currency: "PHP",
   outcomes: [""],
   isActive: true,
 };
@@ -108,6 +115,7 @@ export function CourseManager() {
     INITIAL_FORM_STATE.durationWeeks,
   );
   const [price, setPrice] = useState(INITIAL_FORM_STATE.price);
+  const [currency, setCurrency] = useState<CurrencyCode>(INITIAL_FORM_STATE.currency);
   const [outcomes, setOutcomes] = useState<ReadonlyArray<string>>(
     INITIAL_FORM_STATE.outcomes,
   );
@@ -147,6 +155,7 @@ export function CourseManager() {
     setDescription(INITIAL_FORM_STATE.description);
     setDurationWeeks(INITIAL_FORM_STATE.durationWeeks);
     setPrice(INITIAL_FORM_STATE.price);
+    setCurrency(INITIAL_FORM_STATE.currency);
     setOutcomes(INITIAL_FORM_STATE.outcomes);
     setIsActive(INITIAL_FORM_STATE.isActive);
     setEditingId(null);
@@ -164,6 +173,7 @@ export function CourseManager() {
     setDescription(course.description);
     setDurationWeeks(course.durationWeeks);
     setPrice(Number(course.price));
+    setCurrency((course.currency as CurrencyCode) || "PHP");
     setOutcomes(course.outcomes.length > 0 ? course.outcomes : [""]);
     setIsActive(course.isActive);
     setEditingId(course.id);
@@ -220,6 +230,7 @@ export function CourseManager() {
       description: description.trim(),
       durationWeeks,
       price,
+      currency,
       outcomes: trimmedOutcomes,
       isActive,
     };
@@ -418,8 +429,8 @@ export function CourseManager() {
               />
             </div>
 
-            {/* Duration, Price, Active */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Duration, Price, Currency, Active */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <Label htmlFor="c-duration">Duration (weeks) *</Label>
                 <Input
@@ -447,6 +458,21 @@ export function CourseManager() {
                   }
                   required
                 />
+              </div>
+              <div>
+                <Label htmlFor="c-currency">Currency</Label>
+                <select
+                  id="c-currency"
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  {SUPPORTED_CURRENCIES.map((c) => (
+                    <option key={c} value={c}>
+                      {CURRENCY_SYMBOLS[c]} {c}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="flex items-end">
                 <label className="flex items-center gap-2 cursor-pointer pb-2">
@@ -629,7 +655,7 @@ export function CourseManager() {
                     {course.durationWeeks}w
                   </span>
                   <span className="flex items-center gap-1">
-                    <DollarSign className="h-3.5 w-3.5" />
+                    {CURRENCY_SYMBOLS[(course.currency as CurrencyCode) || "PHP"]}
                     {Number(course.price).toLocaleString()}
                   </span>
                 </div>

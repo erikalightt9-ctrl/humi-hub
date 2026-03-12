@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+export const SUPPORTED_CURRENCIES = ["PHP", "USD", "EUR", "GBP"] as const;
+export type CurrencyCode = (typeof SUPPORTED_CURRENCIES)[number];
+
+export const CURRENCY_SYMBOLS: Readonly<Record<CurrencyCode, string>> = {
+  PHP: "₱",
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+};
+
 export const createCourseSchema = z.object({
   slug: z.enum(["MEDICAL_VA", "REAL_ESTATE_VA", "US_BOOKKEEPING_VA"], {
     message: "Slug must be MEDICAL_VA, REAL_ESTATE_VA, or US_BOOKKEEPING_VA",
@@ -19,6 +29,11 @@ export const createCourseSchema = z.object({
   price: z
     .number()
     .min(0, "Price must be 0 or greater"),
+  currency: z
+    .enum(SUPPORTED_CURRENCIES, {
+      message: "Currency must be PHP, USD, EUR, or GBP",
+    })
+    .optional(),
   outcomes: z
     .array(z.string().min(1, "Outcome cannot be empty"))
     .min(1, "At least one outcome is required"),

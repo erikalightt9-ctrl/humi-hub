@@ -1,19 +1,22 @@
 import Link from "next/link";
-import { Clock, DollarSign, ArrowRight } from "lucide-react";
+import { Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { CURRENCY_SYMBOLS, type CurrencyCode } from "@/lib/validations/course.schema";
 
 interface CourseCardProps {
   title: string;
   description: string;
   durationWeeks: number;
   price: number | string;
+  currency?: string;
   slug: string;
   href: string;
 }
 
-export function CourseCard({ title, description, durationWeeks, price, href }: CourseCardProps) {
+export function CourseCard({ title, description, durationWeeks, price, currency = "PHP", href }: CourseCardProps) {
   const priceNum = typeof price === "string" ? parseFloat(price) : price;
+  const symbol = CURRENCY_SYMBOLS[(currency as CurrencyCode)] ?? "₱";
 
   return (
     <Card className="flex flex-col h-full hover:shadow-lg transition-shadow border border-gray-200">
@@ -27,8 +30,7 @@ export function CourseCard({ title, description, durationWeeks, price, href }: C
             {durationWeeks} weeks
           </span>
           <span className="flex items-center gap-1">
-            <DollarSign className="h-4 w-4" />
-            ₱{priceNum.toLocaleString()}
+            {symbol}{priceNum.toLocaleString()}
           </span>
         </div>
       </CardHeader>

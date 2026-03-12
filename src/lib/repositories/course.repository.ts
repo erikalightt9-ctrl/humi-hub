@@ -9,6 +9,7 @@ interface CreateCourseData {
   readonly description: string;
   readonly durationWeeks: number;
   readonly price: number;
+  readonly currency?: string;
   readonly outcomes: ReadonlyArray<string>;
   readonly isActive?: boolean;
 }
@@ -19,6 +20,7 @@ interface UpdateCourseData {
   readonly description?: string;
   readonly durationWeeks?: number;
   readonly price?: number;
+  readonly currency?: string;
   readonly outcomes?: ReadonlyArray<string>;
   readonly isActive?: boolean;
 }
@@ -93,6 +95,7 @@ export async function createCourse(data: CreateCourseData): Promise<Course> {
       description: data.description,
       durationWeeks: data.durationWeeks,
       price: data.price,
+      currency: data.currency ?? "PHP",
       outcomes: [...data.outcomes],
       isActive: data.isActive ?? true,
     },
@@ -115,6 +118,7 @@ export async function updateCourse(
         durationWeeks: data.durationWeeks,
       }),
       ...(data.price !== undefined && { price: data.price }),
+      ...(data.currency !== undefined && { currency: data.currency }),
       ...(data.outcomes !== undefined && { outcomes: [...data.outcomes] }),
       ...(data.isActive !== undefined && { isActive: data.isActive }),
     },

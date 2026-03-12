@@ -127,6 +127,7 @@ model Course {
   description   String       @db.Text
   durationWeeks Int
   price         Decimal      @db.Decimal(10, 2)
+  currency      String       @default("PHP")
   outcomes      String[]
   isActive      Boolean      @default(true)
   createdAt     DateTime     @default(now())

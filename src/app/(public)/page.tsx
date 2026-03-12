@@ -50,6 +50,7 @@ export default async function HomePage() {
                 description={course.description}
                 durationWeeks={course.durationWeeks}
                 price={course.price.toString()}
+                currency={course.currency}
                 slug={course.slug}
                 href={courseHrefs[course.slug] ?? "/programs"}
               />

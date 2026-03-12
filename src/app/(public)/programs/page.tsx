@@ -47,6 +47,7 @@ export default async function ProgramsPage() {
                 description={course.description}
                 durationWeeks={course.durationWeeks}
                 price={course.price.toString()}
+                currency={course.currency}
                 slug={course.slug}
                 href={courseHrefs[course.slug] ?? "/programs"}
               />
