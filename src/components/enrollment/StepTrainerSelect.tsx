@@ -2,7 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { Star, UserCog, Award, Users, Loader2, CheckCircle } from "lucide-react";
+import {
+  Star,
+  UserCog,
+  Award,
+  Users,
+  Loader2,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  Briefcase,
+  BadgeCheck,
+} from "lucide-react";
 import type { EnrollmentFormData } from "@/lib/validations/enrollment.schema";
 
 /* ------------------------------------------------------------------ */
@@ -20,6 +31,7 @@ interface PublicTrainer {
   readonly specializations: ReadonlyArray<string>;
   readonly credentials: string | null;
   readonly certifications: ReadonlyArray<string>;
+  readonly industryExperience: string | null;
   readonly yearsOfExperience: number;
   readonly averageRating: string | number | null;
   readonly totalRatings: number;
@@ -88,120 +100,258 @@ const TIER_CONFIG: Readonly<
 function TrainerCard({
   trainer,
   isSelected,
+  isExpanded,
   onSelect,
+  onToggleExpand,
 }: {
   readonly trainer: PublicTrainer;
   readonly isSelected: boolean;
+  readonly isExpanded: boolean;
   readonly onSelect: () => void;
+  readonly onToggleExpand: () => void;
 }) {
   const config = TIER_CONFIG[trainer.tier];
   const numRating = trainer.averageRating ? Number(trainer.averageRating) : 0;
 
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`relative w-full text-left rounded-xl border-2 p-4 transition-all hover:shadow-md ${
+    <div
+      className={`relative w-full text-left rounded-xl border-2 transition-all hover:shadow-md ${
         isSelected
           ? `${config.border} ring-2 ${config.ring} shadow-md`
           : "border-gray-200 hover:border-gray-300"
       }`}
     >
-      {/* Selected indicator */}
-      {isSelected && (
-        <div className="absolute top-3 right-3">
-          <CheckCircle className="h-5 w-5 text-green-600" />
-        </div>
-      )}
-
-      <div className="flex items-start gap-3">
-        {/* Photo */}
-        {trainer.photoUrl ? (
-          <img
-            src={trainer.photoUrl}
-            alt={trainer.name}
-            className="h-14 w-14 rounded-full object-cover border-2 border-gray-200 shrink-0"
-          />
-        ) : (
-          <div className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center shrink-0 border-2 border-gray-200">
-            <UserCog className="h-6 w-6 text-blue-400" />
+      {/* Main card — click to select */}
+      <button type="button" onClick={onSelect} className="w-full text-left p-4">
+        {/* Selected indicator */}
+        {isSelected && (
+          <div className="absolute top-3 right-3">
+            <CheckCircle className="h-5 w-5 text-green-600" />
           </div>
         )}
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className="font-semibold text-gray-900 text-sm">
-              {trainer.name}
-            </span>
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.bg} ${config.text}`}
-            >
-              {config.label}
-            </span>
-          </div>
-
-          {/* Stats row */}
-          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-2">
-            {trainer.totalRatings > 0 && (
-              <span className="inline-flex items-center gap-0.5">
-                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                {numRating.toFixed(1)} ({trainer.totalRatings})
-              </span>
-            )}
-            {trainer.yearsOfExperience > 0 && (
-              <span className="inline-flex items-center gap-0.5">
-                <Award className="h-3 w-3" />
-                {trainer.yearsOfExperience}yr exp.
-              </span>
-            )}
-            {trainer.studentsTrainedCount > 0 && (
-              <span className="inline-flex items-center gap-0.5">
-                <Users className="h-3 w-3" />
-                {trainer.studentsTrainedCount} students
-              </span>
-            )}
-          </div>
-
-          {/* Bio */}
-          {trainer.bio && (
-            <p className="text-xs text-gray-500 line-clamp-2 mb-2">
-              {trainer.bio}
-            </p>
+        <div className="flex items-start gap-3">
+          {/* Photo */}
+          {trainer.photoUrl ? (
+            <img
+              src={trainer.photoUrl}
+              alt={trainer.name}
+              className="h-14 w-14 rounded-full object-cover border-2 border-gray-200 shrink-0"
+            />
+          ) : (
+            <div className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center shrink-0 border-2 border-gray-200">
+              <UserCog className="h-6 w-6 text-blue-400" />
+            </div>
           )}
 
-          {/* Specializations */}
-          {trainer.specializations.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {trainer.specializations.slice(0, 3).map((spec) => (
-                <span
-                  key={spec}
-                  className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px]"
-                >
-                  {spec}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="font-semibold text-gray-900 text-sm">
+                {trainer.name}
+              </span>
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.bg} ${config.text}`}
+              >
+                {config.label}
+              </span>
+            </div>
+
+            {/* Stats row */}
+            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-2">
+              {trainer.totalRatings > 0 && (
+                <span className="inline-flex items-center gap-0.5">
+                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                  {numRating.toFixed(1)} ({trainer.totalRatings})
                 </span>
-              ))}
-              {trainer.specializations.length > 3 && (
-                <span className="text-[10px] text-gray-400">
-                  +{trainer.specializations.length - 3} more
+              )}
+              {trainer.yearsOfExperience > 0 && (
+                <span className="inline-flex items-center gap-0.5">
+                  <Award className="h-3 w-3" />
+                  {trainer.yearsOfExperience}yr exp.
+                </span>
+              )}
+              {trainer.studentsTrainedCount > 0 && (
+                <span className="inline-flex items-center gap-0.5">
+                  <Users className="h-3 w-3" />
+                  {trainer.studentsTrainedCount} students
                 </span>
               )}
             </div>
-          )}
-        </div>
 
-        {/* Price */}
-        <div className="text-right shrink-0">
-          <p className="text-lg font-bold text-gray-900">
-            ₱{config.totalPrice.toLocaleString()}
-          </p>
-          {config.upgradeFee > 0 && (
-            <p className="text-[10px] text-gray-400">
-              ₱1,500 + ₱{config.upgradeFee.toLocaleString()}
+            {/* Bio preview (collapsed) */}
+            {!isExpanded && trainer.bio && (
+              <p className="text-xs text-gray-500 line-clamp-2 mb-2">
+                {trainer.bio}
+              </p>
+            )}
+
+            {/* Specializations preview (collapsed) */}
+            {!isExpanded && trainer.specializations.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {trainer.specializations.slice(0, 3).map((spec) => (
+                  <span
+                    key={spec}
+                    className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px]"
+                  >
+                    {spec}
+                  </span>
+                ))}
+                {trainer.specializations.length > 3 && (
+                  <span className="text-[10px] text-gray-400">
+                    +{trainer.specializations.length - 3} more
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Price */}
+          <div className="text-right shrink-0">
+            <p className="text-lg font-bold text-gray-900">
+              ₱{config.totalPrice.toLocaleString()}
             </p>
-          )}
+            {config.upgradeFee > 0 && (
+              <p className="text-[10px] text-gray-400">
+                ₱1,500 + ₱{config.upgradeFee.toLocaleString()}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
-    </button>
+      </button>
+
+      {/* View Profile toggle */}
+      <button
+        type="button"
+        onClick={onToggleExpand}
+        className="w-full flex items-center justify-center gap-1 py-2 text-xs font-medium text-blue-600 hover:text-blue-800 border-t border-gray-100 transition-colors"
+      >
+        {isExpanded ? (
+          <>
+            <ChevronUp className="h-3.5 w-3.5" />
+            Hide Profile
+          </>
+        ) : (
+          <>
+            <ChevronDown className="h-3.5 w-3.5" />
+            View Full Profile
+          </>
+        )}
+      </button>
+
+      {/* Expanded profile details */}
+      {isExpanded && (
+        <div className="px-4 pb-4 space-y-4 border-t border-gray-100">
+          {/* Full bio */}
+          {trainer.bio && (
+            <div className="pt-3">
+              <h4 className="text-xs font-semibold text-gray-700 mb-1">About</h4>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {trainer.bio}
+              </p>
+            </div>
+          )}
+
+          {/* Credentials */}
+          {trainer.credentials && (
+            <div>
+              <h4 className="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                <BadgeCheck className="h-3.5 w-3.5 text-blue-500" />
+                Credentials
+              </h4>
+              <p className="text-sm text-gray-600">{trainer.credentials}</p>
+            </div>
+          )}
+
+          {/* Industry Experience */}
+          {trainer.industryExperience && (
+            <div>
+              <h4 className="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                <Briefcase className="h-3.5 w-3.5 text-green-500" />
+                Industry Experience
+              </h4>
+              <p className="text-sm text-gray-600">
+                {trainer.industryExperience}
+              </p>
+            </div>
+          )}
+
+          {/* All specializations */}
+          {trainer.specializations.length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold text-gray-700 mb-1.5">
+                Specializations
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {trainer.specializations.map((spec) => (
+                  <span
+                    key={spec}
+                    className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs"
+                  >
+                    {spec}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Certifications */}
+          {trainer.certifications.length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1">
+                <Award className="h-3.5 w-3.5 text-amber-500" />
+                Certifications
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {trainer.certifications.map((cert) => (
+                  <span
+                    key={cert}
+                    className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-xs"
+                  >
+                    {cert}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Pricing breakdown */}
+          <div className={`rounded-lg p-3 ${config.bg}`}>
+            <h4 className={`text-xs font-semibold ${config.text} mb-2`}>
+              Pricing Breakdown
+            </h4>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between text-gray-600">
+                <span>Base Program Fee</span>
+                <span>₱1,500</span>
+              </div>
+              {config.upgradeFee > 0 && (
+                <div className="flex justify-between text-gray-600">
+                  <span>{config.label} Tier Upgrade</span>
+                  <span>₱{config.upgradeFee.toLocaleString()}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-gray-900 pt-1 border-t border-gray-200">
+                <span>Total</span>
+                <span>₱{config.totalPrice.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Select button inside expanded view */}
+          <button
+            type="button"
+            onClick={onSelect}
+            className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+              isSelected
+                ? "bg-green-600 text-white"
+                : "bg-blue-600 text-white hover:bg-blue-700"
+            }`}
+          >
+            {isSelected ? "✓ Selected" : `Select ${trainer.name}`}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -260,6 +410,7 @@ function AutoAssignCard({
 export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
   const [trainers, setTrainers] = useState<ReadonlyArray<PublicTrainer>>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedTrainerId, setExpandedTrainerId] = useState<string | null>(null);
 
   const selectedTrainerId = form.watch("trainerId");
 
@@ -284,6 +435,10 @@ export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
     form.setValue("trainerId", trainerId ?? undefined, {
       shouldDirty: true,
     });
+  }
+
+  function handleToggleExpand(trainerId: string) {
+    setExpandedTrainerId((prev) => (prev === trainerId ? null : trainerId));
   }
 
   // Group trainers by tier
@@ -342,7 +497,9 @@ export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
                 key={t.id}
                 trainer={t}
                 isSelected={selectedTrainerId === t.id}
+                isExpanded={expandedTrainerId === t.id}
                 onSelect={() => handleSelectTrainer(t.id)}
+                onToggleExpand={() => handleToggleExpand(t.id)}
               />
             ))}
           </div>
@@ -361,7 +518,9 @@ export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
                 key={t.id}
                 trainer={t}
                 isSelected={selectedTrainerId === t.id}
+                isExpanded={expandedTrainerId === t.id}
                 onSelect={() => handleSelectTrainer(t.id)}
+                onToggleExpand={() => handleToggleExpand(t.id)}
               />
             ))}
           </div>
@@ -380,7 +539,9 @@ export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
                 key={t.id}
                 trainer={t}
                 isSelected={selectedTrainerId === t.id}
+                isExpanded={expandedTrainerId === t.id}
                 onSelect={() => handleSelectTrainer(t.id)}
+                onToggleExpand={() => handleToggleExpand(t.id)}
               />
             ))}
           </div>
