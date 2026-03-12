@@ -9,6 +9,7 @@ import type { Decimal } from "@prisma/client/runtime/client";
 
 export type ScheduleWithCourse = Schedule & {
   course: { id: string; slug: string; title: string; price: Decimal };
+  trainer: { id: string; name: string; tier: string } | null;
   _count: { students: number };
 };
 
@@ -42,6 +43,7 @@ export interface ScheduleOption {
   readonly daysOfWeek: number[];
   readonly maxCapacity: number;
   readonly enrolledCount: number;
+  readonly trainerName: string | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -67,6 +69,7 @@ export async function listSchedules(
       where,
       include: {
         course: { select: { id: true, slug: true, title: true, price: true } },
+        trainer: { select: { id: true, name: true, tier: true } },
         _count: { select: { students: true } },
       },
       orderBy: { startDate: "desc" },
@@ -117,6 +120,7 @@ export async function findScheduleById(id: string): Promise<ScheduleDetail | nul
 interface CreateScheduleData {
   readonly name: string;
   readonly courseId: string;
+  readonly trainerId?: string | null;
   readonly startDate: string;
   readonly endDate: string;
   readonly daysOfWeek: number[];
@@ -131,6 +135,7 @@ export async function createSchedule(data: CreateScheduleData): Promise<Schedule
     data: {
       name: data.name,
       courseId: data.courseId,
+      trainerId: data.trainerId ?? null,
       startDate: new Date(data.startDate),
       endDate: new Date(data.endDate),
       daysOfWeek: data.daysOfWeek,
@@ -149,6 +154,7 @@ export async function createSchedule(data: CreateScheduleData): Promise<Schedule
 interface UpdateScheduleData {
   readonly name?: string;
   readonly courseId?: string;
+  readonly trainerId?: string | null;
   readonly startDate?: string;
   readonly endDate?: string;
   readonly daysOfWeek?: number[];
@@ -167,6 +173,11 @@ export async function updateSchedule(
 
   if (data.name !== undefined) updateData.name = data.name;
   if (data.courseId !== undefined) updateData.course = { connect: { id: data.courseId } };
+  if (data.trainerId !== undefined) {
+    updateData.trainer = data.trainerId
+      ? { connect: { id: data.trainerId } }
+      : { disconnect: true };
+  }
   if (data.startDate !== undefined) updateData.startDate = new Date(data.startDate);
   if (data.endDate !== undefined) updateData.endDate = new Date(data.endDate);
   if (data.daysOfWeek !== undefined) updateData.daysOfWeek = data.daysOfWeek;
@@ -250,7 +261,10 @@ export async function listOpenSchedulesByCourse(
       // Cut-off check: only show if startDate is still in the future
       // The cut-off days check is done in application code below
     },
-    include: { _count: { select: { students: true } } },
+    include: {
+      trainer: { select: { name: true } },
+      _count: { select: { enrollments: true } },
+    },
     orderBy: { startDate: "asc" },
   });
 
@@ -271,7 +285,8 @@ export async function listOpenSchedulesByCourse(
       endTime: s.endTime,
       daysOfWeek: s.daysOfWeek,
       maxCapacity: s.maxCapacity,
-      enrolledCount: s._count.students,
+      enrolledCount: s._count.enrollments,
+      trainerName: s.trainer?.name ?? null,
     }));
 }
 
@@ -307,6 +322,7 @@ export async function getUpcomingSchedules(limit = 5): Promise<ReadonlyArray<Sch
     },
     include: {
       course: { select: { id: true, slug: true, title: true, price: true } },
+      trainer: { select: { id: true, name: true, tier: true } },
       _count: { select: { students: true } },
     },
     orderBy: { startDate: "asc" },

@@ -20,6 +20,16 @@ interface PublicTrainer {
   readonly photoUrl: string | null;
 }
 
+interface ScheduleInfo {
+  readonly id: string;
+  readonly name: string;
+  readonly startDate: string;
+  readonly endDate: string;
+  readonly startTime: string;
+  readonly endTime: string;
+  readonly daysOfWeek: ReadonlyArray<number>;
+}
+
 interface StepReviewProps {
   form: UseFormReturn<EnrollmentFormData>;
   courses: Pick<Course, "id" | "title">[];
@@ -63,6 +73,8 @@ export function StepReview({ form, courses }: StepReviewProps) {
   const course = courses.find((c) => c.id === data.courseId);
   const [trainerName, setTrainerName] = useState<string | null>(null);
   const [trainerTier, setTrainerTier] = useState<TierValue>("BASIC");
+  const [scheduleName, setScheduleName] = useState<string | null>(null);
+  const [scheduleInfo, setScheduleInfo] = useState<ScheduleInfo | null>(null);
 
   // Fetch trainer name if one was selected
   useEffect(() => {
@@ -91,6 +103,34 @@ export function StepReview({ form, courses }: StepReviewProps) {
     }
     fetchTrainer();
   }, [data.trainerId]);
+
+  // Fetch schedule info if one was selected
+  useEffect(() => {
+    if (!data.scheduleId || !data.courseId) {
+      setScheduleName(null);
+      setScheduleInfo(null);
+      return;
+    }
+
+    async function fetchSchedule() {
+      try {
+        const res = await fetch(`/api/public/schedules?courseId=${data.courseId}`);
+        const json = await res.json();
+        if (json.success) {
+          const found = (json.data as ReadonlyArray<ScheduleInfo>).find(
+            (s) => s.id === data.scheduleId,
+          );
+          if (found) {
+            setScheduleName(found.name);
+            setScheduleInfo(found);
+          }
+        }
+      } catch {
+        /* silent */
+      }
+    }
+    fetchSchedule();
+  }, [data.scheduleId, data.courseId]);
 
   const pricing = TIER_PRICES[trainerTier];
 
@@ -148,6 +188,31 @@ export function StepReview({ form, courses }: StepReviewProps) {
               </span>
             }
           />
+        </dl>
+      </div>
+
+      {/* Schedule */}
+      <div className="bg-gray-50 rounded-xl p-5">
+        <h3 className="font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wide">
+          Training Schedule
+        </h3>
+        <dl>
+          <ReviewRow
+            label="Session"
+            value={scheduleName ?? "To be assigned after enrollment"}
+          />
+          {scheduleInfo && (
+            <>
+              <ReviewRow
+                label="Dates"
+                value={`${new Date(scheduleInfo.startDate).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })} — ${new Date(scheduleInfo.endDate).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}`}
+              />
+              <ReviewRow
+                label="Time"
+                value={`${scheduleInfo.startTime} – ${scheduleInfo.endTime}`}
+              />
+            </>
+          )}
         </dl>
       </div>
 

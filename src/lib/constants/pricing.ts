@@ -24,6 +24,13 @@ export const TRAINER_TIER_LABELS: Readonly<Record<TrainerTier, string>> = {
   PREMIUM: "Premium Trainer",
 } as const;
 
+/** Max session capacity per trainer tier */
+export const TIER_MAX_CAPACITY: Readonly<Record<TrainerTier, number>> = {
+  BASIC: 15,
+  PROFESSIONAL: 20,
+  PREMIUM: 25,
+} as const;
+
 /** Tier badge colors for UI */
 export const TRAINER_TIER_COLORS: Readonly<
   Record<TrainerTier, { readonly bg: string; readonly text: string; readonly border: string }>

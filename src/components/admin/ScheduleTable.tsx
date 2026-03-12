@@ -78,8 +78,9 @@ export function ScheduleTable({ schedules, onEdit }: ScheduleTableProps) {
       <Table>
         <TableHeader className="bg-gray-50">
           <TableRow>
-            <TableHead className="w-[220px]">Name</TableHead>
+            <TableHead className="w-[200px]">Name</TableHead>
             <TableHead>Program</TableHead>
+            <TableHead>Trainer</TableHead>
             <TableHead>Dates</TableHead>
             <TableHead>Days</TableHead>
             <TableHead>Time</TableHead>
@@ -100,6 +101,9 @@ export function ScheduleTable({ schedules, onEdit }: ScheduleTableProps) {
                 </TableCell>
                 <TableCell className="text-gray-600 text-sm">
                   {s.course.title}
+                </TableCell>
+                <TableCell className="text-gray-600 text-sm">
+                  {s.trainer?.name ?? <span className="text-gray-400 italic">Unassigned</span>}
                 </TableCell>
                 <TableCell className="text-gray-600 text-sm">
                   {formatDateRange(s.startDate, s.endDate)}

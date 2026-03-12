@@ -4,6 +4,7 @@ import {
   createEnrollment,
   countEnrollmentsByEmail,
 } from "@/lib/repositories/enrollment.repository";
+import { addToWaitlist } from "@/lib/repositories/waitlist.repository";
 import {
   sendEnrollmentConfirmationWithPayment,
   sendNewEnrollmentAdminNotification,
@@ -42,7 +43,7 @@ export async function recordRateLimitAttempt(ip: string): Promise<void> {
 const MAX_ENROLLMENTS_PER_EMAIL = 5;
 
 export type EnrollmentResult =
-  | { success: true; enrollment: Enrollment }
+  | { success: true; enrollment: Enrollment; waitlisted?: boolean }
   | { success: false; code: "EMAIL_LIMIT_REACHED" | "RATE_LIMITED" | "VALIDATION_ERROR"; message: string };
 
 export async function processEnrollment(
@@ -101,6 +102,24 @@ export async function processEnrollment(
 
   const pricing = calculateEnrollmentPrice(trainerTier);
 
+  // Validate schedule if selected
+  let resolvedScheduleId: string | null = null;
+  let scheduleFull = false;
+  if (sanitized.scheduleId) {
+    const schedule = await prisma.schedule.findUnique({
+      where: { id: sanitized.scheduleId },
+      include: { _count: { select: { enrollments: true } } },
+    });
+    if (schedule && (schedule.status === "OPEN" || schedule.status === "FULL")) {
+      if (schedule._count.enrollments < schedule.maxCapacity) {
+        resolvedScheduleId = schedule.id;
+      } else {
+        scheduleFull = true;
+        resolvedScheduleId = schedule.id;
+      }
+    }
+  }
+
   // Create enrollment
   const enrollment = await createEnrollment({
     ...sanitized,
@@ -109,7 +128,15 @@ export async function processEnrollment(
     trainerTier,
     baseProgramPrice: pricing.baseProgramPrice,
     trainerUpgradeFee: pricing.trainerUpgradeFee,
+    scheduleId: resolvedScheduleId,
   });
+
+  // If schedule is full, add to waitlist
+  let waitlisted = false;
+  if (scheduleFull && resolvedScheduleId) {
+    await addToWaitlist(resolvedScheduleId, enrollment.id);
+    waitlisted = true;
+  }
 
   // Fetch course title for the confirmation email
   const course = await prisma.course.findUnique({
@@ -146,7 +173,7 @@ export async function processEnrollment(
     }
   }
 
-  return { success: true, enrollment };
+  return { success: true, enrollment, waitlisted };
 }
 
 async function notifyAdminsOfNewEnrollment(enrollment: Enrollment): Promise<void> {

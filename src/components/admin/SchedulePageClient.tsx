@@ -31,6 +31,7 @@ function toDialogSchedule(s: ScheduleWithCourse) {
     id: s.id,
     name: s.name,
     courseId: s.courseId,
+    trainerId: s.trainerId ?? "",
     startDate: new Date(s.startDate).toISOString(),
     endDate: new Date(s.endDate).toISOString(),
     daysOfWeek: s.daysOfWeek,

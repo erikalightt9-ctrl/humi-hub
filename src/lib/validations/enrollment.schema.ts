@@ -62,6 +62,7 @@ export const enrollmentSchema = z.object({
     .max(2000, "Response is too long"),
   courseId: z.string().cuid("Invalid course selection"),
   trainerId: z.string().cuid("Invalid trainer selection").optional().nullable(),
+  scheduleId: z.string().cuid("Invalid schedule selection").optional().nullable(),
 });
 
 export type EnrollmentFormData = z.infer<typeof enrollmentSchema>;

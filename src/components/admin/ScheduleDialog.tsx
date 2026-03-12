@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { TIER_MAX_CAPACITY, TRAINER_TIER_LABELS } from "@/lib/constants/pricing";
+import type { TrainerTier } from "@prisma/client";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -22,10 +24,17 @@ interface Course {
   readonly title: string;
 }
 
+interface TrainerOption {
+  readonly id: string;
+  readonly name: string;
+  readonly tier: TrainerTier;
+}
+
 interface ScheduleItem {
   readonly id: string;
   readonly name: string;
   readonly courseId: string;
+  readonly trainerId?: string;
   readonly startDate: string;
   readonly endDate: string;
   readonly daysOfWeek: number[];
@@ -65,6 +74,12 @@ const DAY_OPTIONS = [
   { value: 0, label: "Sun" },
 ] as const;
 
+const TIER_BADGE_CLASSES: Readonly<Record<TrainerTier, string>> = {
+  BASIC: "bg-gray-100 text-gray-700",
+  PROFESSIONAL: "bg-blue-100 text-blue-700",
+  PREMIUM: "bg-amber-100 text-amber-700",
+};
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -80,9 +95,14 @@ export function ScheduleDialog({
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  // Trainer list
+  const [trainers, setTrainers] = React.useState<ReadonlyArray<TrainerOption>>([]);
+  const [trainersLoading, setTrainersLoading] = React.useState(false);
+
   // Form state
   const [name, setName] = React.useState("");
   const [courseId, setCourseId] = React.useState("");
+  const [trainerId, setTrainerId] = React.useState("");
   const [startDate, setStartDate] = React.useState("");
   const [endDate, setEndDate] = React.useState("");
   const [daysOfWeek, setDaysOfWeek] = React.useState<number[]>([]);
@@ -90,12 +110,37 @@ export function ScheduleDialog({
   const [endTime, setEndTime] = React.useState("11:30");
   const [maxCapacity, setMaxCapacity] = React.useState(25);
   const [cutOffDays, setCutOffDays] = React.useState(2);
+  const [capacityManuallySet, setCapacityManuallySet] = React.useState(false);
+
+  // Fetch trainers on mount
+  React.useEffect(() => {
+    async function fetchTrainers() {
+      setTrainersLoading(true);
+      try {
+        const res = await fetch("/api/public/trainers");
+        const json = await res.json();
+        if (json.success) {
+          setTrainers(
+            (json.data as ReadonlyArray<{ id: string; name: string; tier: TrainerTier }>).map(
+              (t) => ({ id: t.id, name: t.name, tier: t.tier })
+            )
+          );
+        }
+      } catch {
+        /* silent */
+      } finally {
+        setTrainersLoading(false);
+      }
+    }
+    if (open) fetchTrainers();
+  }, [open]);
 
   // Populate form when editing
   React.useEffect(() => {
     if (schedule) {
       setName(schedule.name);
       setCourseId(schedule.courseId);
+      setTrainerId(schedule.trainerId ?? "");
       setStartDate(schedule.startDate.slice(0, 10));
       setEndDate(schedule.endDate.slice(0, 10));
       setDaysOfWeek([...schedule.daysOfWeek]);
@@ -103,9 +148,11 @@ export function ScheduleDialog({
       setEndTime(schedule.endTime);
       setMaxCapacity(schedule.maxCapacity);
       setCutOffDays(schedule.enrollmentCutOffDays);
+      setCapacityManuallySet(true);
     } else {
       setName("");
       setCourseId("");
+      setTrainerId("");
       setStartDate("");
       setEndDate("");
       setDaysOfWeek([]);
@@ -113,9 +160,28 @@ export function ScheduleDialog({
       setEndTime("11:30");
       setMaxCapacity(25);
       setCutOffDays(2);
+      setCapacityManuallySet(false);
     }
     setError(null);
   }, [schedule, open]);
+
+  function handleTrainerChange(newTrainerId: string) {
+    setTrainerId(newTrainerId);
+
+    if (!capacityManuallySet && newTrainerId) {
+      const selected = trainers.find((t) => t.id === newTrainerId);
+      if (selected) {
+        setMaxCapacity(TIER_MAX_CAPACITY[selected.tier]);
+      }
+    }
+  }
+
+  function handleCapacityChange(value: number) {
+    setMaxCapacity(value);
+    setCapacityManuallySet(true);
+  }
+
+  const selectedTrainer = trainers.find((t) => t.id === trainerId);
 
   function toggleDay(day: number) {
     setDaysOfWeek((prev) =>
@@ -137,6 +203,7 @@ export function ScheduleDialog({
     const body = {
       name: name.trim(),
       courseId,
+      trainerId: trainerId || null,
       startDate,
       endDate,
       daysOfWeek,
@@ -246,6 +313,33 @@ export function ScheduleDialog({
             </select>
           </div>
 
+          {/* Trainer */}
+          <div>
+            <Label htmlFor="sched-trainer">Assigned Trainer</Label>
+            <select
+              id="sched-trainer"
+              value={trainerId}
+              onChange={(e) => handleTrainerChange(e.target.value)}
+              disabled={trainersLoading}
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="">No trainer assigned</option>
+              {trainers.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} ({TRAINER_TIER_LABELS[t.tier]})
+                </option>
+              ))}
+            </select>
+            {selectedTrainer && (
+              <p className="text-xs mt-1 text-gray-500">
+                <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${TIER_BADGE_CLASSES[selectedTrainer.tier]}`}>
+                  {TRAINER_TIER_LABELS[selectedTrainer.tier]}
+                </span>
+                {" "}— Recommended capacity: {TIER_MAX_CAPACITY[selectedTrainer.tier]} students
+              </p>
+            )}
+          </div>
+
           {/* Dates */}
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -342,7 +436,7 @@ export function ScheduleDialog({
                 min={1}
                 max={100}
                 value={maxCapacity}
-                onChange={(e) => setMaxCapacity(parseInt(e.target.value, 10) || 25)}
+                onChange={(e) => handleCapacityChange(parseInt(e.target.value, 10) || 25)}
               />
             </div>
             <div>

@@ -6,6 +6,7 @@ export const createScheduleSchema = z
   .object({
     name: z.string().min(1, "Name is required").max(200),
     courseId: z.string().min(1, "Course is required"),
+    trainerId: z.string().min(1).optional().nullable(),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
     daysOfWeek: z
@@ -29,6 +30,7 @@ export const updateScheduleSchema = z
   .object({
     name: z.string().min(1).max(200).optional(),
     courseId: z.string().min(1).optional(),
+    trainerId: z.string().min(1).optional().nullable(),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     daysOfWeek: z
