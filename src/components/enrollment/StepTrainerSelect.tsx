@@ -115,135 +115,101 @@ function TrainerCard({
 
   return (
     <div
-      className={`relative w-full text-left rounded-xl border-2 transition-all hover:shadow-md ${
+      className={`relative w-full text-left rounded-xl border-2 transition-all ${
         isSelected
           ? `${config.border} ring-2 ${config.ring} shadow-md`
           : "border-gray-200 hover:border-gray-300"
       }`}
     >
-      {/* Main card — click to select */}
-      <button type="button" onClick={onSelect} className="w-full text-left p-4">
+      {/* Compact row — photo, name, tier, price. Click name to expand. */}
+      <div className="flex items-center gap-3 p-4">
+        {/* Photo */}
+        {trainer.photoUrl ? (
+          <img
+            src={trainer.photoUrl}
+            alt={trainer.name}
+            className="h-12 w-12 rounded-full object-cover border-2 border-gray-200 shrink-0"
+          />
+        ) : (
+          <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0 border-2 border-gray-200">
+            <UserCog className="h-5 w-5 text-blue-400" />
+          </div>
+        )}
+
+        {/* Name + tier — clickable to expand */}
+        <button
+          type="button"
+          onClick={onToggleExpand}
+          className="flex-1 min-w-0 text-left group"
+        >
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors">
+              {trainer.name}
+            </span>
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.bg} ${config.text}`}
+            >
+              {config.label}
+            </span>
+            {isExpanded ? (
+              <ChevronUp className="h-3.5 w-3.5 text-gray-400" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+            )}
+          </div>
+          {!isExpanded && (
+            <p className="text-[11px] text-blue-500 mt-0.5">
+              Tap to view profile
+            </p>
+          )}
+        </button>
+
+        {/* Price */}
+        <div className="text-right shrink-0">
+          <p className="text-lg font-bold text-gray-900">
+            ₱{config.totalPrice.toLocaleString()}
+          </p>
+          {config.upgradeFee > 0 && (
+            <p className="text-[10px] text-gray-400">
+              ₱1,500 + ₱{config.upgradeFee.toLocaleString()}
+            </p>
+          )}
+        </div>
+
         {/* Selected indicator */}
         {isSelected && (
-          <div className="absolute top-3 right-3">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-          </div>
+          <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
         )}
-
-        <div className="flex items-start gap-3">
-          {/* Photo */}
-          {trainer.photoUrl ? (
-            <img
-              src={trainer.photoUrl}
-              alt={trainer.name}
-              className="h-14 w-14 rounded-full object-cover border-2 border-gray-200 shrink-0"
-            />
-          ) : (
-            <div className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center shrink-0 border-2 border-gray-200">
-              <UserCog className="h-6 w-6 text-blue-400" />
-            </div>
-          )}
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <span className="font-semibold text-gray-900 text-sm">
-                {trainer.name}
-              </span>
-              <span
-                className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.bg} ${config.text}`}
-              >
-                {config.label}
-              </span>
-            </div>
-
-            {/* Stats row */}
-            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-2">
-              {trainer.totalRatings > 0 && (
-                <span className="inline-flex items-center gap-0.5">
-                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                  {numRating.toFixed(1)} ({trainer.totalRatings})
-                </span>
-              )}
-              {trainer.yearsOfExperience > 0 && (
-                <span className="inline-flex items-center gap-0.5">
-                  <Award className="h-3 w-3" />
-                  {trainer.yearsOfExperience}yr exp.
-                </span>
-              )}
-              {trainer.studentsTrainedCount > 0 && (
-                <span className="inline-flex items-center gap-0.5">
-                  <Users className="h-3 w-3" />
-                  {trainer.studentsTrainedCount} students
-                </span>
-              )}
-            </div>
-
-            {/* Bio preview (collapsed) */}
-            {!isExpanded && trainer.bio && (
-              <p className="text-xs text-gray-500 line-clamp-2 mb-2">
-                {trainer.bio}
-              </p>
-            )}
-
-            {/* Specializations preview (collapsed) */}
-            {!isExpanded && trainer.specializations.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {trainer.specializations.slice(0, 3).map((spec) => (
-                  <span
-                    key={spec}
-                    className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px]"
-                  >
-                    {spec}
-                  </span>
-                ))}
-                {trainer.specializations.length > 3 && (
-                  <span className="text-[10px] text-gray-400">
-                    +{trainer.specializations.length - 3} more
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Price */}
-          <div className="text-right shrink-0">
-            <p className="text-lg font-bold text-gray-900">
-              ₱{config.totalPrice.toLocaleString()}
-            </p>
-            {config.upgradeFee > 0 && (
-              <p className="text-[10px] text-gray-400">
-                ₱1,500 + ₱{config.upgradeFee.toLocaleString()}
-              </p>
-            )}
-          </div>
-        </div>
-      </button>
-
-      {/* View Profile toggle */}
-      <button
-        type="button"
-        onClick={onToggleExpand}
-        className="w-full flex items-center justify-center gap-1 py-2 text-xs font-medium text-blue-600 hover:text-blue-800 border-t border-gray-100 transition-colors"
-      >
-        {isExpanded ? (
-          <>
-            <ChevronUp className="h-3.5 w-3.5" />
-            Hide Profile
-          </>
-        ) : (
-          <>
-            <ChevronDown className="h-3.5 w-3.5" />
-            View Full Profile
-          </>
-        )}
-      </button>
+      </div>
 
       {/* Expanded profile details */}
       {isExpanded && (
         <div className="px-4 pb-4 space-y-4 border-t border-gray-100">
+          {/* Stats row */}
+          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 pt-3">
+            {trainer.totalRatings > 0 && (
+              <span className="inline-flex items-center gap-0.5">
+                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                {numRating.toFixed(1)} ({trainer.totalRatings})
+              </span>
+            )}
+            {trainer.yearsOfExperience > 0 && (
+              <span className="inline-flex items-center gap-0.5">
+                <Award className="h-3 w-3" />
+                {trainer.yearsOfExperience}yr exp.
+              </span>
+            )}
+            {trainer.studentsTrainedCount > 0 && (
+              <span className="inline-flex items-center gap-0.5">
+                <Users className="h-3 w-3" />
+                {trainer.studentsTrainedCount} students
+              </span>
+            )}
+          </div>
+
           {/* Full bio */}
           {trainer.bio && (
-            <div className="pt-3">
+            <div>
               <h4 className="text-xs font-semibold text-gray-700 mb-1">About</h4>
               <p className="text-sm text-gray-600 leading-relaxed">
                 {trainer.bio}
@@ -337,7 +303,7 @@ function TrainerCard({
             </div>
           </div>
 
-          {/* Select button inside expanded view */}
+          {/* Select button */}
           <button
             type="button"
             onClick={onSelect}
@@ -347,7 +313,7 @@ function TrainerCard({
                 : "bg-blue-600 text-white hover:bg-blue-700"
             }`}
           >
-            {isSelected ? "✓ Selected" : `Select ${trainer.name}`}
+            {isSelected ? "Selected" : `Select ${trainer.name}`}
           </button>
         </div>
       )}
