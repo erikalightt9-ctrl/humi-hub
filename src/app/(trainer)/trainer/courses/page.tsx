@@ -14,7 +14,7 @@ import { authOptions } from "@/lib/auth";
 import { getTrainerCourses } from "@/lib/repositories/trainer.repository";
 
 export const metadata: Metadata = {
-  title: "My Courses | HUMI+ Trainer Portal",
+  title: "My Courses | HUMI Trainer Portal",
 };
 export const dynamic = "force-dynamic";
 

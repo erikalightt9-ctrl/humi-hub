@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { BookOpen } from "lucide-react";
 
-export const metadata: Metadata = { title: "Materials | HUMI+ Trainer Portal" };
+export const metadata: Metadata = { title: "Materials | HUMI Trainer Portal" };
 
 export default function TrainerMaterialsPage() {
   return (

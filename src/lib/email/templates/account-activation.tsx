@@ -45,7 +45,7 @@ export function AccountActivationEmail({
 
       <Text style={styles.textMuted}>
         This activation link will expire in {expiresInHours} hours. If you did
-        not enroll at HUMI+ VA Training Center, please ignore this email.
+        not enroll at HUMI Training Center, please ignore this email.
       </Text>
     </BaseLayout>
   );

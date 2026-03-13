@@ -8,7 +8,7 @@ import {
   getTrainerRatingStats,
 } from "@/lib/repositories/trainer-rating.repository";
 
-export const metadata: Metadata = { title: "My Ratings | HUMI+ Trainer Portal" };
+export const metadata: Metadata = { title: "My Ratings | HUMI Trainer Portal" };
 export const dynamic = "force-dynamic";
 
 // ---------------------------------------------------------------------------

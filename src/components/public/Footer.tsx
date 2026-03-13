@@ -71,7 +71,7 @@ export function Footer() {
           <div>
             <div className="flex items-center gap-2 font-bold text-xl mb-3">
               <GraduationCap className="h-6 w-6 text-blue-400" />
-              <span>HUMI+ VA Training Center</span>
+              <span>HUMI Training Center</span>
             </div>
             <p className="text-blue-200 text-sm leading-relaxed">
               Training AI-powered Filipino Virtual Assistants for the global market.
@@ -108,7 +108,7 @@ export function Footer() {
 
           {/* Copyright */}
           <p className="text-center text-sm text-blue-300">
-            &copy; {new Date().getFullYear()} HUMI+ VA Training Center. All rights reserved.
+            &copy; {new Date().getFullYear()} HUMI Training Center. All rights reserved.
           </p>
         </div>
       </div>

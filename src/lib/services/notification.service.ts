@@ -21,7 +21,7 @@ import { EmailVerificationEmail } from "@/lib/email/templates/email-verification
 import { AccountActivationEmail } from "@/lib/email/templates/account-activation";
 import { EnrollmentConfirmationWithPaymentEmail } from "@/lib/email/templates/enrollment-confirmation-with-payment";
 
-const FROM_NAME = process.env.EMAIL_FROM_NAME ?? "HUMI+ VA Training Center";
+const FROM_NAME = process.env.EMAIL_FROM_NAME ?? "HUMI Training Center";
 const FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS ?? process.env.GMAIL_USER ?? "noreply@vatrainingcenter.com";
 
 const fromAddress = () => `"${FROM_NAME}" <${FROM_ADDRESS}>`;
@@ -78,7 +78,7 @@ export async function sendEnrollmentRejected(opts: {
 
   await sendEmail(
     opts.email,
-    `Application Update — ${opts.courseTitle} | HUMI+ VA Training Center`,
+    `Application Update — ${opts.courseTitle} | HUMI Training Center`,
     html
   );
 }
@@ -131,7 +131,7 @@ export async function sendLessonCompleted(opts: {
 
   await sendEmail(
     opts.email,
-    `Lesson Completed: ${opts.lessonTitle} | HUMI+ VA Training Center`,
+    `Lesson Completed: ${opts.lessonTitle} | HUMI Training Center`,
     html
   );
 }
@@ -233,7 +233,7 @@ export async function sendBadgeEarned(opts: {
 
   await sendEmail(
     opts.email,
-    `Badge Earned: ${opts.badgeName} | HUMI+ VA Training Center`,
+    `Badge Earned: ${opts.badgeName} | HUMI Training Center`,
     html
   );
 }
@@ -338,7 +338,7 @@ export async function sendPasswordReset(opts: {
 
   await sendEmail(
     opts.email,
-    "Reset Your Password — HUMI+ VA Training Center",
+    "Reset Your Password — HUMI Training Center",
     html
   );
 }
@@ -423,7 +423,7 @@ export async function sendPaymentInstructions(opts: {
 
   await sendEmail(
     opts.email,
-    `Payment Instructions — ${opts.courseTitle} | HUMI+ VA Training Center`,
+    `Payment Instructions — ${opts.courseTitle} | HUMI Training Center`,
     html
   );
 }
@@ -454,8 +454,8 @@ export async function sendAdminReviewReminder(opts: {
   );
 
   const subject = opts.isUrgent
-    ? `URGENT: ${count} ${label} pending over 12h — HUMI+ VA Training Center`
-    : `Reminder: ${count} pending ${label} to review — HUMI+ VA Training Center`;
+    ? `URGENT: ${count} ${label} pending over 12h — HUMI Training Center`
+    : `Reminder: ${count} pending ${label} to review — HUMI Training Center`;
 
   await sendEmail(opts.adminEmail, subject, html);
 }
@@ -506,7 +506,7 @@ export async function sendEmailVerification(opts: {
 
   await sendEmail(
     opts.email,
-    `Verify Your Email — ${opts.courseTitle} | HUMI+ VA Training Center`,
+    `Verify Your Email — ${opts.courseTitle} | HUMI Training Center`,
     html
   );
 }
@@ -530,7 +530,7 @@ export async function sendAccountActivation(opts: {
 
   await sendEmail(
     opts.email,
-    `Create Your Password — ${opts.courseTitle} | HUMI+ VA Training Center`,
+    `Create Your Password — ${opts.courseTitle} | HUMI Training Center`,
     html
   );
 }

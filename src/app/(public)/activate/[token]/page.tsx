@@ -6,7 +6,7 @@ import { AccountActivationForm } from "@/components/public/AccountActivationForm
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Activate Your Account | HUMI+ VA Training Center",
+  title: "Activate Your Account | HUMI Training Center",
 };
 
 interface ErrorConfig {
@@ -56,7 +56,7 @@ export default async function ActivatePage({
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900">
-              HUMI+ VA Training Center
+              HUMI Training Center
             </h1>
             <p className="text-gray-500 mt-1">Account Activation</p>
           </div>
@@ -104,7 +104,7 @@ export default async function ActivatePage({
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
-            HUMI+ VA Training Center
+            HUMI Training Center
           </h1>
           <p className="text-gray-500 mt-1">Account Activation</p>
         </div>

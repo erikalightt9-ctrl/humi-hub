@@ -8,7 +8,7 @@ import { TestimonialManager } from "@/components/admin/TestimonialManager";
 import { MessageSquareQuote } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Testimonials | HUMI+ Admin",
+  title: "Testimonials | HUMI Admin",
 };
 
 export default async function AdminTestimonialsPage() {

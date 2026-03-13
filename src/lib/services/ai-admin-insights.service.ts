@@ -89,7 +89,7 @@ async function generateInsights(
     )
     .join("\n");
 
-  const userPrompt = `Analyze this HUMI+ VA Training Center platform data:
+  const userPrompt = `Analyze this HUMI Training Center platform data:
 
 **Overview**:
 - Total Active Students: ${overview.totalStudents}

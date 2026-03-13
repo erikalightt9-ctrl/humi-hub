@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { TestimonialsSection } from "@/components/public/TestimonialsSection";
 
 export const metadata: Metadata = {
-  title: "Student Success — HUMI+ VA Training Center",
+  title: "Student Success — HUMI Training Center",
   description:
     "See how our graduates transformed their careers. Real stories, real results from AI-powered Virtual Assistant training.",
 };

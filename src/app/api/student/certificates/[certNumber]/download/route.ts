@@ -39,7 +39,7 @@ export async function GET(
       React.createElement(Page, { size: "A4", orientation: "landscape", style: styles.page },
         React.createElement(View, { style: styles.border },
           React.createElement(Text, { style: styles.title }, "Certificate of Completion"),
-          React.createElement(Text, { style: styles.subtitle }, "HUMI+ VA Training Center"),
+          React.createElement(Text, { style: styles.subtitle }, "HUMI Training Center"),
           React.createElement(Text, { style: styles.label }, "This certifies that"),
           React.createElement(Text, { style: styles.name }, cert.student.name),
           React.createElement(Text, { style: styles.label }, "has successfully completed"),

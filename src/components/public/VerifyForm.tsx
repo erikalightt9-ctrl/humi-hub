@@ -93,7 +93,7 @@ export function VerifyForm() {
               </div>
               <div>
                 <h3 className="font-bold text-green-800">Certificate Verified</h3>
-                <p className="text-sm text-green-600">This is an authentic HUMI+ VA Training Center certificate</p>
+                <p className="text-sm text-green-600">This is an authentic HUMI Training Center certificate</p>
               </div>
             </div>
             <div className="bg-white rounded-lg p-5 border border-green-100 space-y-3">

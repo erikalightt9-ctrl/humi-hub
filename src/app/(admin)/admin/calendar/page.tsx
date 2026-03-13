@@ -5,7 +5,7 @@ import { AdminCalendarSection } from "@/components/admin/AdminCalendarSection";
 import { getEventsByDateRange } from "@/lib/repositories/calendar.repository";
 import { prisma } from "@/lib/prisma";
 
-export const metadata: Metadata = { title: "Calendar | HUMI+ Admin" };
+export const metadata: Metadata = { title: "Calendar | HUMI Admin" };
 
 export default async function AdminCalendarPage() {
   const now = new Date();

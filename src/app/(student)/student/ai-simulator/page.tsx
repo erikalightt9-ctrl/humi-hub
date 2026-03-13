@@ -9,7 +9,7 @@ import { SubscriptionGate } from "@/components/student/SubscriptionGate";
 import { Users } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "AI VA Simulator | HUMI+ Student",
+  title: "AI VA Simulator | HUMI Student",
 };
 
 export default async function AISimulatorPage() {

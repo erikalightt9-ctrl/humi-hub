@@ -7,7 +7,7 @@ import { getPendingSubmissionsForTrainer } from "@/lib/repositories/trainer.repo
 import { GradingQueueClient } from "@/components/trainer/GradingQueueClient";
 
 export const metadata: Metadata = {
-  title: "Grading Queue | HUMI+ Trainer Portal",
+  title: "Grading Queue | HUMI Trainer Portal",
 };
 export const dynamic = "force-dynamic";
 

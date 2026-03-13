@@ -8,7 +8,7 @@ import { ControlTowerDashboard } from "@/components/admin/ControlTowerDashboard"
 import { Rocket } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "AI Control Tower | HUMI+ Admin",
+  title: "AI Control Tower | HUMI Admin",
 };
 
 export default async function AdminControlTowerPage() {

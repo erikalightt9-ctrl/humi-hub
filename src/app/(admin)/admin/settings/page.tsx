@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Settings, Globe, Bell, Shield, Palette } from "lucide-react";
 
-export const metadata: Metadata = { title: "Settings | HUMI+ Admin" };
+export const metadata: Metadata = { title: "Settings | HUMI Admin" };
 
 export default function SettingsPage() {
   const sections = [

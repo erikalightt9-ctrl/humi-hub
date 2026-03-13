@@ -21,7 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 /*  Metadata                                                           */
 /* ------------------------------------------------------------------ */
 
-export const metadata: Metadata = { title: "Student Detail | HUMI+ Admin" };
+export const metadata: Metadata = { title: "Student Detail | HUMI Admin" };
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                              */

@@ -44,7 +44,7 @@ export function WhyChooseUs() {
     <section className="py-16 bg-gray-50 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">Why Choose HUMI+ VA Training Center?</h2>
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">Why Choose HUMI Training Center?</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             We don&apos;t just teach VA skills — we train you to combine human expertise with AI tools,
             giving you the edge to earn more and deliver faster.

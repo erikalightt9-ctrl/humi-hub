@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { CourseManager } from "@/components/admin/CourseManager";
 import { BookOpen } from "lucide-react";
 
-export const metadata: Metadata = { title: "Courses | HUMI+ Admin" };
+export const metadata: Metadata = { title: "Courses | HUMI Admin" };
 
 export default async function CoursesPage() {
   const session = await getServerSession(authOptions);

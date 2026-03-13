@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { JobBoard } from "@/components/public/JobBoard";
 
 export const metadata: Metadata = {
-  title: "Career Placement — HUMI+ VA Training Center",
+  title: "Career Placement — HUMI Training Center",
   description:
     "Get placed in your dream VA role. Resume building, AI mock interviews, job matching, and career coaching to launch your virtual assistant career.",
 };

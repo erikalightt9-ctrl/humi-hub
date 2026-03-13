@@ -147,7 +147,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         <div className="px-6 py-5 border-b border-blue-800">
           <div className="flex items-center gap-2 font-bold text-lg">
             <GraduationCap className="h-6 w-6 text-blue-400" />
-            <span>HUMI+ Admin</span>
+            <span>HUMI Admin</span>
           </div>
         </div>
 

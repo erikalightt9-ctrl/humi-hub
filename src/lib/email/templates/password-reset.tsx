@@ -14,7 +14,7 @@ export function PasswordResetEmail({
   expiresInMinutes,
 }: PasswordResetEmailProps) {
   return (
-    <BaseLayout previewText="Reset your HUMI+ VA Training Center password">
+    <BaseLayout previewText="Reset your HUMI Training Center password">
       <Text style={styles.heading}>Password Reset</Text>
       <Text style={styles.text}>Hi <strong>{name}</strong>,</Text>
       <Text style={styles.text}>

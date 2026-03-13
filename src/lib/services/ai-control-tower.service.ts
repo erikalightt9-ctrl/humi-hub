@@ -63,7 +63,7 @@ export async function generateAutomationInsights(
     `Active (7d): ${controlTowerData.platformStats.activeStudents}, ` +
     `Inactive (14d+): ${controlTowerData.platformStats.inactiveStudents}`;
 
-  const userPrompt = `Analyze this HUMI+ VA Training Center data and provide comprehensive automation insights.
+  const userPrompt = `Analyze this HUMI Training Center data and provide comprehensive automation insights.
 
 **Platform Stats**:
 ${platformSummary}

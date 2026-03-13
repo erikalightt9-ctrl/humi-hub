@@ -84,7 +84,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 font-bold text-xl text-blue-900">
             <GraduationCap className="h-7 w-7 text-blue-600" />
-            <span>HUMI+ VA Training Center</span>
+            <span>HUMI Training Center</span>
           </Link>
 
           {/* Desktop nav */}

@@ -86,7 +86,7 @@ export function TrainerLayout({ children }: TrainerLayoutProps) {
         <div className="px-6 py-5 border-b border-blue-800">
           <div className="flex items-center gap-2 font-bold text-lg">
             <GraduationCap className="h-6 w-6 text-blue-400" />
-            <span>HUMI+ Trainer Portal</span>
+            <span>HUMI Trainer Portal</span>
           </div>
           <p className="text-blue-300 text-xs mt-1 truncate">{trainerName}</p>
         </div>

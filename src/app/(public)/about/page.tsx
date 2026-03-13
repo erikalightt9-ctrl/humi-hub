@@ -4,7 +4,7 @@ import { Bot, ShieldCheck, Globe, Zap, Users, Wrench } from "lucide-react";
 export const metadata: Metadata = {
   title: "About Us",
   description:
-    "Learn about HUMI+ VA Training Center — pioneering the VA + AI model for Filipino Virtual Assistants serving global clients.",
+    "Learn about HUMI Training Center — pioneering the VA + AI model for Filipino Virtual Assistants serving global clients.",
 };
 
 const values = [
@@ -50,7 +50,7 @@ const team = [
   {
     name: "Maria Santos",
     role: "Founder & CEO",
-    bio: "10+ years in healthcare administration. Pioneer of the VA + AI training model. Built HUMI+ VA Training Center to bridge Filipino talent and global opportunity.",
+    bio: "10+ years in healthcare administration. Pioneer of the VA + AI training model. Built HUMI Training Center to bridge Filipino talent and global opportunity.",
   },
   {
     name: "Jose Reyes",
@@ -75,7 +75,7 @@ export default function AboutPage() {
       {/* Hero */}
       <section className="bg-blue-900 text-white py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-4xl font-extrabold mb-4">About HUMI+ VA Training Center</h1>
+          <h1 className="text-4xl font-extrabold mb-4">About HUMI Training Center</h1>
           <p className="text-blue-100 text-lg leading-relaxed">
             We are a Philippine-based training institution pioneering the{" "}
             <strong className="text-white">VA + AI collaboration model</strong> —
@@ -114,7 +114,7 @@ export default function AboutPage() {
               The Leading VA + AI Training Institution in Southeast Asia
             </h3>
             <p className="text-gray-600 leading-relaxed">
-              We envision a future where HUMI+ VA Training Center graduates are the first choice for
+              We envision a future where HUMI Training Center graduates are the first choice for
               employers worldwide — known for combining human expertise with AI efficiency to
               deliver faster, smarter, and more accountable results.
             </p>

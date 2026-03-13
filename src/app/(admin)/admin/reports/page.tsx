@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { FileBarChart, Download } from "lucide-react";
 
-export const metadata: Metadata = { title: "Reports | HUMI+ Admin" };
+export const metadata: Metadata = { title: "Reports | HUMI Admin" };
 
 export default function ReportsPage() {
   const reportTypes = [

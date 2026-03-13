@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { StudentRankingBoard } from "@/components/public/StudentRankingBoard";
 
 export const metadata: Metadata = {
-  title: "Student Ranking | HUMI+ VA Training Center",
+  title: "Student Ranking | HUMI Training Center",
   description:
     "See the top-performing virtual assistant students ranked by composite scores across career readiness, quizzes, assignments, and more.",
 };

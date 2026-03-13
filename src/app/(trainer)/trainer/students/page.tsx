@@ -7,7 +7,7 @@ import { getTrainerStudents } from "@/lib/repositories/trainer.repository";
 import { StudentProgressTable } from "@/components/trainer/StudentProgressTable";
 
 export const metadata: Metadata = {
-  title: "My Students | HUMI+ Trainer Portal",
+  title: "My Students | HUMI Trainer Portal",
 };
 export const dynamic = "force-dynamic";
 

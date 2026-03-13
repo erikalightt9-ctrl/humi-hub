@@ -30,7 +30,7 @@ import {
   getCurrentlyPresent,
 } from "@/lib/repositories/dashboard.repository";
 
-export const metadata: Metadata = { title: "Dashboard | HUMI+ Admin" };
+export const metadata: Metadata = { title: "Dashboard | HUMI Admin" };
 
 // ---------------------------------------------------------------------------
 // Helpers

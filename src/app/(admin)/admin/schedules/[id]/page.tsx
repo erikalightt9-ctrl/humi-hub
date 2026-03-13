@@ -18,7 +18,7 @@ import {
 import { ChevronLeft, ExternalLink } from "lucide-react";
 import type { StudentPaymentStatus } from "@prisma/client";
 
-export const metadata: Metadata = { title: "Schedule Detail | HUMI+ Admin" };
+export const metadata: Metadata = { title: "Schedule Detail | HUMI Admin" };
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */

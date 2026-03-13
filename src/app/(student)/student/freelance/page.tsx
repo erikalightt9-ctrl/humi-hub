@@ -8,7 +8,7 @@ import { FreelanceOpportunities } from "@/components/student/FreelanceOpportunit
 import { Briefcase } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Freelance Opportunities | HUMI+ Student",
+  title: "Freelance Opportunities | HUMI Student",
 };
 
 export default async function FreelancePage() {

@@ -8,7 +8,7 @@ import { TrainerManager } from "@/components/admin/TrainerManager";
 import { UserCog } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Trainers | HUMI+ Admin",
+  title: "Trainers | HUMI Admin",
 };
 
 export default async function TrainersPage() {

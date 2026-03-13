@@ -4,8 +4,8 @@ import { AttendanceLiveTable } from "@/components/admin/AttendanceLiveTable";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Attendance | HUMI+ Admin",
-  description: "Live attendance tracking for HUMI+ VA Training Center students",
+  title: "Attendance | HUMI Admin",
+  description: "Live attendance tracking for HUMI Training Center students",
 };
 
 export default function AdminAttendancePage() {

@@ -14,7 +14,7 @@ const WELCOME_MESSAGE: Message = {
   id: "welcome",
   role: "assistant",
   content:
-    "Hi! 👋 I'm your HUMI+ VA Training Center assistant. Ask me anything about our courses, enrollment, pricing, or how to get started!",
+    "Hi! 👋 I'm your HUMI Training Center assistant. Ask me anything about our courses, enrollment, pricing, or how to get started!",
 };
 
 export function ChatWidget() {

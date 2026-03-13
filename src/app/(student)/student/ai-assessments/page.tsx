@@ -11,7 +11,7 @@ import { Sparkles } from "lucide-react";
 import type { AIAssessmentResult } from "@/lib/types/ai.types";
 
 export const metadata: Metadata = {
-  title: "AI Review | HUMI+ Student",
+  title: "AI Review | HUMI Student",
 };
 
 export default async function AIAssessmentsPage() {

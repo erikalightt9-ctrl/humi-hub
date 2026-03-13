@@ -7,7 +7,7 @@ import { PaymentProofModal } from "@/components/admin/PaymentProofModal";
 import { listAllPayments } from "@/lib/repositories/payment.repository";
 import type { PaymentStatus } from "@prisma/client";
 
-export const metadata: Metadata = { title: "Payments | HUMI+ Admin" };
+export const metadata: Metadata = { title: "Payments | HUMI Admin" };
 
 export default async function PaymentsPage({
   searchParams,

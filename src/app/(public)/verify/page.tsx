@@ -5,7 +5,7 @@ import { VerifyForm } from "@/components/public/VerifyForm";
 export const metadata: Metadata = {
   title: "Verify Certificate",
   description:
-    "Verify the authenticity of a HUMI+ VA Training Center certificate. Enter a certificate number to confirm a graduate's credentials.",
+    "Verify the authenticity of a HUMI Training Center certificate. Enter a certificate number to confirm a graduate's credentials.",
 };
 
 export default function VerifyPage() {
@@ -19,7 +19,7 @@ export default function VerifyPage() {
           </div>
           <h1 className="text-4xl font-extrabold mb-4">Verify a Certificate</h1>
           <p className="text-blue-100 text-lg leading-relaxed max-w-xl mx-auto">
-            Confirm the authenticity of a HUMI+ VA Training Center graduate&apos;s certificate.
+            Confirm the authenticity of a HUMI Training Center graduate&apos;s certificate.
             Enter the certificate number to view the holder&apos;s credentials.
           </p>
         </div>
@@ -35,7 +35,7 @@ export default function VerifyPage() {
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-xl font-bold text-gray-900 mb-3">Where to Find the Certificate Number</h2>
           <p className="text-gray-600 text-sm leading-relaxed">
-            The certificate number is printed at the bottom of each HUMI+ VA Training Center certificate.
+            The certificate number is printed at the bottom of each HUMI Training Center certificate.
             It starts with a unique identifier (e.g., &quot;cm9...&quot;). You can also ask the certificate
             holder to share their certificate number or public portfolio link for verification.
           </p>

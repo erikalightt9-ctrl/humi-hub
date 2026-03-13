@@ -8,7 +8,7 @@ import { StudentForum } from "@/components/student/StudentForum";
 import { MessageCircle } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Student Forum | HUMI+ Student",
+  title: "Student Forum | HUMI Student",
 };
 
 export default async function ForumPage() {

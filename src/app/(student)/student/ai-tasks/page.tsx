@@ -9,7 +9,7 @@ import { SubscriptionGate } from "@/components/student/SubscriptionGate";
 import { Zap } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "AI Task Generator | HUMI+ Student",
+  title: "AI Task Generator | HUMI Student",
 };
 
 export default async function AITasksPage() {

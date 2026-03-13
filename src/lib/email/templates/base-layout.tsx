@@ -27,7 +27,7 @@ export function BaseLayout({ children, previewText }: BaseLayoutProps) {
         <Container style={styles.container}>
           {/* Header */}
           <Section style={styles.header}>
-            <Text style={styles.headerTitle}>HUMI+ VA Training Center</Text>
+            <Text style={styles.headerTitle}>HUMI Training Center</Text>
             <Text style={styles.headerSubtitle}>Your Path to a VA Career</Text>
           </Section>
 
@@ -38,7 +38,7 @@ export function BaseLayout({ children, previewText }: BaseLayoutProps) {
           <Section style={styles.footer}>
             <Hr style={styles.footerHr} />
             <Text style={styles.footerText}>
-              HUMI+ VA Training Center &bull; Empowering Virtual Assistants
+              HUMI Training Center &bull; Empowering Professional Growth
             </Text>
             <Text style={styles.footerSmall}>
               This is an automated message. Please do not reply directly to this

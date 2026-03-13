@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { ClockInWidget } from "@/components/student/ClockInWidget";
 
-export const metadata: Metadata = { title: "Dashboard | HUMI+ Student" };
+export const metadata: Metadata = { title: "Dashboard | HUMI Student" };
 
 function formatRelativeTime(date: Date): string {
   const now = new Date();

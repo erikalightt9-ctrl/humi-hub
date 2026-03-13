@@ -6,7 +6,7 @@ import { PortalTabs } from "@/components/portal/PortalTabs";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Login & Enroll — HUMI+ VA Training Center",
+  title: "Login & Enroll — HUMI Training Center",
   description:
     "Sign in as a student or admin, or enroll in a VA training course. All access in one place.",
 };

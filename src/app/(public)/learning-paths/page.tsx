@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Learning Paths — HUMI+ VA Training Center",
+  title: "Learning Paths — HUMI Training Center",
   description:
     "Follow a clear, structured learning path from enrollment to career placement. Choose your VA specialization and start your journey.",
 };

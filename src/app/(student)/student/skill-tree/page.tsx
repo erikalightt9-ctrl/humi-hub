@@ -9,7 +9,7 @@ import { SkillTreeVisualization } from "@/components/student/SkillTreeVisualizat
 import { TreePine } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Skill Tree | HUMI+ Student",
+  title: "Skill Tree | HUMI Student",
 };
 
 export default async function SkillTreePage() {

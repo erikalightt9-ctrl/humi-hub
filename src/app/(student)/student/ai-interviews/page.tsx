@@ -9,7 +9,7 @@ import { SubscriptionGate } from "@/components/student/SubscriptionGate";
 import { Mic } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "AI Mock Interviews | HUMI+ Student",
+  title: "AI Mock Interviews | HUMI Student",
 };
 
 export default async function AIInterviewsPage() {

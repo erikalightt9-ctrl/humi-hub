@@ -24,7 +24,7 @@ import {
 /*  Metadata                                                           */
 /* ------------------------------------------------------------------ */
 
-export const metadata: Metadata = { title: "Free Lesson Preview | HUMI+ VA Training Center" };
+export const metadata: Metadata = { title: "Free Lesson Preview | HUMI Training Center" };
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                              */

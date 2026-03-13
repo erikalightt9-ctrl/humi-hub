@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 export const metadata: Metadata = {
   title: "Enroll Now",
   description:
-    "Apply for HUMI+ VA Training Center's Medical VA, Real Estate VA, or US Bookkeeping VA programs. Applications are open year-round.",
+    "Apply for HUMI Training Center's professional training programs. Applications are open year-round.",
 };
 
 export default async function EnrollPage() {

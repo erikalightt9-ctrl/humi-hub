@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { getMergedStudentCalendar } from "@/lib/repositories/calendar.repository";
 import { StudentCalendarSection } from "@/components/student/StudentCalendarSection";
 
-export const metadata: Metadata = { title: "Calendar | HUMI+ Student" };
+export const metadata: Metadata = { title: "Calendar | HUMI Student" };
 
 export default async function StudentCalendarPage() {
   const session = await getServerSession(authOptions);

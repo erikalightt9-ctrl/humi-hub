@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { Settings } from "lucide-react";
 import { SettingsPanel } from "@/components/student/SettingsPanel";
 
-export const metadata: Metadata = { title: "Settings | HUMI+ Student" };
+export const metadata: Metadata = { title: "Settings | HUMI Student" };
 
 export default async function StudentSettingsPage() {
   const session = await getServerSession(authOptions);

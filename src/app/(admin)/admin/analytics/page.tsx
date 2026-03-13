@@ -5,7 +5,7 @@ import { CourseEngagementCard } from "@/components/admin/CourseEngagementCard";
 import { StudentEngagementTable } from "@/components/admin/StudentEngagementTable";
 import { AttendanceLiveTable } from "@/components/admin/AttendanceLiveTable";
 
-export const metadata: Metadata = { title: "Analytics | HUMI+ Admin" };
+export const metadata: Metadata = { title: "Analytics | HUMI Admin" };
 
 export default async function AnalyticsPage() {
   const courseMetrics = await getCourseEngagementMetrics();

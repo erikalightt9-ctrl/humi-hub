@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { Award } from "lucide-react";
 
-export const metadata: Metadata = { title: "Certificates | HUMI+ Admin" };
+export const metadata: Metadata = { title: "Certificates | HUMI Admin" };
 
 export default async function CertificatesPage() {
   const certificates = await prisma.certificate.findMany({

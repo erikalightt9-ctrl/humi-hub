@@ -16,7 +16,7 @@ export async function sendStudentCredentialsEmail(opts: StudentCredentialsOption
 <head><meta charset="utf-8"></head>
 <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
   <div style="background: #1d4ed8; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
-    <h1 style="color: #fff; margin: 0; font-size: 24px;">HUMI+ VA Training Center</h1>
+    <h1 style="color: #fff; margin: 0; font-size: 24px;">HUMI Training Center</h1>
     <p style="color: #bfdbfe; margin: 8px 0 0;">Learning Portal Access</p>
   </div>
   <div style="background: #f9fafb; padding: 32px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
@@ -32,19 +32,19 @@ export async function sendStudentCredentialsEmail(opts: StudentCredentialsOption
       <a href="${loginUrl}" style="background: #1d4ed8; color: #fff; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px;">Access Learning Portal</a>
     </div>
     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
-    <p style="color: #6b7280; font-size: 13px; margin: 0;">HUMI+ VA Training Center &bull; This email was sent to ${opts.email}</p>
+    <p style="color: #6b7280; font-size: 13px; margin: 0;">HUMI Training Center &bull; This email was sent to ${opts.email}</p>
   </div>
 </body>
 </html>`;
 
-  const fromName = process.env.EMAIL_FROM_NAME ?? "HUMI+ VA Training Center";
+  const fromName = process.env.EMAIL_FROM_NAME ?? "HUMI Training Center";
   const fromAddr = process.env.EMAIL_FROM_ADDRESS ?? process.env.GMAIL_USER ?? "noreply@vatrainingcenter.com";
 
   await sendMailWithRetry(
     {
       from: `"${fromName}" <${fromAddr}>`,
       to: opts.email,
-      subject: `Your Learning Portal Access — ${opts.courseTitle} | HUMI+ VA Training Center`,
+      subject: `Your Learning Portal Access — ${opts.courseTitle} | HUMI Training Center`,
       html,
     },
     `Credentials to ${opts.email}`,
