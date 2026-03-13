@@ -2,17 +2,23 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { HeroSection } from "@/components/public/HeroSection";
-import { VAaiSection } from "@/components/public/VAaiSection";
+import { IndustryProgramsSection } from "@/components/public/IndustryProgramsSection";
+import { CorporateTrainingSection } from "@/components/public/CorporateTrainingSection";
 import { CourseCard } from "@/components/public/CourseCard";
 import { WhyChooseUs } from "@/components/public/WhyChooseUs";
+import { HowItWorksSection } from "@/components/public/HowItWorksSection";
+import { LearningExperienceSection } from "@/components/public/LearningExperienceSection";
+import { TrainersSection } from "@/components/public/TrainersSection";
 import { TestimonialsSection } from "@/components/public/TestimonialsSection";
+import { CareerPathwaysSection } from "@/components/public/CareerPathwaysSection";
+import { EnrollmentCTASection } from "@/components/public/EnrollmentCTASection";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "Home — Virtual Assistant Training Programs",
+  title: "HUMI Training Center — Professional Training Programs",
   description:
-    "Become an AI-powered Virtual Assistant. Specialized courses in Medical VA, Real Estate VA, and US Bookkeeping VA — with hands-on AI training.",
+    "The Philippines' premier professional training platform. Industry-specific programs in Healthcare, Real Estate, Finance, Legal, Tech, and more — with AI-enhanced curriculum and career placement support.",
 };
 
 const courseHrefs: Record<string, string> = {
@@ -29,17 +35,25 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* 1. Hero — dual audience positioning */}
       <HeroSection />
 
-      <VAaiSection />
+      {/* 2. Industry Programs — 8 industry cards */}
+      <IndustryProgramsSection />
 
-      {/* Course preview */}
-      <section className="py-16 px-4 bg-white">
+      {/* 3. Featured Courses — dynamic from DB */}
+      <section className="py-20 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-extrabold text-gray-900 mb-3">Our Programs</h2>
+          <div className="text-center mb-12">
+            <p className="text-blue-600 font-semibold text-sm uppercase tracking-wide mb-2">
+              Featured Programs
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
+              Start With Our <span className="text-blue-700">Top Programs</span>
+            </h2>
             <p className="text-gray-600 max-w-xl mx-auto">
-              Choose the VA specialization that matches your interests and career goals.
+              Our most popular training programs — designed to get you job-ready
+              in as little as 8 weeks.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -64,23 +78,29 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <TestimonialsSection />
+      {/* 4. How It Works — 4-step process */}
+      <HowItWorksSection />
 
+      {/* 5. Platform Advantages — 8 advantage cards */}
       <WhyChooseUs />
 
-      {/* CTA Banner */}
-      <section className="bg-blue-700 text-white py-16 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-extrabold mb-4">Ready to Become an AI-Powered VA?</h2>
-          <p className="text-blue-100 mb-8 text-lg">
-            Join 2,400+ Filipino professionals who are earning more by working smarter with AI.
-            Applications are open year-round.
-          </p>
-          <Button asChild size="lg" className="bg-white text-blue-700 font-bold hover:bg-blue-50">
-            <Link href="/enroll">Apply Now — It is Free</Link>
-          </Button>
-        </div>
-      </section>
+      {/* 6. Learning Experience — platform features */}
+      <LearningExperienceSection />
+
+      {/* 7. Expert Trainers — tiers + stats */}
+      <TrainersSection />
+
+      {/* 8. Corporate Training — B2B positioning */}
+      <CorporateTrainingSection />
+
+      {/* 9. Testimonials — dynamic from DB */}
+      <TestimonialsSection />
+
+      {/* 10. Career Pathways — outcomes + career table */}
+      <CareerPathwaysSection />
+
+      {/* 11. Final CTA — dual audience enrollment */}
+      <EnrollmentCTASection />
     </>
   );
 }

@@ -34,16 +34,19 @@ export async function TestimonialsSection() {
   }
 
   return (
-    <section className="py-16 bg-gray-50 px-4">
+    <section className="py-20 bg-white px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
-            What Our Graduates Say
+        <div className="text-center mb-14">
+          <p className="text-blue-600 font-semibold text-sm uppercase tracking-wide mb-2">
+            Success Stories
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
+            What Our <span className="text-blue-700">Graduates</span> Say
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Hear from real graduates who transformed their careers with
-            AI-powered VA training.
+          <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+            Hear from real professionals who transformed their careers through
+            HUMI Training Center.
           </p>
         </div>
 
@@ -52,7 +55,7 @@ export async function TestimonialsSection() {
           {testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+              className="bg-gray-50 rounded-xl p-6 border border-gray-100 hover:shadow-md transition-shadow"
             >
               {/* Quote icon */}
               <div className="bg-amber-100 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
@@ -70,7 +73,7 @@ export async function TestimonialsSection() {
               </p>
 
               {/* Author */}
-              <div className="border-t border-gray-100 pt-4">
+              <div className="border-t border-gray-200 pt-4">
                 <p className="font-semibold text-gray-900 text-sm">
                   {testimonial.name}
                 </p>

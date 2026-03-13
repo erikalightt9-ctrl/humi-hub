@@ -2,130 +2,128 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
-  DollarSign,
-  TrendingUp,
-  Zap,
   CheckCircle2,
   Users,
+  Building2,
+  GraduationCap,
+  Globe,
+  Award,
+  TrendingUp,
 } from "lucide-react";
 
-const outcomes = [
-  {
-    icon: DollarSign,
-    value: "$800\u2013$1,500/mo",
-    label: "Average graduate salary",
-  },
-  {
-    icon: TrendingUp,
-    value: "85% Placed",
-    label: "Within 30 days",
-  },
-  {
-    icon: Zap,
-    value: "3x Productivity",
-    label: "With AI tools",
-  },
+/* ------------------------------------------------------------------ */
+/*  Data                                                               */
+/* ------------------------------------------------------------------ */
+
+const stats = [
+  { icon: Users, value: "2,400+", label: "Trained Professionals" },
+  { icon: Globe, value: "15+", label: "Industry Programs" },
+  { icon: Award, value: "95%", label: "Certification Rate" },
+  { icon: TrendingUp, value: "85%", label: "Career Placement" },
 ] as const;
 
-const proofPoints = [
-  "AI tools training included",
-  "Flexible schedule",
-  "Payment plans available",
+const trustPoints = [
+  "Industry-recognized certifications",
+  "Expert-led training programs",
+  "Flexible learning schedules",
+  "Career placement support",
 ] as const;
+
+/* ------------------------------------------------------------------ */
+/*  HeroSection                                                        */
+/* ------------------------------------------------------------------ */
 
 export function HeroSection() {
   return (
-    <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white py-20 lg:py-28 px-4 overflow-hidden">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-        {/* Left Column — Copy + CTAs */}
-        <div className="animate-fade-in-down">
-          {/* Trust Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-blue-100 text-sm font-medium px-4 py-1.5 rounded-full mb-8 border border-white/20">
-            <Users className="h-3.5 w-3.5 text-amber-300" />
-            Trusted by 2,400+ Filipino VA Professionals
-          </div>
+    <section className="relative bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white overflow-hidden">
+      {/* Background pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-white rounded-full translate-x-1/3 translate-y-1/3" />
+      </div>
 
-          {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.1] mb-6 tracking-tight">
-            Become an{" "}
-            <span className="text-amber-300">AI-Powered</span>{" "}
-            Virtual Assistant
-          </h1>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* Left Column — Copy + CTAs */}
+          <div>
+            {/* Trust Badge */}
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-blue-100 text-sm font-medium px-4 py-1.5 rounded-full mb-8 border border-white/20">
+              <GraduationCap className="h-3.5 w-3.5 text-amber-300" />
+              The Philippines&apos; Premier Professional Training Platform
+            </div>
 
-          {/* Subheadline — outcome-focused */}
-          <p className="text-blue-100 text-lg sm:text-xl leading-relaxed mb-8 max-w-xl">
-            Master human expertise + AI tools. Our graduates are{" "}
-            <strong className="text-white">3x more productive</strong> and earn{" "}
-            <strong className="text-white">$800&ndash;$1,500/month</strong>{" "}
-            working remotely for US, UK &amp; AU clients.
-          </p>
+            {/* Headline */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.08] mb-6 tracking-tight">
+              Build{" "}
+              <span className="text-amber-300">World-Class</span>{" "}
+              Careers Through Expert Training
+            </h1>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-8">
-            <Button
-              asChild
-              size="lg"
-              className="bg-white text-blue-900 hover:bg-blue-50 font-bold text-base px-8 py-6 shadow-lg shadow-blue-900/30"
-            >
-              <Link href="/enroll">
-                Enroll Now <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-white/40 text-white hover:bg-white/10 font-semibold text-base px-8 py-6"
-            >
-              <Link href="/programs">Explore Programs</Link>
-            </Button>
-          </div>
+            {/* Subheadline — dual audience */}
+            <p className="text-blue-100 text-lg sm:text-xl leading-relaxed mb-8 max-w-xl">
+              Whether you&apos;re an{" "}
+              <strong className="text-white">individual professional</strong>{" "}
+              advancing your career or an{" "}
+              <strong className="text-white">organization</strong>{" "}
+              building a skilled workforce — HUMI delivers
+              industry-specific training that produces results.
+            </p>
 
-          {/* Social proof points */}
-          <div className="flex flex-wrap gap-x-5 gap-y-2">
-            {proofPoints.map((point) => (
-              <span
-                key={point}
-                className="flex items-center gap-1.5 text-blue-200 text-sm"
+            {/* Dual CTAs */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+              <Button
+                asChild
+                size="lg"
+                className="bg-white text-blue-900 hover:bg-blue-50 font-bold text-base px-8 py-6 shadow-lg shadow-blue-950/30"
               >
-                <CheckCircle2 className="h-3.5 w-3.5 text-green-400 shrink-0" />
-                {point}
-              </span>
-            ))}
-          </div>
-        </div>
+                <Link href="/enroll">
+                  Start Your Training <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="border-white/40 text-white hover:bg-white/10 font-semibold text-base px-8 py-6"
+              >
+                <Link href="/enterprise">
+                  <Building2 className="mr-2 h-4 w-4" />
+                  Corporate Training Solutions
+                </Link>
+              </Button>
+            </div>
 
-        {/* Right Column — Outcome Cards */}
-        <div className="flex flex-col gap-4">
-          {/* Outcome cards — 3-col on mobile, stacked on desktop */}
-          <div className="grid grid-cols-3 lg:grid-cols-1 gap-3 lg:gap-4">
-            {outcomes.map((item) => (
+            {/* Trust points */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              {trustPoints.map((point) => (
+                <span
+                  key={point}
+                  className="flex items-center gap-1.5 text-blue-200 text-sm"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5 text-green-400 shrink-0" />
+                  {point}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Right Column — Stats Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            {stats.map((stat) => (
               <div
-                key={item.label}
-                className="bg-white/10 backdrop-blur-sm rounded-xl p-4 lg:p-6 border border-white/10 hover:bg-white/15 transition-colors"
+                key={stat.label}
+                className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/15 transition-colors text-center"
               >
-                <div className="flex items-center gap-3 lg:gap-4">
-                  <div className="hidden lg:flex w-12 h-12 rounded-lg bg-amber-300/20 items-center justify-center shrink-0">
-                    <item.icon className="h-6 w-6 text-amber-300" />
-                  </div>
-                  <div>
-                    <p className="text-xl lg:text-3xl font-extrabold text-amber-300 leading-tight">
-                      {item.value}
-                    </p>
-                    <p className="text-blue-200 text-xs lg:text-sm mt-0.5">
-                      {item.label}
-                    </p>
-                  </div>
+                <div className="w-12 h-12 rounded-xl bg-amber-300/20 flex items-center justify-center mx-auto mb-3">
+                  <stat.icon className="h-6 w-6 text-amber-300" />
                 </div>
+                <p className="text-3xl font-extrabold text-white leading-tight">
+                  {stat.value}
+                </p>
+                <p className="text-blue-200 text-sm mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
-
-          {/* Enrollment counter */}
-          <p className="text-blue-300/70 text-xs lg:text-sm text-center lg:text-left mt-2">
-            Join <strong className="text-blue-200">47+ students</strong> who
-            enrolled this month
-          </p>
         </div>
       </div>
     </section>

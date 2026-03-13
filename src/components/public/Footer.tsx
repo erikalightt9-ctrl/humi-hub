@@ -25,7 +25,7 @@ const studentsLinks: readonly FooterLink[] = [
 
 const companyLinks: readonly FooterLink[] = [
   { href: "/about", label: "About Us" },
-  { href: "/enterprise", label: "Enterprise Training" },
+  { href: "/enterprise", label: "Corporate Training" },
   { href: "/contact", label: "Contact" },
   { href: "/verify", label: "Verify Certificate" },
 ] as const;
@@ -74,8 +74,9 @@ export function Footer() {
               <span>HUMI Training Center</span>
             </div>
             <p className="text-blue-200 text-sm leading-relaxed">
-              Training AI-powered Filipino Virtual Assistants for the global market.
-              Human expertise + AI tools = unstoppable productivity.
+              The Philippines&apos; premier professional training platform.
+              Industry-specific programs that build world-class careers
+              through expert-led, AI-enhanced training.
             </p>
           </div>
 
