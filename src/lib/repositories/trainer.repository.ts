@@ -215,6 +215,133 @@ export async function removeTrainerFromCourse(
   });
 }
 
+// ── Trainer course queries ────────────────────────────────────────────
+
+export async function getTrainerCourses(trainerId: string) {
+  // Get unique courses from trainer's assigned schedules
+  const schedules = await prisma.schedule.findMany({
+    where: { trainerId },
+    select: { courseId: true },
+    distinct: ["courseId"],
+  });
+
+  const courseIds = schedules.map((s) => s.courseId);
+  if (courseIds.length === 0) return [];
+
+  return prisma.course.findMany({
+    where: { id: { in: courseIds } },
+    include: {
+      _count: {
+        select: { lessons: true, assignments: true, quizzes: true },
+      },
+      schedules: {
+        where: { trainerId },
+        include: { _count: { select: { students: true } } },
+      },
+    },
+    orderBy: { title: "asc" },
+  });
+}
+
+export async function getTrainerCourseDetail(
+  trainerId: string,
+  courseId: string,
+) {
+  // Verify trainer is assigned to this course via schedule
+  const schedule = await prisma.schedule.findFirst({
+    where: { trainerId, courseId },
+  });
+  if (!schedule) return null;
+
+  const [course, lessons, assignments, quizzes] = await Promise.all([
+    prisma.course.findUnique({
+      where: { id: courseId },
+      select: { id: true, title: true, slug: true, description: true, durationWeeks: true },
+    }),
+    prisma.lesson.findMany({
+      where: { courseId },
+      orderBy: { order: "asc" },
+      select: {
+        id: true,
+        title: true,
+        order: true,
+        durationMin: true,
+        isPublished: true,
+      },
+    }),
+    prisma.assignment.findMany({
+      where: { courseId },
+      orderBy: { createdAt: "asc" },
+      include: {
+        _count: { select: { submissions: true } },
+        submissions: {
+          where: { status: "PENDING" },
+          select: { id: true },
+        },
+      },
+    }),
+    prisma.quiz.findMany({
+      where: { courseId },
+      orderBy: { createdAt: "asc" },
+      include: {
+        _count: { select: { questions: true, attempts: true } },
+      },
+    }),
+  ]);
+
+  if (!course) return null;
+
+  return {
+    ...course,
+    lessons,
+    assignments: assignments.map((a) => ({
+      id: a.id,
+      title: a.title,
+      instructions: a.instructions,
+      dueDate: a.dueDate,
+      maxPoints: a.maxPoints,
+      isPublished: a.isPublished,
+      createdAt: a.createdAt,
+      totalSubmissions: a._count.submissions,
+      pendingCount: a.submissions.length,
+    })),
+    quizzes: quizzes.map((q) => ({
+      id: q.id,
+      title: q.title,
+      description: q.description,
+      passingScore: q.passingScore,
+      isPublished: q.isPublished,
+      createdAt: q.createdAt,
+      questionCount: q._count.questions,
+      attemptCount: q._count.attempts,
+    })),
+  };
+}
+
+export async function getPendingSubmissionsForTrainer(trainerId: string) {
+  return prisma.submission.findMany({
+    where: {
+      status: "PENDING",
+      student: { trainerId },
+    },
+    include: {
+      student: {
+        select: { id: true, name: true, email: true },
+      },
+      assignment: {
+        select: {
+          id: true,
+          title: true,
+          maxPoints: true,
+          courseId: true,
+          course: { select: { title: true } },
+        },
+      },
+    },
+    orderBy: { submittedAt: "asc" },
+  });
+}
+
 // ── Trainer dashboard queries ───────────────────────────────────────
 
 export async function getTrainerDashboardStats(trainerId: string) {

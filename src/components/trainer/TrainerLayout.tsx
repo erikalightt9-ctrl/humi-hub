@@ -8,7 +8,8 @@ import {
   LayoutDashboard,
   CalendarClock,
   Users,
-  FileText,
+  BookOpen,
+  ClipboardCheck,
   Star,
   UserCircle,
   LogOut,
@@ -35,7 +36,14 @@ const trainerNavGroups: ReadonlyArray<NavGroup> = [
     items: [
       { href: "/trainer/schedule", label: "My Schedule", icon: CalendarClock },
       { href: "/trainer/students", label: "My Students", icon: Users },
-      { href: "/trainer/materials", label: "Materials", icon: FileText },
+    ],
+  },
+  {
+    label: "Content",
+    icon: BookOpen,
+    items: [
+      { href: "/trainer/courses", label: "My Courses", icon: BookOpen },
+      { href: "/trainer/submissions", label: "Grading Queue", icon: ClipboardCheck },
     ],
   },
   {
