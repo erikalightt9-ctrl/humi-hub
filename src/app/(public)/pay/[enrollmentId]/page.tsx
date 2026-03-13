@@ -41,6 +41,7 @@ export default async function PaymentPage({
     : Number(enrollment.course.price);
   const referenceCode = enrollment.referenceCode;
   const gcashQrUrl = process.env.GCASH_QR_URL;
+  const isPaymongoEnabled = Boolean(process.env.PAYMONGO_SECRET_KEY);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
@@ -187,15 +188,20 @@ export default async function PaymentPage({
                 )}
               </div>
 
-              {/* Online Payment */}
-              <PayOnlineButton enrollmentId={enrollmentId} />
+              {/* Online Payment — only shown when PayMongo is configured */}
+              {isPaymongoEnabled && (
+                <>
+                  <PayOnlineButton enrollmentId={enrollmentId} />
 
-              <div className="flex items-center gap-3 my-6">
-                <div className="flex-1 h-px bg-gray-200" />
-                <span className="text-sm text-gray-400 font-medium">or pay manually</span>
-                <div className="flex-1 h-px bg-gray-200" />
-              </div>
+                  <div className="flex items-center gap-3 my-6">
+                    <div className="flex-1 h-px bg-gray-200" />
+                    <span className="text-sm text-gray-400 font-medium">or pay manually</span>
+                    <div className="flex-1 h-px bg-gray-200" />
+                  </div>
+                </>
+              )}
 
+              {/* Manual Payment Upload */}
               <PaymentUploadForm enrollmentId={enrollmentId} />
             </>
           )}

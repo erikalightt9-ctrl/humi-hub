@@ -42,6 +42,14 @@ export async function POST(request: NextRequest) {
       return jsonError("Payment has already been confirmed for this enrollment", 400);
     }
 
+    // Verify PayMongo is configured before attempting checkout
+    if (!process.env.PAYMONGO_SECRET_KEY) {
+      return jsonError(
+        "Online payment is not available at this time. Please use the manual payment option below.",
+        503
+      );
+    }
+
     const coursePrice = Number(enrollment.course.price);
     const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
     const successUrl = `${baseUrl}/pay/${body.enrollmentId}/success`;
