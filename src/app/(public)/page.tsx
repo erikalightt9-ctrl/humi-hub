@@ -18,11 +18,16 @@ export const metadata: Metadata = {
     "The Philippines' premier professional training platform. Industry-specific programs in Healthcare, Real Estate, Finance, Legal, Tech, and more — with AI-enhanced curriculum and career placement support.",
 };
 
-const courseHrefs: Record<string, string> = {
-  MEDICAL_VA: "/programs/medical-va",
-  REAL_ESTATE_VA: "/programs/real-estate-va",
-  US_BOOKKEEPING_VA: "/programs/us-bookkeeping-va",
-};
+/** Convert DB slug (UPPER_SNAKE) → URL slug (lower-kebab) */
+function buildCourseHrefs(
+  courses: readonly { readonly slug: string }[],
+): Record<string, string> {
+  const hrefs: Record<string, string> = {};
+  for (const c of courses) {
+    hrefs[c.slug] = `/programs/${c.slug.toLowerCase().replace(/_/g, "-")}`;
+  }
+  return hrefs;
+}
 
 export default async function HomePage() {
   const courses = await prisma.course.findMany({
@@ -36,7 +41,7 @@ export default async function HomePage() {
       <HeroSection />
 
       {/* 2. Industry Programs — dynamic course cards */}
-      <IndustryProgramsSection courses={courses} courseHrefs={courseHrefs} />
+      <IndustryProgramsSection courses={courses} courseHrefs={buildCourseHrefs(courses)} />
 
       {/* 3. How It Works — 4-step process */}
       <HowItWorksSection />
