@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { generateTask, evaluateTaskAnswer } from "@/lib/services/ai-task-generator.service";
 import { generateTaskSchema, evaluateTaskSchema } from "@/lib/validations/ai-task.schema";
 import { requireSubscription } from "@/lib/guards/subscription.guard";
-import type { CourseSlug } from "@prisma/client";
+import type { CourseSlug } from "@/types";
 
 /* ------------------------------------------------------------------ */
 /*  Helper: get student's course slug                                  */

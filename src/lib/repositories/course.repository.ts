@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import type { Course, CourseSlug } from "@prisma/client";
+import type { Course } from "@prisma/client";
 
 // ── Types ──────────────────────────────────────────────────────────
 
 interface CreateCourseData {
-  readonly slug: CourseSlug;
+  readonly slug: string;
   readonly title: string;
   readonly description: string;
   readonly durationWeeks: number;
@@ -15,7 +15,7 @@ interface CreateCourseData {
 }
 
 interface UpdateCourseData {
-  readonly slug?: CourseSlug;
+  readonly slug?: string;
   readonly title?: string;
   readonly description?: string;
   readonly durationWeeks?: number;

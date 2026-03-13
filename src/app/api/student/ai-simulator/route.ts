@@ -14,7 +14,7 @@ import {
   endSimulationSchema,
 } from "@/lib/validations/ai-simulator.schema";
 import { requireSubscription } from "@/lib/guards/subscription.guard";
-import type { CourseSlug } from "@prisma/client";
+import type { CourseSlug } from "@/types";
 
 /* ------------------------------------------------------------------ */
 /*  Helper: get student's course slug                                  */

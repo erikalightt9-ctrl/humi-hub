@@ -2,7 +2,6 @@ import type {
   Course,
   Enrollment,
   EnrollmentStatus,
-  CourseSlug,
   EmploymentStatus,
   ToolFamiliarity,
   Student,
@@ -25,11 +24,13 @@ import type {
   BadgeType,
 } from "@prisma/client";
 
+// CourseSlug is now a flexible string (no longer a Prisma enum)
+export type CourseSlug = string;
+
 export type {
   Course,
   Enrollment,
   EnrollmentStatus,
-  CourseSlug,
   EmploymentStatus,
   ToolFamiliarity,
   Student,

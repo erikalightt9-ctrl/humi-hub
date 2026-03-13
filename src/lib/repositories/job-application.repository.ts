@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import type { ApplicationStatus, CourseSlug } from "@prisma/client";
+import type { ApplicationStatus } from "@prisma/client";
+import type { CourseSlug } from "@/types";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

@@ -5,7 +5,8 @@ import {
   updateApplicationStatus,
 } from "@/lib/repositories/job-application.repository";
 import { updateApplicationStatusSchema } from "@/lib/validations/job-application.schema";
-import type { ApplicationStatus, CourseSlug } from "@prisma/client";
+import type { ApplicationStatus } from "@prisma/client";
+import type { CourseSlug } from "@/types";
 
 /* ------------------------------------------------------------------ */
 /*  GET — List all applications with optional filters                  */
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
       filters.status = statusParam as ApplicationStatus;
     }
     if (courseSlugParam && courseSlugParam !== "ALL") {
-      filters.courseSlug = courseSlugParam as CourseSlug;
+      filters.courseSlug = courseSlugParam;
     }
 
     const applications = await getAllApplications(filters);

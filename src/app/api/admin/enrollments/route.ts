@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listEnrollments } from "@/lib/repositories/enrollment.repository";
 import type { EnrollmentFilters } from "@/types";
-import type { CourseSlug, EnrollmentStatus } from "@prisma/client";
+import type { EnrollmentStatus } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     };
 
     const courseSlug = searchParams.get("courseSlug");
-    if (courseSlug) filters.courseSlug = courseSlug as CourseSlug;
+    if (courseSlug) filters.courseSlug = courseSlug;
 
     const status = searchParams.get("status");
     if (status) filters.status = status as EnrollmentStatus;

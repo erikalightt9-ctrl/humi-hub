@@ -6,12 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum CourseSlug {
-  MEDICAL_VA
-  REAL_ESTATE_VA
-  US_BOOKKEEPING_VA
-}
-
 enum EnrollmentStatus {
   PENDING
   PAYMENT_SUBMITTED
@@ -122,7 +116,7 @@ enum WaitlistStatus {
 
 model Course {
   id            String       @id @default(cuid())
-  slug          CourseSlug   @unique
+  slug          String       @unique
   title         String
   description   String       @db.Text
   durationWeeks Int
@@ -634,7 +628,7 @@ model JobPosting {
   description  String      @db.Text
   requirements String[]
   skills       String[]
-  courseSlug    CourseSlug?
+  courseSlug    String?
   location     String
   type         String
   salaryRange  String?

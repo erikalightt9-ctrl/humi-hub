@@ -6,7 +6,7 @@ import {
   getSession,
 } from "@/lib/repositories/simulation.repository";
 import type { SimulationMessage } from "@/lib/repositories/simulation.repository";
-import type { CourseSlug } from "@prisma/client";
+import type { CourseSlug } from "@/types";
 
 /* ------------------------------------------------------------------ */
 /*  Scenario definitions                                               */

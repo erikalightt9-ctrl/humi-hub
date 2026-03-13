@@ -1,4 +1,4 @@
-import type { CourseSlug } from "@prisma/client";
+import type { CourseSlug } from "@/types";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -358,5 +358,5 @@ export const AI_PRACTICE_DATA: Record<CourseSlug, AIPracticeCourseData> = {
 };
 
 export function getAIPracticeData(slug: string): AIPracticeCourseData | null {
-  return AI_PRACTICE_DATA[slug as CourseSlug] ?? null;
+  return AI_PRACTICE_DATA[slug] ?? null;
 }

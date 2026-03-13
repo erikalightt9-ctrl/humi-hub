@@ -1,5 +1,5 @@
 import { generateJsonCompletion } from "@/lib/services/openai.service";
-import type { CourseSlug } from "@prisma/client";
+import type { CourseSlug } from "@/types";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

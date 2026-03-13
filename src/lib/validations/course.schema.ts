@@ -11,9 +11,14 @@ export const CURRENCY_SYMBOLS: Readonly<Record<CurrencyCode, string>> = {
 };
 
 export const createCourseSchema = z.object({
-  slug: z.enum(["MEDICAL_VA", "REAL_ESTATE_VA", "US_BOOKKEEPING_VA"], {
-    message: "Slug must be MEDICAL_VA, REAL_ESTATE_VA, or US_BOOKKEEPING_VA",
-  }),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .max(50, "Slug must be 50 characters or fewer")
+    .regex(
+      /^[A-Z0-9_]+$/,
+      "Slug must contain only uppercase letters, numbers, and underscores",
+    ),
   title: z
     .string()
     .min(1, "Title is required")

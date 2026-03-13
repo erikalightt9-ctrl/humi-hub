@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { listSchedules, createSchedule, getScheduleStats } from "@/lib/repositories/schedule.repository";
 import { createScheduleSchema } from "@/lib/validations/schedule.schema";
-import type { CourseSlug, ScheduleStatus } from "@prisma/client";
+import type { ScheduleStatus } from "@prisma/client";
+import type { CourseSlug } from "@/types";
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     const filters = {
       search: searchParams.get("search") ?? undefined,
-      courseSlug: (searchParams.get("courseSlug") as CourseSlug) ?? undefined,
+      courseSlug: searchParams.get("courseSlug") ?? undefined,
       status: (searchParams.get("status") as ScheduleStatus) ?? undefined,
       page: parseInt(searchParams.get("page") ?? "1", 10),
       limit: parseInt(searchParams.get("limit") ?? "20", 10),

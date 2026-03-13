@@ -15,7 +15,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import type { EnrollmentFilters, EnrolleeFilters } from "@/types";
-import type { CourseSlug, EnrollmentStatus, StudentPaymentStatus } from "@prisma/client";
+import type { EnrollmentStatus, StudentPaymentStatus } from "@prisma/client";
 
 export const metadata: Metadata = { title: "Enrollees | HUMI+ Admin" };
 
@@ -47,7 +47,7 @@ export default async function EnrolleesPage({ searchParams }: PageProps) {
     appFilters.status = params.status as EnrollmentStatus;
   }
   if (activeTab === "applications" && params.courseSlug) {
-    appFilters.courseSlug = params.courseSlug as CourseSlug;
+    appFilters.courseSlug = params.courseSlug;
   }
 
   // Build filters for Active Enrollees tab (Student model)
@@ -60,7 +60,7 @@ export default async function EnrolleesPage({ searchParams }: PageProps) {
     enrolleeFilters.paymentStatus = params.paymentStatus as StudentPaymentStatus;
   }
   if (activeTab === "enrollees" && params.courseSlug) {
-    enrolleeFilters.courseSlug = params.courseSlug as CourseSlug;
+    enrolleeFilters.courseSlug = params.courseSlug;
   }
   if (activeTab === "enrollees" && params.accessGranted === "true") {
     enrolleeFilters.accessGranted = true;

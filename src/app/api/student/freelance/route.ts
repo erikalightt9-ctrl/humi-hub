@@ -8,7 +8,7 @@ import {
   createApplication,
 } from "@/lib/repositories/job-application.repository";
 import { applySchema } from "@/lib/validations/job-application.schema";
-import type { CourseSlug } from "@prisma/client";
+
 
 /* ------------------------------------------------------------------ */
 /*  GET — Freelance listings + student's applications                  */
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const courseSlug = student?.enrollment?.course?.slug as CourseSlug | undefined;
+    const courseSlug = student?.enrollment?.course?.slug;
 
     const [listings, applications] = await Promise.all([
       getFreelanceListings(courseSlug),

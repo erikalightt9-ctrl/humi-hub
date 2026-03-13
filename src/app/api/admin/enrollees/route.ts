@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { listEnrollees, getEnrolleeStats } from "@/lib/repositories/enrollee.repository";
 import type { EnrolleeFilters } from "@/types";
-import type { CourseSlug, StudentPaymentStatus } from "@prisma/client";
+import type { StudentPaymentStatus } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       page: parseInt(searchParams.get("page") ?? "1", 10),
       limit: parseInt(searchParams.get("limit") ?? "20", 10),
       search: searchParams.get("search") ?? undefined,
-      courseSlug: (searchParams.get("courseSlug") as CourseSlug) ?? undefined,
+      courseSlug: searchParams.get("courseSlug") ?? undefined,
       paymentStatus: (searchParams.get("paymentStatus") as StudentPaymentStatus) ?? undefined,
       batch: searchParams.get("batch") ?? undefined,
     };

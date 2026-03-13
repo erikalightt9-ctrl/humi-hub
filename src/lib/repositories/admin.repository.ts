@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import type { AnalyticsStats } from "@/types";
-import type { CourseSlug } from "@prisma/client";
 
 export async function getAnalyticsStats(): Promise<AnalyticsStats> {
   const thirtyDaysAgo = new Date();
@@ -29,7 +28,7 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
     rejectedCount: rejected,
     recentEnrollments: recent,
     enrollmentsByCourse: courseBreakdown.map((c) => ({
-      slug: c.slug as CourseSlug,
+      slug: c.slug,
       title: c.title,
       count: c._count.enrollments,
     })),

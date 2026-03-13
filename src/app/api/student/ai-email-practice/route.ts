@@ -18,7 +18,7 @@ import {
   evaluateEmailSchema,
 } from "@/lib/validations/ai-email-practice.schema";
 import { requireSubscription } from "@/lib/guards/subscription.guard";
-import type { CourseSlug } from "@prisma/client";
+import type { CourseSlug } from "@/types";
 
 /* ------------------------------------------------------------------ */
 /*  Helper: get student's course slug                                  */

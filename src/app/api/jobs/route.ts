@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { CourseSlug, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 const COURSE_SLUGS = ["MEDICAL_VA", "REAL_ESTATE_VA", "US_BOOKKEEPING_VA"] as const;
 
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (courseSlug) {
-      where.courseSlug = courseSlug as CourseSlug;
+      where.courseSlug = courseSlug;
     }
 
     if (type) {

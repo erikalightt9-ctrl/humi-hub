@@ -9,7 +9,7 @@ import { Pagination } from "@/components/admin/Pagination";
 import { listSchedules, getScheduleStats } from "@/lib/repositories/schedule.repository";
 import { prisma } from "@/lib/prisma";
 import type { ScheduleFilters as ScheduleFilterType } from "@/types";
-import type { CourseSlug, ScheduleStatus } from "@prisma/client";
+import type { ScheduleStatus } from "@prisma/client";
 
 export const metadata: Metadata = { title: "Schedules | HUMI+ Admin" };
 
@@ -29,7 +29,7 @@ export default async function SchedulesPage({ searchParams }: PageProps) {
     page: parseInt(params.page ?? "1", 10),
     limit: 20,
     search: params.search,
-    courseSlug: params.courseSlug as CourseSlug | undefined,
+    courseSlug: params.courseSlug,
     status: params.status as ScheduleStatus | undefined,
   };
 

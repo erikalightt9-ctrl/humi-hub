@@ -65,14 +65,8 @@ interface FormState {
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const SLUG_OPTIONS = [
-  { value: "MEDICAL_VA", label: "Medical VA" },
-  { value: "REAL_ESTATE_VA", label: "Real Estate VA" },
-  { value: "US_BOOKKEEPING_VA", label: "US Bookkeeping VA" },
-] as const;
-
 const INITIAL_FORM_STATE: FormState = {
-  slug: "MEDICAL_VA",
+  slug: "",
   title: "",
   description: "",
   durationWeeks: 8,
@@ -87,8 +81,10 @@ const INITIAL_FORM_STATE: FormState = {
 /* ------------------------------------------------------------------ */
 
 function slugLabel(slug: string): string {
-  const found = SLUG_OPTIONS.find((s) => s.value === slug);
-  return found?.label ?? slug;
+  return slug
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 }
 
 /* ------------------------------------------------------------------ */
@@ -387,19 +383,19 @@ export function CourseManager() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="c-slug">Course Slug *</Label>
-                <select
+                <Input
                   id="c-slug"
                   value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
+                  onChange={(e) =>
+                    setSlug(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ""))
+                  }
+                  placeholder="e.g. MEDICAL_VA"
+                  maxLength={50}
                   required
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  {SLUG_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Uppercase letters, numbers, and underscores only
+                </p>
               </div>
               <div>
                 <Label htmlFor="c-title">Title *</Label>

@@ -5,7 +5,7 @@ import {
   getJobPostings,
 } from "@/lib/repositories/job-matching.repository";
 import { createJobPostingSchema } from "@/lib/validations/ai-job-matching.schema";
-import type { CourseSlug } from "@prisma/client";
+import type { CourseSlug } from "@/types";
 
 /* ------------------------------------------------------------------ */
 /*  GET — List all job postings (with optional filters)                */
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     if (isActiveParam === "true") filters.isActive = true;
     if (isActiveParam === "false") filters.isActive = false;
-    if (courseSlugParam) filters.courseSlug = courseSlugParam as CourseSlug;
+    if (courseSlugParam) filters.courseSlug = courseSlugParam;
 
     const postings = await getJobPostings(filters);
 
