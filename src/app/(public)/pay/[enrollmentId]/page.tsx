@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LogIn, ClipboardList } from "lucide-react";
 import { findEnrollmentById } from "@/lib/repositories/enrollment.repository";
 import { findPaymentsByEnrollment } from "@/lib/repositories/payment.repository";
-import { PaymentUploadForm } from "./PaymentUploadForm";
 import { PayOnlineButton } from "./PayOnlineButton";
 
 export const metadata: Metadata = { title: "Submit Payment | HUMI Training Center" };
@@ -40,15 +38,13 @@ export default async function PaymentPage({
     ? baseProgramPrice + (trainerUpgradeFee ?? 0)
     : Number(enrollment.course.price);
   const referenceCode = enrollment.referenceCode;
-  const gcashQrUrl = process.env.GCASH_QR_URL;
-  const isPaymongoEnabled = Boolean(process.env.PAYMONGO_SECRET_KEY);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">HUMI Training Center</h1>
-          <p className="text-gray-500 mt-1">Payment Submission</p>
+          <p className="text-gray-500 mt-1">Payment</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
@@ -83,7 +79,7 @@ export default async function PaymentPage({
               <div className="text-5xl mb-4">&#9203;</div>
               <h2 className="text-xl font-bold text-amber-700 mb-2">Payment Under Review</h2>
               <p className="text-gray-600">
-                We received your payment proof for <strong>{enrollment.course.title}</strong>.
+                We received your payment for <strong>{enrollment.course.title}</strong>.
                 We&apos;ll verify it within 24 hours and send you an email once confirmed.
               </p>
               {referenceCode && (
@@ -119,9 +115,6 @@ export default async function PaymentPage({
                   <p className="text-2xl font-bold font-mono text-amber-900 tracking-wider">
                     {referenceCode}
                   </p>
-                  <p className="text-xs text-amber-600 mt-1">
-                    Include this code in your payment reference/note
-                  </p>
                 </div>
               )}
 
@@ -141,68 +134,12 @@ export default async function PaymentPage({
                 )}
               </div>
 
-              {/* Payment methods */}
-              <div className="space-y-4 mb-6">
-                {process.env.GCASH_NUMBER && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                    <h3 className="font-semibold text-blue-800 mb-2">GCash</h3>
-                    <p className="text-sm text-blue-700">
-                      Number: <span className="font-mono font-bold">{process.env.GCASH_NUMBER}</span>
-                    </p>
-                    {process.env.GCASH_NAME && (
-                      <p className="text-sm text-blue-700">
-                        Name: <span className="font-bold">{process.env.GCASH_NAME}</span>
-                      </p>
-                    )}
-                    {gcashQrUrl && (
-                      <div className="mt-3 flex justify-center">
-                        <Image
-                          src={gcashQrUrl}
-                          alt="GCash QR Code"
-                          width={200}
-                          height={200}
-                          className="rounded-lg border border-blue-200"
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
+              {/* Online Payment */}
+              <PayOnlineButton enrollmentId={enrollmentId} />
 
-                {process.env.BANK_ACCOUNT_NUMBER && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-                    <h3 className="font-semibold text-purple-800 mb-2">Bank Transfer</h3>
-                    {process.env.BANK_NAME && (
-                      <p className="text-sm text-purple-700">
-                        Bank: <span className="font-bold">{process.env.BANK_NAME}</span>
-                      </p>
-                    )}
-                    <p className="text-sm text-purple-700">
-                      Account #: <span className="font-mono font-bold">{process.env.BANK_ACCOUNT_NUMBER}</span>
-                    </p>
-                    {process.env.BANK_ACCOUNT_NAME && (
-                      <p className="text-sm text-purple-700">
-                        Name: <span className="font-bold">{process.env.BANK_ACCOUNT_NAME}</span>
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Online Payment — only shown when PayMongo is configured */}
-              {isPaymongoEnabled && (
-                <>
-                  <PayOnlineButton enrollmentId={enrollmentId} />
-
-                  <div className="flex items-center gap-3 my-6">
-                    <div className="flex-1 h-px bg-gray-200" />
-                    <span className="text-sm text-gray-400 font-medium">or pay manually</span>
-                    <div className="flex-1 h-px bg-gray-200" />
-                  </div>
-                </>
-              )}
-
-              {/* Manual Payment Upload */}
-              <PaymentUploadForm enrollmentId={enrollmentId} />
+              <p className="text-xs text-gray-400 text-center mt-4">
+                Secure payment via GCash, PayMaya, or Credit/Debit Card
+              </p>
             </>
           )}
         </div>

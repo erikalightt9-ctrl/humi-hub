@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     // Verify PayMongo is configured before attempting checkout
     if (!process.env.PAYMONGO_SECRET_KEY) {
       return jsonError(
-        "Online payment is not available at this time. Please use the manual payment option below.",
+        "Online payment is not available at this time. Please contact support for assistance.",
         503
       );
     }

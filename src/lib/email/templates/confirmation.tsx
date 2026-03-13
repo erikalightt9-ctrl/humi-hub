@@ -53,7 +53,7 @@ export function ConfirmationEmail({
         2. You will receive an email with the result of your application.
       </Text>
       <Text style={styles.text}>
-        3. If approved, you will receive payment instructions and portal access.
+        3. If approved, you will receive a payment link and portal access.
       </Text>
 
       <Text style={styles.textMuted}>

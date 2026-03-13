@@ -15,7 +15,7 @@ const FAQ_ENTRIES = [
   },
   {
     q: "What payment methods do you accept?",
-    a: "We accept GCash and bank transfer. After your enrollment is approved, you'll receive payment instructions via email with our GCash QR code and bank details.",
+    a: "We accept online payments via GCash, PayMaya, and credit/debit card. After your enrollment is approved, you'll receive a secure payment link via email.",
   },
   {
     q: "How long are the courses?",

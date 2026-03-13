@@ -33,8 +33,7 @@ export default async function PaymentFailedPage({
           </h1>
 
           <p className="text-gray-600 mb-6">
-            Your payment was cancelled or failed. You can try again or use the
-            manual payment option.
+            Your payment was cancelled or failed. You can try again below.
           </p>
 
           <div className="flex flex-col gap-3">

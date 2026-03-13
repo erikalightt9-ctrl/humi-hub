@@ -299,7 +299,7 @@ export function EnrollmentForm({ courses }: EnrollmentFormProps) {
             <AlertDialogTitle>Submit Enrollment Application?</AlertDialogTitle>
             <AlertDialogDescription>
               Please confirm that all the information you provided is accurate and complete.
-              Once submitted, you will receive a confirmation email with payment instructions.
+              Once submitted, you will receive a confirmation email with next steps.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
