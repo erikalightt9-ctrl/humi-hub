@@ -127,6 +127,50 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
+    CredentialsProvider({
+      id: "corporate",
+      name: "Corporate Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
+        }
+
+        const manager = await prisma.corporateManager.findUnique({
+          where: { email: credentials.email.toLowerCase() },
+          include: { organization: true },
+        });
+
+        if (!manager) {
+          throw new Error("Invalid credentials");
+        }
+
+        const isValid = await bcrypt.compare(credentials.password, manager.passwordHash);
+
+        if (!isValid) {
+          throw new Error("Invalid credentials");
+        }
+
+        if (!manager.isActive) {
+          throw new Error("Your account has been deactivated. Please contact admin.");
+        }
+
+        if (!manager.organization.isActive) {
+          throw new Error("Your organization has been deactivated. Please contact admin.");
+        }
+
+        return {
+          id: manager.id,
+          email: manager.email,
+          name: manager.name,
+          role: "corporate" as const,
+          organizationId: manager.organizationId,
+        };
+      },
+    }),
   ],
   session: {
     strategy: "jwt",
@@ -142,6 +186,7 @@ export const authOptions: NextAuthOptions = {
         token.role = (user as typeof user & { role: string }).role;
         token.mustChangePassword = (user as typeof user & { mustChangePassword?: boolean }).mustChangePassword ?? false;
         token.accessExpiry = (user as typeof user & { accessExpiry?: string | null }).accessExpiry ?? null;
+        token.organizationId = (user as typeof user & { organizationId?: string }).organizationId ?? null;
       }
       return token;
     },
@@ -151,10 +196,12 @@ export const authOptions: NextAuthOptions = {
           id: string;
           role: string;
           mustChangePassword: boolean;
+          organizationId: string | null;
         };
         user.id = token.id as string;
         user.role = token.role as string;
         user.mustChangePassword = (token.mustChangePassword as boolean) ?? false;
+        user.organizationId = (token.organizationId as string) ?? null;
       }
       return session;
     },

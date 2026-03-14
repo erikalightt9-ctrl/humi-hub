@@ -192,7 +192,11 @@ export interface JobPostingRecord {
   readonly location: string;
   readonly type: string;
   readonly salaryRange: string | null;
+  readonly industry: string | null;
   readonly isActive: boolean;
+  readonly externalId: string | null;
+  readonly externalSource: string | null;
+  readonly externalUrl: string | null;
   readonly createdAt: Date;
 }
 

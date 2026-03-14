@@ -140,6 +140,70 @@ export async function deleteJobPosting(id: string): Promise<void> {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Job Posting — External upsert (for sync service)                   */
+/* ------------------------------------------------------------------ */
+
+interface UpsertExternalJobInput {
+  readonly title: string;
+  readonly company: string;
+  readonly description: string;
+  readonly requirements: ReadonlyArray<string>;
+  readonly skills: ReadonlyArray<string>;
+  readonly courseSlug: string | null;
+  readonly location: string;
+  readonly type: string;
+  readonly salaryRange: string | null;
+  readonly industry: string | null;
+  readonly externalId: string;
+  readonly externalSource: string;
+  readonly externalUrl: string;
+}
+
+interface UpsertResult {
+  readonly id: string;
+  readonly created: boolean;
+}
+
+export async function upsertExternalJob(
+  data: UpsertExternalJobInput,
+): Promise<UpsertResult> {
+  const existing = await prisma.jobPosting.findUnique({
+    where: {
+      externalId_externalSource: {
+        externalId: data.externalId,
+        externalSource: data.externalSource,
+      },
+    },
+    select: { id: true },
+  });
+
+  if (existing) {
+    return { id: existing.id, created: false };
+  }
+
+  const created = await prisma.jobPosting.create({
+    data: {
+      title: data.title,
+      company: data.company,
+      description: data.description,
+      requirements: [...data.requirements],
+      skills: [...data.skills],
+      courseSlug: data.courseSlug,
+      location: data.location,
+      type: data.type,
+      salaryRange: data.salaryRange,
+      industry: data.industry,
+      externalId: data.externalId,
+      externalSource: data.externalSource,
+      externalUrl: data.externalUrl,
+    },
+    select: { id: true },
+  });
+
+  return { id: created.id, created: true };
+}
+
+/* ------------------------------------------------------------------ */
 /*  Job Match — Read                                                   */
 /* ------------------------------------------------------------------ */
 

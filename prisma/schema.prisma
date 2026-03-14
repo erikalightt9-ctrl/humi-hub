@@ -185,6 +185,8 @@ model Enrollment {
   referenceCode            String?           @unique
   createdAt                DateTime          @default(now())
   updatedAt                DateTime          @updatedAt
+  organizationId           String?
+  organization             Organization? @relation(fields: [organizationId], references: [id])
   student                  Student?
   payments                 Payment[]
   waitlistEntries          Waitlist[]
@@ -197,6 +199,7 @@ model Enrollment {
   @@index([trainerId])
   @@index([scheduleId])
   @@index([referenceCode])
+  @@index([organizationId])
   @@map("enrollments")
 }
 
@@ -250,11 +253,13 @@ model Student {
   notes              String?              @db.Text
   courseTier         CourseTier           @default(BASIC)
   trainerId          String?
+  organizationId     String?
   portfolioPublic    Boolean              @default(false)
   createdAt          DateTime             @default(now())
   enrollment   Enrollment         @relation(fields: [enrollmentId], references: [id])
   schedule     Schedule?          @relation(fields: [scheduleId], references: [id])
   trainer      Trainer?           @relation(fields: [trainerId], references: [id])
+  organization Organization?     @relation(fields: [organizationId], references: [id])
   completions  LessonCompletion[]
   attempts     QuizAttempt[]
   certificates Certificate[]
@@ -281,6 +286,7 @@ model Student {
   @@index([paymentStatus])
   @@index([accessGranted])
   @@index([scheduleId])
+  @@index([organizationId])
   @@map("students")
 }
 
@@ -634,25 +640,31 @@ model InterviewSession {
 }
 
 model JobPosting {
-  id           String      @id @default(cuid())
-  title        String
-  company      String
-  description  String      @db.Text
-  requirements String[]
-  skills       String[]
-  courseSlug    String?
-  location     String
-  type         String
-  salaryRange  String?
-  isActive     Boolean     @default(true)
-  isInternship Boolean     @default(false)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  matches      JobMatch[]
-  applications JobApplication[]
+  id             String      @id @default(cuid())
+  title          String
+  company        String
+  description    String      @db.Text
+  requirements   String[]
+  skills         String[]
+  courseSlug      String?
+  location       String
+  type           String
+  salaryRange    String?
+  industry       String?
+  isActive       Boolean     @default(true)
+  isInternship   Boolean     @default(false)
+  externalId     String?
+  externalSource String?
+  externalUrl    String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  matches        JobMatch[]
+  applications   JobApplication[]
 
+  @@unique([externalId, externalSource])
   @@index([isActive])
   @@index([courseSlug])
+  @@index([externalSource])
   @@map("job_postings")
 }
 
@@ -944,4 +956,38 @@ model Waitlist {
   @@index([scheduleId, status])
   @@index([enrollmentId])
   @@map("waitlist")
+}
+
+model Organization {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  email       String    @unique
+  industry    String?
+  logoUrl     String?
+  maxSeats    Int       @default(10)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  managers    CorporateManager[]
+  enrollments Enrollment[]
+  students    Student[]
+
+  @@map("organizations")
+}
+
+model CorporateManager {
+  id              String       @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  email           String       @unique
+  passwordHash    String
+  name            String
+  role            String       @default("manager")
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+
+  @@index([organizationId])
+  @@map("corporate_managers")
 }

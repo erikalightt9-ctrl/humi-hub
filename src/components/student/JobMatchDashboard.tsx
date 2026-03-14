@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Briefcase,
   Loader2,
@@ -9,8 +9,16 @@ import {
   Sparkles,
   Search,
   DollarSign,
+  ExternalLink,
+  Filter,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  JOB_INDUSTRIES,
+  JOB_TYPE_OPTIONS,
+} from "@/lib/constants/job-skill-mappings";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -27,7 +35,10 @@ interface JobPosting {
   readonly location: string;
   readonly type: string;
   readonly salaryRange: string | null;
+  readonly industry: string | null;
   readonly isActive: boolean;
+  readonly externalSource: string | null;
+  readonly externalUrl: string | null;
 }
 
 interface JobMatch {
@@ -68,6 +79,31 @@ function scoreRingColor(score: number): string {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Source badge                                                        */
+/* ------------------------------------------------------------------ */
+
+const SOURCE_LABELS: Readonly<Record<string, string>> = {
+  remotive: "Remotive",
+  jsearch: "JSearch",
+};
+
+const SOURCE_COLORS: Readonly<Record<string, string>> = {
+  remotive: "bg-purple-100 text-purple-700",
+  jsearch: "bg-teal-100 text-teal-700",
+};
+
+function SourceBadge({ source }: { readonly source: string | null }) {
+  if (!source) return null;
+  return (
+    <span
+      className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${SOURCE_COLORS[source] ?? "bg-gray-100 text-gray-600"}`}
+    >
+      {SOURCE_LABELS[source] ?? source}
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Circular score indicator                                           */
 /* ------------------------------------------------------------------ */
 
@@ -79,7 +115,6 @@ function ScoreCircle({ score }: { readonly score: number }) {
   return (
     <div className="relative w-[72px] h-[72px] shrink-0">
       <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
-        {/* Background ring */}
         <circle
           cx="32"
           cy="32"
@@ -88,7 +123,6 @@ function ScoreCircle({ score }: { readonly score: number }) {
           stroke="#e5e7eb"
           strokeWidth="5"
         />
-        {/* Score ring */}
         <circle
           cx="32"
           cy="32"
@@ -111,6 +145,152 @@ function ScoreCircle({ score }: { readonly score: number }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Filter panel                                                       */
+/* ------------------------------------------------------------------ */
+
+interface FilterState {
+  readonly search: string;
+  readonly jobType: string;
+  readonly industry: string;
+  readonly source: string;
+  readonly minScore: number;
+}
+
+const INITIAL_FILTERS: FilterState = {
+  search: "",
+  jobType: "",
+  industry: "",
+  source: "",
+  minScore: 0,
+};
+
+function FilterPanel({
+  filters,
+  onFiltersChange,
+  matchCount,
+  filteredCount,
+}: {
+  readonly filters: FilterState;
+  readonly onFiltersChange: (filters: FilterState) => void;
+  readonly matchCount: number;
+  readonly filteredCount: number;
+}) {
+  const hasActiveFilters =
+    filters.search !== "" ||
+    filters.jobType !== "" ||
+    filters.industry !== "" ||
+    filters.source !== "" ||
+    filters.minScore > 0;
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-gray-500" />
+          <span className="text-sm font-medium text-gray-700">
+            Filter Matches
+          </span>
+        </div>
+        {hasActiveFilters && (
+          <button
+            onClick={() => onFiltersChange(INITIAL_FILTERS)}
+            className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+          >
+            <X className="h-3 w-3" />
+            Clear All
+          </button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {/* Keyword search */}
+        <div className="relative lg:col-span-1">
+          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
+          <Input
+            value={filters.search}
+            onChange={(e) =>
+              onFiltersChange({ ...filters, search: e.target.value })
+            }
+            placeholder="Search jobs..."
+            className="pl-8 h-9 text-sm"
+          />
+        </div>
+
+        {/* Job type */}
+        <select
+          value={filters.jobType}
+          onChange={(e) =>
+            onFiltersChange({ ...filters, jobType: e.target.value })
+          }
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          <option value="">All Types</option>
+          {JOB_TYPE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+
+        {/* Industry */}
+        <select
+          value={filters.industry}
+          onChange={(e) =>
+            onFiltersChange({ ...filters, industry: e.target.value })
+          }
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          <option value="">All Industries</option>
+          {JOB_INDUSTRIES.map((industry) => (
+            <option key={industry} value={industry}>
+              {industry}
+            </option>
+          ))}
+        </select>
+
+        {/* Source */}
+        <select
+          value={filters.source}
+          onChange={(e) =>
+            onFiltersChange({ ...filters, source: e.target.value })
+          }
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          <option value="">All Sources</option>
+          <option value="manual">Manual</option>
+          <option value="remotive">Remotive</option>
+          <option value="jsearch">JSearch</option>
+        </select>
+
+        {/* Min score */}
+        <select
+          value={filters.minScore}
+          onChange={(e) =>
+            onFiltersChange({
+              ...filters,
+              minScore: Number(e.target.value),
+            })
+          }
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          <option value={0}>Any Score</option>
+          <option value={50}>50%+ Match</option>
+          <option value={60}>60%+ Match</option>
+          <option value={75}>75%+ Match</option>
+          <option value={90}>90%+ Match</option>
+        </select>
+      </div>
+
+      {hasActiveFilters && (
+        <p className="text-xs text-gray-400 mt-2">
+          Showing {filteredCount} of {matchCount} matches
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -119,6 +299,7 @@ export function JobMatchDashboard() {
   const [loading, setLoading] = useState(true);
   const [matching, setMatching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
 
   /* ---------------------------------------------------------------- */
   /*  Fetch existing matches                                           */
@@ -143,6 +324,54 @@ export function JobMatchDashboard() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  /* ---------------------------------------------------------------- */
+  /*  Filter matches client-side                                       */
+  /* ---------------------------------------------------------------- */
+
+  const filteredMatches = useMemo(() => {
+    const matches = data?.matches ?? [];
+    if (matches.length === 0) return [];
+
+    return matches.filter((match) => {
+      const job = match.jobPosting;
+
+      // Keyword search
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        const matchesSearch =
+          job.title.toLowerCase().includes(searchLower) ||
+          job.company.toLowerCase().includes(searchLower) ||
+          job.description.toLowerCase().includes(searchLower) ||
+          job.skills.some((s) => s.toLowerCase().includes(searchLower));
+
+        if (!matchesSearch) return false;
+      }
+
+      // Job type
+      if (filters.jobType && job.type !== filters.jobType) {
+        return false;
+      }
+
+      // Industry
+      if (filters.industry && job.industry !== filters.industry) {
+        return false;
+      }
+
+      // Source
+      if (filters.source) {
+        const jobSource = job.externalSource ?? "manual";
+        if (jobSource !== filters.source) return false;
+      }
+
+      // Min score
+      if (filters.minScore > 0 && match.matchScore < filters.minScore) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [data?.matches, filters]);
 
   /* ---------------------------------------------------------------- */
   /*  Trigger matching                                                 */
@@ -238,13 +467,13 @@ export function JobMatchDashboard() {
   }
 
   /* ---------------------------------------------------------------- */
-  /*  Matches list                                                     */
+  /*  Matches list with filters                                        */
   /* ---------------------------------------------------------------- */
 
   return (
-    <div className="space-y-6">
-      {/* Match button */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-4">
+      {/* Top bar */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <p className="text-sm text-gray-500">
           {matches.length} match{matches.length !== 1 ? "es" : ""} found
         </p>
@@ -260,7 +489,7 @@ export function JobMatchDashboard() {
           ) : (
             <Sparkles className="h-3.5 w-3.5" />
           )}
-          {matching ? "Matching..." : "Find My Matches"}
+          {matching ? "Matching..." : "Refresh Matches"}
         </Button>
       </div>
 
@@ -270,8 +499,16 @@ export function JobMatchDashboard() {
         </p>
       )}
 
-      {error && (
-        <p className="text-sm text-red-500">{error}</p>
+      {error && <p className="text-sm text-red-500">{error}</p>}
+
+      {/* Filter Panel */}
+      {matches.length > 0 && (
+        <FilterPanel
+          filters={filters}
+          onFiltersChange={setFilters}
+          matchCount={matches.length}
+          filteredCount={filteredMatches.length}
+        />
       )}
 
       {/* Matching in progress */}
@@ -287,9 +524,24 @@ export function JobMatchDashboard() {
         </div>
       )}
 
+      {/* No results after filtering */}
+      {filteredMatches.length === 0 && matches.length > 0 && !matching && (
+        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+          <p className="text-sm text-gray-500 mb-2">
+            No matches found with the current filters.
+          </p>
+          <button
+            onClick={() => setFilters(INITIAL_FILTERS)}
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
+            Clear all filters
+          </button>
+        </div>
+      )}
+
       {/* Match cards */}
       <div className="space-y-4">
-        {matches.map((match) => (
+        {filteredMatches.map((match) => (
           <div
             key={match.id}
             className="bg-white rounded-xl border border-gray-200 p-5"
@@ -302,16 +554,31 @@ export function JobMatchDashboard() {
               <div className="flex-1 min-w-0">
                 {/* Title row */}
                 <div className="flex items-start justify-between mb-1">
-                  <h3 className="font-semibold text-gray-900">
-                    {match.jobPosting.title}
-                  </h3>
-                  <span
-                    className={`text-xs font-medium px-2 py-0.5 rounded-full border shrink-0 ml-2 ${scoreBg(match.matchScore)}`}
-                  >
-                    <span className={scoreColor(match.matchScore)}>
-                      {match.matchScore}% Match
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-semibold text-gray-900">
+                      {match.jobPosting.title}
+                    </h3>
+                    <SourceBadge source={match.jobPosting.externalSource} />
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                    <span
+                      className={`text-xs font-medium px-2 py-0.5 rounded-full border ${scoreBg(match.matchScore)}`}
+                    >
+                      <span className={scoreColor(match.matchScore)}>
+                        {match.matchScore}% Match
+                      </span>
                     </span>
-                  </span>
+                    {match.jobPosting.externalUrl && (
+                      <a
+                        href={match.jobPosting.externalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-400 hover:text-blue-600 transition-colors"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
                 </div>
 
                 {/* Meta */}
@@ -328,6 +595,11 @@ export function JobMatchDashboard() {
                     <Briefcase className="h-3 w-3" />
                     {match.jobPosting.type}
                   </span>
+                  {match.jobPosting.industry && (
+                    <span className="text-gray-400">
+                      {match.jobPosting.industry}
+                    </span>
+                  )}
                   {match.jobPosting.salaryRange && (
                     <span className="flex items-center gap-1">
                       <DollarSign className="h-3 w-3" />
@@ -351,7 +623,7 @@ export function JobMatchDashboard() {
 
                 {/* Skills tags */}
                 <div className="flex flex-wrap gap-1.5">
-                  {match.jobPosting.skills.map((skill) => (
+                  {match.jobPosting.skills.slice(0, 8).map((skill) => (
                     <span
                       key={skill}
                       className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full"
@@ -359,6 +631,11 @@ export function JobMatchDashboard() {
                       {skill}
                     </span>
                   ))}
+                  {match.jobPosting.skills.length > 8 && (
+                    <span className="text-xs text-gray-400">
+                      +{match.jobPosting.skills.length - 8} more
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

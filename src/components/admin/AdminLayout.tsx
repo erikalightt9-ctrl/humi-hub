@@ -30,6 +30,7 @@ import {
   FileText,
   TrendingUp,
   Crown,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -121,6 +122,13 @@ const adminNavGroups: ReadonlyArray<NavGroup> = [
       { href: "/admin/ai-insights", label: "AI Insights", icon: Brain },
       { href: "/admin/control-tower", label: "Control Tower", icon: Rocket },
       { href: "/admin/reports", label: "Reports", icon: FileBarChart },
+    ],
+  },
+  {
+    label: "Corporate",
+    icon: Building2,
+    items: [
+      { href: "/admin/organizations", label: "Organizations", icon: Building2 },
     ],
   },
   {
