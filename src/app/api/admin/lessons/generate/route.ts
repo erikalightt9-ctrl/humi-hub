@@ -7,6 +7,9 @@ import {
   generateLessonsForAllTiers,
 } from "@/lib/services/ai-lesson-generator.service";
 
+// Allow up to 60s for AI generation (especially "All Tiers" = 3 API calls)
+export const maxDuration = 60;
+
 const generateSchema = z.object({
   courseId: z.string().min(1),
   tier: z.enum(["BASIC", "PROFESSIONAL", "ADVANCED", "ALL"]),

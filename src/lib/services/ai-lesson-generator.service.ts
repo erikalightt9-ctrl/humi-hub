@@ -135,7 +135,7 @@ export async function generateLessonsForTier(
   const result = await generateJsonCompletion<AIGenerationResult>(
     systemPrompt,
     userPrompt,
-    { maxTokens: 4096, temperature: 0.7 },
+    { maxTokens: 12000, temperature: 0.7 },
   );
 
   if (!result.modules || result.modules.length === 0) {

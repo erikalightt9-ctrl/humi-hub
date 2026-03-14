@@ -20,7 +20,8 @@ function getOpenAI(): OpenAI {
 const DEFAULT_MODEL = "gpt-4o-mini";
 const DEFAULT_MAX_TOKENS = 1024;
 const DEFAULT_TEMPERATURE = 0.7;
-const MAX_RETRIES = 1;
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 1000;
 
 /* ------------------------------------------------------------------ */
 /*  Options                                                            */
@@ -95,6 +96,10 @@ export async function generateJsonCompletion<T>(
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
+      if (attempt > 0) {
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS * attempt));
+      }
+
       const response = await getOpenAI().chat.completions.create({
         model,
         messages: [
@@ -106,18 +111,39 @@ export async function generateJsonCompletion<T>(
         response_format: { type: "json_object" },
       });
 
-      const raw = response.choices[0]?.message?.content ?? "{}";
-      return JSON.parse(raw) as T;
+      const raw = response.choices[0]?.message?.content;
+      const finishReason = response.choices[0]?.finish_reason;
+
+      if (!raw) {
+        throw new Error("OpenAI returned empty response content");
+      }
+
+      if (finishReason === "length") {
+        console.warn(
+          `[OpenAI JSON] Response truncated (finish_reason=length). maxTokens=${maxTokens}`,
+        );
+        throw new Error("Response was truncated — increase maxTokens");
+      }
+
+      try {
+        return JSON.parse(raw) as T;
+      } catch (parseErr) {
+        console.error(
+          `[OpenAI JSON] Parse error. Raw (first 500 chars): ${raw.slice(0, 500)}`,
+        );
+        throw new Error(`JSON parse failed: ${parseErr instanceof Error ? parseErr.message : "unknown"}`);
+      }
     } catch (err) {
       lastError = err;
       if (attempt < MAX_RETRIES) {
-        console.warn(`[OpenAI JSON] Retry ${attempt + 1} after error:`, err);
+        console.warn(`[OpenAI JSON] Retry ${attempt + 1}/${MAX_RETRIES} after error:`, err);
       }
     }
   }
 
   console.error("[OpenAI JSON] All retries exhausted:", lastError);
-  throw new Error("Failed to generate AI JSON completion after retries");
+  const detail = lastError instanceof Error ? lastError.message : "Unknown error";
+  throw new Error(`Failed to generate AI JSON completion after retries: ${detail}`);
 }
 
 /* ------------------------------------------------------------------ */
