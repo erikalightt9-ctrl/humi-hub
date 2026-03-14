@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 import { chatMessageSchema } from "@/lib/validations/chat.schema";
-import { streamChatResponse } from "@/lib/services/chat.service";
+import { streamChatResponse, streamChatResponseWithRole } from "@/lib/services/chat.service";
 
 // Simple in-memory rate limiter (per IP, 10 requests per minute)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -64,7 +65,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const stream = await streamChatResponse(result.data.messages);
+    // Check if authenticated — use role-aware prompts if so
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const role = token?.role as string | undefined;
+    const currentPage = body.currentPage as string | undefined;
+
+    const stream = role
+      ? await streamChatResponseWithRole(result.data.messages, role, currentPage)
+      : await streamChatResponse(result.data.messages);
 
     return new Response(stream, {
       headers: {

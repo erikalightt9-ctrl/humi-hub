@@ -38,11 +38,16 @@ import {
   Building2,
   Laptop,
   Crown,
+  Ticket,
+  HelpCircle,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { SidebarNavGroup } from "@/components/shared/SidebarNavGroup";
 import type { NavItem } from "@/components/shared/SidebarNavGroup";
+import { NotificationBell } from "@/components/shared/NotificationBell";
+import { ChatWidgetEnhanced } from "@/components/shared/ChatWidgetEnhanced";
 
 interface NavGroup {
   readonly label: string;
@@ -109,6 +114,16 @@ function buildNavGroups(courseId: string): ReadonlyArray<NavGroup> {
         { href: `/student/courses/${courseId}/leaderboard`, label: "Leaderboard", icon: Trophy },
         { href: "/student/calendar", label: "Calendar", icon: CalendarDays },
         { href: "/student/mentorship", label: "Mentorship", icon: Heart },
+      ],
+    },
+    {
+      label: "Support",
+      icon: Ticket,
+      items: [
+        { href: "/student/messages", label: "Messages", icon: Mail },
+        { href: "/student/support", label: "Support Tickets", icon: Ticket },
+        { href: "/student/notifications", label: "Notifications", icon: Bell },
+        { href: "/student/help", label: "Help Center", icon: HelpCircle },
       ],
     },
   ];
@@ -215,8 +230,12 @@ export function StudentLayout({ courseId, children }: StudentLayoutProps) {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex items-center justify-end px-8 py-3 border-b border-gray-200 bg-white shrink-0">
+          <NotificationBell />
+        </div>
         <main className="flex-1 overflow-y-auto p-8">{children}</main>
       </div>
+      <ChatWidgetEnhanced role="student" currentPage={pathname} />
     </div>
   );
 }

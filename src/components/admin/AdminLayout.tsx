@@ -31,11 +31,17 @@ import {
   TrendingUp,
   Crown,
   Building2,
+  Ticket,
+  Bell,
+  HelpCircle,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { SidebarNavGroup } from "@/components/shared/SidebarNavGroup";
 import type { NavItem } from "@/components/shared/SidebarNavGroup";
+import { NotificationBell } from "@/components/shared/NotificationBell";
+import { ChatWidgetEnhanced } from "@/components/shared/ChatWidgetEnhanced";
 
 // ---------------------------------------------------------------------------
 // Navigation group definitions
@@ -109,7 +115,11 @@ const adminNavGroups: ReadonlyArray<NavGroup> = [
     label: "Communication",
     icon: MessageSquare,
     items: [
-      { href: "/admin/communications", label: "Messages", icon: MessageSquare },
+      { href: "/admin/communications", label: "Contact Messages", icon: MessageSquare },
+      { href: "/admin/messages", label: "Messaging", icon: Mail },
+      { href: "/admin/tickets", label: "Support Tickets", icon: Ticket },
+      { href: "/admin/knowledge-base", label: "Knowledge Base", icon: HelpCircle },
+      { href: "/admin/notifications", label: "Notifications", icon: Bell },
       { href: "/admin/calendar", label: "Calendar", icon: CalendarDays },
       { href: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote },
     ],
@@ -210,8 +220,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex items-center justify-end px-8 py-3 border-b border-gray-200 bg-white shrink-0">
+          <NotificationBell />
+        </div>
         <main className="flex-1 overflow-y-auto p-8">{children}</main>
       </div>
+      <ChatWidgetEnhanced role="admin" currentPage={pathname} />
     </div>
   );
 }

@@ -991,3 +991,186 @@ model CorporateManager {
   @@index([organizationId])
   @@map("corporate_managers")
 }
+
+// ============================================================
+// Communications Module
+// ============================================================
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketCategory {
+  ENROLLMENT
+  PAYMENT
+  TECHNICAL_SUPPORT
+  COURSE_CONTENT
+  CERTIFICATION
+  CORPORATE_TRAINING
+}
+
+enum ActorType {
+  ADMIN
+  STUDENT
+  TRAINER
+  CORPORATE_MANAGER
+}
+
+enum ConversationType {
+  DIRECT
+  COURSE_GROUP
+  ANNOUNCEMENT
+  LESSON_DISCUSSION
+}
+
+enum NotificationType {
+  NEW_MESSAGE
+  TICKET_RESPONSE
+  TRAINER_ANNOUNCEMENT
+  LESSON_UPDATE
+  JOB_ALERT
+  COURSE_UPDATE
+  SYSTEM
+}
+
+enum KBCategory {
+  GETTING_STARTED
+  COURSE_ENROLLMENT
+  PAYMENT_GUIDE
+  CERTIFICATION_GUIDE
+  CORPORATE_TRAINING_GUIDE
+  TECHNICAL_TROUBLESHOOTING
+}
+
+model SupportTicket {
+  id            String         @id @default(cuid())
+  referenceNo   String         @unique
+  category      TicketCategory
+  priority      TicketPriority @default(MEDIUM)
+  status        TicketStatus   @default(OPEN)
+  subject       String
+  description   String         @db.Text
+  submitterType ActorType
+  submitterId   String
+  assignedToId  String?
+  resolvedAt    DateTime?
+  closedAt      DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  responses     TicketResponse[]
+
+  @@index([status])
+  @@index([submitterType, submitterId])
+  @@index([assignedToId])
+  @@index([referenceNo])
+  @@index([category])
+  @@index([createdAt])
+  @@map("support_tickets")
+}
+
+model TicketResponse {
+  id         String        @id @default(cuid())
+  ticketId   String
+  authorType ActorType
+  authorId   String
+  content    String        @db.Text
+  isInternal Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@map("ticket_responses")
+}
+
+model Conversation {
+  id          String               @id @default(cuid())
+  type        ConversationType
+  title       String?
+  courseId     String?
+  lessonId    String?
+  createdByType ActorType
+  createdById   String
+  isActive    Boolean              @default(true)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  participants ConversationParticipant[]
+  messages     DirectMessage[]
+
+  @@index([type])
+  @@index([courseId])
+  @@index([lessonId])
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  actorType      ActorType
+  actorId        String
+  lastReadAt     DateTime?
+  joinedAt       DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, actorType, actorId])
+  @@index([actorType, actorId])
+  @@map("conversation_participants")
+}
+
+model DirectMessage {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderType     ActorType
+  senderId       String
+  content        String       @db.Text
+  attachmentUrl  String?
+  attachmentName String?
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([senderType, senderId])
+  @@map("direct_messages")
+}
+
+model Notification {
+  id            String           @id @default(cuid())
+  recipientType ActorType
+  recipientId   String
+  type          NotificationType
+  title         String
+  message       String
+  linkUrl       String?
+  isRead        Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+
+  @@index([recipientType, recipientId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model KnowledgeBaseArticle {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  title       String
+  content     String     @db.Text
+  category    KBCategory
+  isPublished Boolean    @default(false)
+  order       Int        @default(0)
+  createdBy   String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([category, isPublished])
+  @@index([slug])
+  @@map("knowledge_base_articles")
+}

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { findAllPublished } from "@/lib/repositories/knowledge-base.repository";
 
 const FAQ_ENTRIES = [
   {
@@ -109,5 +110,63 @@ IMPORTANT LINKS:
 - Courses: /courses
 - Enroll: /enroll
 - Contact: /contact
-- Student Login: /student/login`;
+- Student Login: /student/login
+- Help Center: /help`;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Knowledge Base Context for AI                                      */
+/* ------------------------------------------------------------------ */
+
+async function buildKnowledgeBaseContext(): Promise<string> {
+  const articles = await findAllPublished();
+  if (articles.length === 0) return "";
+
+  const summary = articles
+    .map((a) => `[${a.category}] ${a.title}: ${a.content.slice(0, 300)}`)
+    .join("\n\n");
+
+  return `\n\nKNOWLEDGE BASE ARTICLES:\n${summary}`;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Role-Aware System Prompt                                           */
+/* ------------------------------------------------------------------ */
+
+const ROLE_INSTRUCTIONS: Readonly<Record<string, string>> = {
+  student: `You are helping a student who is enrolled in the platform.
+- Help with course navigation, lesson content, assignments, and quizzes
+- Guide them on using the student dashboard features
+- Answer questions about certificates, career readiness, and job matching
+- If asked about billing or enrollment issues, suggest submitting a support ticket`,
+
+  trainer: `You are helping a trainer on the platform.
+- Help with course management, grading, and student communication
+- Guide them on scheduling, materials, and trainer tools
+- Answer questions about their dashboard features`,
+
+  admin: `You are helping a platform administrator.
+- Help with platform management, user management, and system settings
+- Guide them on enrollment processing, payment verification, and analytics
+- Answer questions about reports, organizations, and admin tools`,
+
+  corporate: `You are helping a corporate manager.
+- Help with employee enrollment, training progress tracking, and analytics
+- Guide them on using the corporate dashboard and team management
+- Answer questions about corporate training programs and seat management`,
+};
+
+export async function buildRoleAwareSystemPrompt(
+  role?: string,
+  currentPage?: string
+): Promise<string> {
+  const basePrompt = await buildSystemPrompt();
+  const kbContext = await buildKnowledgeBaseContext();
+
+  const roleInstruction = role ? ROLE_INSTRUCTIONS[role] ?? "" : "";
+  const pageContext = currentPage
+    ? `\nThe user is currently on the page: ${currentPage}`
+    : "";
+
+  return `${basePrompt}${kbContext}${roleInstruction ? `\n\nROLE-SPECIFIC INSTRUCTIONS:\n${roleInstruction}` : ""}${pageContext}`;
 }

@@ -14,9 +14,16 @@ import {
   LogOut,
   Building2,
   Loader2,
+  MessageSquare,
+  Megaphone,
+  Ticket,
+  Bell,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/shared/NotificationBell";
+import { ChatWidgetEnhanced } from "@/components/shared/ChatWidgetEnhanced";
 
 /* ------------------------------------------------------------------ */
 /*  Navigation items                                                   */
@@ -33,6 +40,10 @@ const NAV_ITEMS: ReadonlyArray<NavItem> = [
   { href: "/corporate/employees", label: "Employees", icon: Users },
   { href: "/corporate/enrollments", label: "Enrollments", icon: ClipboardList },
   { href: "/corporate/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/corporate/messages", label: "Messages", icon: Mail },
+  { href: "/corporate/announcements", label: "Announcements", icon: Megaphone },
+  { href: "/corporate/support", label: "Support", icon: Ticket },
+  { href: "/corporate/notifications", label: "Notifications", icon: Bell },
   { href: "/corporate/settings", label: "Settings", icon: Settings },
 ];
 
@@ -119,8 +130,12 @@ export function CorporateLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex items-center justify-end px-8 py-3 border-b border-gray-200 bg-white shrink-0">
+          <NotificationBell />
+        </div>
         <main className="flex-1 overflow-y-auto p-8">{children}</main>
       </div>
+      <ChatWidgetEnhanced role="corporate" currentPage={pathname} />
     </div>
   );
 }

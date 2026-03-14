@@ -13,11 +13,17 @@ import {
   Star,
   UserCircle,
   LogOut,
+  MessageSquare,
+  Ticket,
+  Bell,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { SidebarNavGroup } from "@/components/shared/SidebarNavGroup";
 import type { NavItem } from "@/components/shared/SidebarNavGroup";
+import { NotificationBell } from "@/components/shared/NotificationBell";
+import { ChatWidgetEnhanced } from "@/components/shared/ChatWidgetEnhanced";
 
 // ---------------------------------------------------------------------------
 // Navigation group definitions
@@ -51,6 +57,15 @@ const trainerNavGroups: ReadonlyArray<NavGroup> = [
     icon: Star,
     items: [
       { href: "/trainer/ratings", label: "My Ratings", icon: Star },
+    ],
+  },
+  {
+    label: "Communication",
+    icon: MessageSquare,
+    items: [
+      { href: "/trainer/messages", label: "Messages", icon: Mail },
+      { href: "/trainer/support", label: "Support Tickets", icon: Ticket },
+      { href: "/trainer/notifications", label: "Notifications", icon: Bell },
     ],
   },
 ];
@@ -159,8 +174,12 @@ export function TrainerLayout({ children }: TrainerLayoutProps) {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex items-center justify-end px-8 py-3 border-b border-gray-200 bg-white shrink-0">
+          <NotificationBell />
+        </div>
         <main className="flex-1 overflow-y-auto p-8">{children}</main>
       </div>
+      <ChatWidgetEnhanced role="trainer" currentPage={pathname} />
     </div>
   );
 }
