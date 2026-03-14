@@ -22,7 +22,9 @@ export default async function PublicHelpPage() {
     const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
     const res = await fetch(`${baseUrl}/api/knowledge-base`, { cache: "no-store" });
     const data = await res.json();
-    if (data.success) articles = data.data;
+    if (data.success) {
+      articles = Array.isArray(data.data) ? data.data : data.data?.data ?? [];
+    }
   } catch { /* ignore */ }
 
   const grouped = KB_CATEGORIES.map((cat) => ({

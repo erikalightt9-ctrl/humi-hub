@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "platform-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 3000
+      "runtimeExecutable": "/Users/erikahernando/Desktop/va-training-center/node_modules/.bin/next",
+      "runtimeArgs": ["dev"],
+      "port": 3000,
+      "cwd": "/Users/erikahernando/Desktop/va-training-center"
     },
     {
       "name": "smart-assistant",
