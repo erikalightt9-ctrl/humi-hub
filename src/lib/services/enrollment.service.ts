@@ -9,7 +9,7 @@ import {
   sendEnrollmentConfirmationWithPayment,
   sendNewEnrollmentAdminNotification,
 } from "@/lib/services/notification.service";
-import { calculateEnrollmentPrice } from "@/lib/constants/pricing";
+import { getTierConfig } from "@/lib/repositories/trainer-tier.repository";
 import { getCourseTierPricing } from "@/lib/repositories/course.repository";
 import type { EnrollmentFormData } from "@/lib/validations/enrollment.schema";
 import type { Enrollment, TrainerTier, CourseTier } from "@prisma/client";
@@ -101,7 +101,8 @@ export async function processEnrollment(
     }
   }
 
-  const trainerPricing = calculateEnrollmentPrice(trainerTier);
+  const tierConfig = await getTierConfig(trainerTier);
+  const trainerUpgradeFee = tierConfig ? Number(tierConfig.upgradeFee) : 0;
 
   // Resolve course tier pricing
   const courseTier: CourseTier = sanitized.courseTier ?? "BASIC";
@@ -139,7 +140,7 @@ export async function processEnrollment(
     trainerId: resolvedTrainerId,
     trainerTier,
     baseProgramPrice,
-    trainerUpgradeFee: trainerPricing.trainerUpgradeFee,
+    trainerUpgradeFee,
     scheduleId: resolvedScheduleId,
   });
 

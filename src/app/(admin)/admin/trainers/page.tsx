@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { TrainerManager } from "@/components/admin/TrainerManager";
+import { getAllTierConfigs } from "@/lib/repositories/trainer-tier.repository";
 import { UserCog } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -16,6 +17,8 @@ export default async function TrainersPage() {
   if (!session || (session.user as { role?: string })?.role !== "admin") {
     redirect("/portal?tab=admin");
   }
+
+  const tierConfigs = await getAllTierConfigs();
 
   return (
     <div className="space-y-6">
@@ -35,7 +38,7 @@ export default async function TrainersPage() {
         </div>
       </div>
 
-      <TrainerManager />
+      <TrainerManager tierConfigs={tierConfigs} />
     </div>
   );
 }

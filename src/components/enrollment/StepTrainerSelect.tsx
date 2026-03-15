@@ -22,6 +22,17 @@ import type { EnrollmentFormData } from "@/lib/validations/enrollment.schema";
 
 type TierValue = "BASIC" | "PROFESSIONAL" | "PREMIUM";
 
+interface TierConfigEntry {
+  readonly tier: TierValue;
+  readonly label: string;
+  readonly upgradeFee: number;
+  readonly baseProgramPrice: number;
+  readonly bg: string;
+  readonly text: string;
+  readonly border: string;
+  readonly ring: string;
+}
+
 interface PublicTrainer {
   readonly id: string;
   readonly name: string;
@@ -43,55 +54,45 @@ interface StepTrainerSelectProps {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Constants                                                          */
+/*  Style map (UI only — not business logic)                          */
 /* ------------------------------------------------------------------ */
 
-const TIER_CONFIG: Readonly<
-  Record<
-    TierValue,
-    {
-      readonly label: string;
-      readonly upgradeFee: number;
-      readonly totalPrice: number;
-      readonly bg: string;
-      readonly text: string;
-      readonly border: string;
-      readonly ring: string;
-      readonly description: string;
-    }
-  >
-> = {
-  BASIC: {
-    label: "Basic",
-    upgradeFee: 0,
-    totalPrice: 1500,
-    bg: "bg-gray-50",
-    text: "text-gray-700",
-    border: "border-gray-200",
-    ring: "ring-gray-400",
-    description: "Standard training program",
-  },
-  PROFESSIONAL: {
-    label: "Professional",
-    upgradeFee: 2000,
-    totalPrice: 3500,
-    bg: "bg-blue-50",
-    text: "text-blue-700",
-    border: "border-blue-200",
-    ring: "ring-blue-500",
-    description: "Enhanced training with experienced mentors",
-  },
-  PREMIUM: {
-    label: "Premium",
-    upgradeFee: 6000,
-    totalPrice: 7500,
-    bg: "bg-amber-50",
-    text: "text-amber-700",
-    border: "border-amber-200",
-    ring: "ring-amber-500",
-    description: "Elite training with top-rated professionals",
-  },
+const TIER_STYLES: Readonly<Record<TierValue, Pick<TierConfigEntry, "bg" | "text" | "border" | "ring">>> = {
+  BASIC:        { bg: "bg-gray-50",  text: "text-gray-700",  border: "border-gray-200",  ring: "ring-gray-400"  },
+  PROFESSIONAL: { bg: "bg-blue-50",  text: "text-blue-700",  border: "border-blue-200",  ring: "ring-blue-500"  },
+  PREMIUM:      { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", ring: "ring-amber-500" },
 };
+
+const DEFAULT_TIER_CONFIG: Readonly<Record<TierValue, TierConfigEntry>> = {
+  BASIC:        { tier: "BASIC",        label: "Basic",        upgradeFee: 0,    baseProgramPrice: 1500, ...TIER_STYLES.BASIC },
+  PROFESSIONAL: { tier: "PROFESSIONAL", label: "Professional", upgradeFee: 2000, baseProgramPrice: 1500, ...TIER_STYLES.PROFESSIONAL },
+  PREMIUM:      { tier: "PREMIUM",      label: "Premium",      upgradeFee: 6000, baseProgramPrice: 1500, ...TIER_STYLES.PREMIUM },
+};
+
+function toNumber(v: unknown): number {
+  if (typeof v === "number") return v;
+  if (v && typeof (v as { toNumber?: () => number }).toNumber === "function") {
+    return (v as { toNumber: () => number }).toNumber();
+  }
+  return Number(v) || 0;
+}
+
+function buildTierConfig(raw: { tier: string; label: string; upgradeFee: unknown; baseProgramPrice: unknown }[]): Record<TierValue, TierConfigEntry> {
+  const result = { ...DEFAULT_TIER_CONFIG };
+  for (const r of raw) {
+    const tier = r.tier as TierValue;
+    if (TIER_STYLES[tier]) {
+      result[tier] = {
+        tier,
+        label: r.label || tier,
+        upgradeFee: toNumber(r.upgradeFee),
+        baseProgramPrice: toNumber(r.baseProgramPrice),
+        ...TIER_STYLES[tier],
+      };
+    }
+  }
+  return result;
+}
 
 /* ------------------------------------------------------------------ */
 /*  TrainerCard                                                        */
@@ -103,14 +104,17 @@ function TrainerCard({
   isExpanded,
   onSelect,
   onToggleExpand,
+  tierConfig,
 }: {
   readonly trainer: PublicTrainer;
   readonly isSelected: boolean;
   readonly isExpanded: boolean;
   readonly onSelect: () => void;
   readonly onToggleExpand: () => void;
+  readonly tierConfig: Record<TierValue, TierConfigEntry>;
 }) {
-  const config = TIER_CONFIG[trainer.tier];
+  const config = tierConfig[trainer.tier] ?? DEFAULT_TIER_CONFIG[trainer.tier];
+  const totalPrice = config.baseProgramPrice + config.upgradeFee;
   const numRating = trainer.averageRating ? Number(trainer.averageRating) : 0;
 
   return (
@@ -167,11 +171,11 @@ function TrainerCard({
         {/* Price */}
         <div className="text-right shrink-0">
           <p className="text-lg font-bold text-gray-900">
-            ₱{config.totalPrice.toLocaleString()}
+            ₱{totalPrice.toLocaleString()}
           </p>
           {config.upgradeFee > 0 && (
             <p className="text-[10px] text-gray-400">
-              ₱1,500 + ₱{config.upgradeFee.toLocaleString()}
+              ₱{config.baseProgramPrice.toLocaleString()} + ₱{config.upgradeFee.toLocaleString()}
             </p>
           )}
         </div>
@@ -288,7 +292,7 @@ function TrainerCard({
             <div className="space-y-1 text-sm">
               <div className="flex justify-between text-gray-600">
                 <span>Base Program Fee</span>
-                <span>₱1,500</span>
+                <span>₱{config.baseProgramPrice.toLocaleString()}</span>
               </div>
               {config.upgradeFee > 0 && (
                 <div className="flex justify-between text-gray-600">
@@ -298,7 +302,7 @@ function TrainerCard({
               )}
               <div className="flex justify-between font-bold text-gray-900 pt-1 border-t border-gray-200">
                 <span>Total</span>
-                <span>₱{config.totalPrice.toLocaleString()}</span>
+                <span>₱{totalPrice.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -375,26 +379,34 @@ function AutoAssignCard({
 
 export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
   const [trainers, setTrainers] = useState<ReadonlyArray<PublicTrainer>>([]);
+  const [tierConfig, setTierConfig] = useState<Record<TierValue, TierConfigEntry>>(DEFAULT_TIER_CONFIG);
   const [loading, setLoading] = useState(true);
   const [expandedTrainerId, setExpandedTrainerId] = useState<string | null>(null);
 
   const selectedTrainerId = form.watch("trainerId");
 
   useEffect(() => {
-    async function fetchTrainers() {
+    async function fetchData() {
       try {
-        const res = await fetch("/api/public/trainers");
-        const json = await res.json();
-        if (json.success) {
-          setTrainers(json.data);
+        const [trainersRes, tierRes] = await Promise.all([
+          fetch("/api/public/trainers"),
+          fetch("/api/tier-configs"),
+        ]);
+        const [trainersJson, tierJson] = await Promise.all([
+          trainersRes.json(),
+          tierRes.json(),
+        ]);
+        if (trainersJson.success) setTrainers(trainersJson.data);
+        if (tierJson.success && Array.isArray(tierJson.data)) {
+          setTierConfig(buildTierConfig(tierJson.data));
         }
       } catch {
-        // Silently fail — auto-assign will be the default
+        // Silently fail — defaults will be used
       } finally {
         setLoading(false);
       }
     }
-    fetchTrainers();
+    fetchData();
   }, []);
 
   function handleSelectTrainer(trainerId: string | null) {
@@ -466,6 +478,7 @@ export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
                 isExpanded={expandedTrainerId === t.id}
                 onSelect={() => handleSelectTrainer(t.id)}
                 onToggleExpand={() => handleToggleExpand(t.id)}
+                tierConfig={tierConfig}
               />
             ))}
           </div>
@@ -487,6 +500,7 @@ export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
                 isExpanded={expandedTrainerId === t.id}
                 onSelect={() => handleSelectTrainer(t.id)}
                 onToggleExpand={() => handleToggleExpand(t.id)}
+                tierConfig={tierConfig}
               />
             ))}
           </div>
@@ -508,6 +522,7 @@ export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
                 isExpanded={expandedTrainerId === t.id}
                 onSelect={() => handleSelectTrainer(t.id)}
                 onToggleExpand={() => handleToggleExpand(t.id)}
+                tierConfig={tierConfig}
               />
             ))}
           </div>

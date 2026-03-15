@@ -1256,3 +1256,17 @@ model BrandingSettings {
 
   @@map("branding_settings")
 }
+
+model TrainerTierConfig {
+  tier             TrainerTier @id
+  label            String      @default("")
+  upgradeFee       Decimal     @default(0)    @db.Decimal(10, 2)
+  baseProgramPrice Decimal     @default(1500) @db.Decimal(10, 2)
+  benefits         String[]
+  maxCapacity      Int         @default(15)
+  revenueSharePct  Int         @default(70)
+  isActive         Boolean     @default(true)
+  updatedAt        DateTime    @updatedAt
+
+  @@map("trainer_tier_config")
+}

@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TagInput } from "@/components/admin/TagInput";
+import type { TrainerTierConfig } from "@/lib/repositories/trainer-tier.repository";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -39,6 +40,7 @@ interface TrainerFormProps {
   readonly editingTrainer: TrainerData | null;
   readonly onSave: () => void;
   readonly onCancel: () => void;
+  readonly tierConfigs?: ReadonlyArray<TrainerTierConfig>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -47,19 +49,23 @@ interface TrainerFormProps {
 
 const MAX_PHOTO_SIZE_BYTES = 500_000;
 
-const TIER_OPTIONS: ReadonlyArray<{
+const DEFAULT_TIER_OPTIONS: ReadonlyArray<{
   readonly value: TierValue;
   readonly label: string;
   readonly description: string;
 }> = [
   { value: "BASIC", label: "Basic", description: "₱0 upgrade fee" },
-  {
-    value: "PROFESSIONAL",
-    label: "Professional",
-    description: "₱2,000 upgrade fee",
-  },
+  { value: "PROFESSIONAL", label: "Professional", description: "₱2,000 upgrade fee" },
   { value: "PREMIUM", label: "Premium", description: "₱6,000 upgrade fee" },
 ] as const;
+
+function toNumber(v: unknown): number {
+  if (typeof v === "number") return v;
+  if (v && typeof (v as { toNumber?: () => number }).toNumber === "function") {
+    return (v as { toNumber: () => number }).toNumber();
+  }
+  return Number(v) || 0;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -69,7 +75,16 @@ export function TrainerForm({
   editingTrainer,
   onSave,
   onCancel,
+  tierConfigs,
 }: TrainerFormProps) {
+  const tierOptions =
+    tierConfigs && tierConfigs.length > 0
+      ? tierConfigs.map((c) => ({
+          value: c.tier as TierValue,
+          label: c.label || c.tier.charAt(0) + c.tier.slice(1).toLowerCase(),
+          description: `₱${toNumber(c.upgradeFee).toLocaleString()} upgrade fee`,
+        }))
+      : DEFAULT_TIER_OPTIONS;
   const isEditing = editingTrainer !== null;
 
   // Form state
@@ -301,7 +316,7 @@ export function TrainerForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {TIER_OPTIONS.map((opt) => (
+                {tierOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label} — {opt.description}
                   </SelectItem>

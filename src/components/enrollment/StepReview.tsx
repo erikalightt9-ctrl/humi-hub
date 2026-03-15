@@ -52,7 +52,7 @@ const TRAINER_TIER_LABELS: Readonly<Record<TrainerTierValue, string>> = {
   PREMIUM: "Premium",
 };
 
-const TRAINER_UPGRADE_FEES: Readonly<Record<TrainerTierValue, number>> = {
+const DEFAULT_UPGRADE_FEES: Readonly<Record<TrainerTierValue, number>> = {
   BASIC: 0,
   PROFESSIONAL: 2000,
   PREMIUM: 6000,
@@ -111,8 +111,33 @@ export function StepReview({ form, courses }: StepReviewProps) {
   const [scheduleName, setScheduleName] = useState<string | null>(null);
   const [scheduleInfo, setScheduleInfo] = useState<ScheduleInfo | null>(null);
   const [courseTierPricing, setCourseTierPricing] = useState<CourseTierPricing | null>(null);
+  const [trainerUpgradeFees, setTrainerUpgradeFees] = useState<Readonly<Record<TrainerTierValue, number>>>(DEFAULT_UPGRADE_FEES);
 
   const selectedCourseTier = (data.courseTier as CourseTier) ?? "BASIC";
+
+  // Fetch trainer tier upgrade fees from DB
+  useEffect(() => {
+    async function fetchTierConfigs() {
+      try {
+        const res = await fetch("/api/tier-configs");
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          const fees: Record<TrainerTierValue, number> = { ...DEFAULT_UPGRADE_FEES };
+          for (const config of json.data as ReadonlyArray<{ tier: string; upgradeFee: unknown }>) {
+            if (config.tier === "BASIC" || config.tier === "PROFESSIONAL" || config.tier === "PREMIUM") {
+              fees[config.tier] = typeof config.upgradeFee === "number"
+                ? config.upgradeFee
+                : Number(config.upgradeFee) || 0;
+            }
+          }
+          setTrainerUpgradeFees(fees);
+        }
+      } catch {
+        /* falls back to DEFAULT_UPGRADE_FEES */
+      }
+    }
+    fetchTierConfigs();
+  }, []);
 
   // Fetch course tier pricing
   useEffect(() => {
@@ -192,7 +217,7 @@ export function StepReview({ form, courses }: StepReviewProps) {
   }, [data.scheduleId, data.courseId]);
 
   const courseTierPrice = getCourseTierPrice(courseTierPricing, selectedCourseTier);
-  const trainerUpgradeFee = TRAINER_UPGRADE_FEES[trainerTier];
+  const trainerUpgradeFee = trainerUpgradeFees[trainerTier];
   const totalPrice = courseTierPrice + trainerUpgradeFee;
 
   return (

@@ -2,17 +2,19 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { Globe, Bell, Shield, Palette } from "lucide-react";
+import { Globe, Bell, Shield, Palette, Users } from "lucide-react";
 import {
   getPlatformSettings,
   getEmailSettings,
   getSecuritySettings,
   getBrandingSettings,
 } from "@/lib/repositories/settings.repository";
+import { getAllTierConfigs } from "@/lib/repositories/trainer-tier.repository";
 import { GeneralSettingsForm } from "@/components/admin/settings/GeneralSettingsForm";
 import { NotificationsSettingsForm } from "@/components/admin/settings/NotificationsSettingsForm";
 import { SecuritySettingsForm } from "@/components/admin/settings/SecuritySettingsForm";
 import { AppearanceSettingsForm } from "@/components/admin/settings/AppearanceSettingsForm";
+import { TrainerTierSettingsForm } from "@/components/admin/settings/TrainerTierSettingsForm";
 
 export const metadata: Metadata = { title: "Settings | Admin" };
 
@@ -25,6 +27,7 @@ const TABS = [
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "security", label: "Security", icon: Shield },
   { id: "appearance", label: "Appearance", icon: Palette },
+  { id: "trainer-tiers", label: "Trainer Tiers", icon: Users },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -42,11 +45,12 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   const activeTab = (TABS.find((t) => t.id === resolvedParams.tab)?.id ?? "general") as TabId;
 
   // Load only what the active tab needs
-  const [general, email, security, branding] = await Promise.all([
+  const [general, email, security, branding, tierConfigs] = await Promise.all([
     activeTab === "general" ? getPlatformSettings() : null,
     activeTab === "notifications" ? getEmailSettings() : null,
     activeTab === "security" ? getSecuritySettings() : null,
     activeTab === "appearance" ? getBrandingSettings() : null,
+    activeTab === "trainer-tiers" ? getAllTierConfigs() : null,
   ]);
 
   return (
@@ -130,6 +134,19 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               </p>
             </div>
             <AppearanceSettingsForm initialValues={branding} />
+          </section>
+        )}
+
+        {activeTab === "trainer-tiers" && tierConfigs && (
+          <section>
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">Trainer Tier Pricing</h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Control tier prices, benefits, capacity limits, and revenue sharing. Changes
+                apply immediately across the enrollment flow and trainer dashboard.
+              </p>
+            </div>
+            <TrainerTierSettingsForm initialConfigs={tierConfigs} />
           </section>
         )}
       </div>
