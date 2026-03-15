@@ -731,10 +731,26 @@ model Trainer {
   enrollments          Enrollment[]
   students             Student[]
   schedules            Schedule[]
+  availability         TrainerAvailability[]
 
   @@index([isActive])
   @@index([tier])
   @@map("trainers")
+}
+
+model TrainerAvailability {
+  id         String   @id @default(cuid())
+  trainerId  String
+  dayOfWeek  Int      // 0=Sun, 1=Mon, ..., 6=Sat
+  startTime  String   // "HH:MM" 24-hour format
+  endTime    String   // "HH:MM" 24-hour format
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  trainer    Trainer  @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@unique([trainerId, dayOfWeek, startTime])
+  @@index([trainerId])
+  @@map("trainer_availability")
 }
 
 model TrainerRating {
