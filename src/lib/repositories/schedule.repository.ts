@@ -10,11 +10,24 @@ import type { Decimal } from "@prisma/client/runtime/client";
 export type ScheduleWithCourse = Schedule & {
   course: { id: string; slug: string; title: string; price: Decimal };
   trainer: { id: string; name: string; tier: string } | null;
-  _count: { students: number };
+  _count: { students: number; waitlist: number };
+};
+
+export type WaitlistEntryDetail = {
+  id: string;
+  position: number;
+  status: string;
+  createdAt: Date;
+  enrollment: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
 };
 
 export type ScheduleDetail = Schedule & {
   course: { id: string; slug: string; title: string; price: Decimal };
+  trainer: { id: string; name: string; tier: string } | null;
   students: ReadonlyArray<{
     id: string;
     name: string;
@@ -23,7 +36,8 @@ export type ScheduleDetail = Schedule & {
     accessGranted: boolean;
     amountPaid: Decimal;
   }>;
-  _count: { students: number };
+  waitlist: ReadonlyArray<WaitlistEntryDetail>;
+  _count: { students: number; waitlist: number };
 };
 
 export interface ScheduleStats {
@@ -31,6 +45,8 @@ export interface ScheduleStats {
   readonly totalStudents: number;
   readonly availableSlots: number;
   readonly upcomingStarts: number;
+  readonly totalWaiting: number;
+  readonly seatUtilizationPct: number;
 }
 
 export interface ScheduleOption {
@@ -70,7 +86,7 @@ export async function listSchedules(
       include: {
         course: { select: { id: true, slug: true, title: true, price: true } },
         trainer: { select: { id: true, name: true, tier: true } },
-        _count: { select: { students: true } },
+        _count: { select: { students: true, waitlist: true } },
       },
       orderBy: { startDate: "desc" },
       skip,
@@ -97,6 +113,7 @@ export async function findScheduleById(id: string): Promise<ScheduleDetail | nul
     where: { id },
     include: {
       course: { select: { id: true, slug: true, title: true, price: true } },
+      trainer: { select: { id: true, name: true, tier: true } },
       students: {
         select: {
           id: true,
@@ -108,7 +125,14 @@ export async function findScheduleById(id: string): Promise<ScheduleDetail | nul
         },
         orderBy: { name: "asc" },
       },
-      _count: { select: { students: true } },
+      waitlist: {
+        where: { status: "WAITING" },
+        include: {
+          enrollment: { select: { id: true, fullName: true, email: true } },
+        },
+        orderBy: { position: "asc" },
+      },
+      _count: { select: { students: true, waitlist: true } },
     },
   });
 }
@@ -221,28 +245,41 @@ export async function deleteSchedule(id: string): Promise<Schedule> {
 /* ------------------------------------------------------------------ */
 
 export async function getScheduleStats(): Promise<ScheduleStats> {
-  const activeSchedules = await prisma.schedule.findMany({
-    where: { status: { in: ["OPEN", "FULL"] } },
-    select: { maxCapacity: true, _count: { select: { students: true } } },
-  });
+  const now = new Date();
+  const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  const [activeSchedules, upcomingStarts, totalWaiting] = await Promise.all([
+    prisma.schedule.findMany({
+      where: { status: { in: ["OPEN", "FULL"] } },
+      select: { maxCapacity: true, _count: { select: { students: true } } },
+    }),
+    prisma.schedule.count({
+      where: {
+        status: { in: ["OPEN", "FULL"] },
+        startDate: { gte: now, lte: sevenDaysLater },
+      },
+    }),
+    prisma.waitlist.count({ where: { status: "WAITING" } }),
+  ]);
 
   const totalActive = activeSchedules.length;
   const totalStudents = activeSchedules.reduce((sum, s) => sum + s._count.students, 0);
+  const totalCapacity = activeSchedules.reduce((sum, s) => sum + s.maxCapacity, 0);
   const availableSlots = activeSchedules.reduce(
     (sum, s) => sum + Math.max(0, s.maxCapacity - s._count.students),
     0
   );
+  const seatUtilizationPct =
+    totalCapacity > 0 ? Math.round((totalStudents / totalCapacity) * 100) : 0;
 
-  const now = new Date();
-  const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const upcomingStarts = await prisma.schedule.count({
-    where: {
-      status: { in: ["OPEN", "FULL"] },
-      startDate: { gte: now, lte: sevenDaysLater },
-    },
-  });
-
-  return { totalActive, totalStudents, availableSlots, upcomingStarts };
+  return {
+    totalActive,
+    totalStudents,
+    availableSlots,
+    upcomingStarts,
+    totalWaiting,
+    seatUtilizationPct,
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -323,7 +360,7 @@ export async function getUpcomingSchedules(limit = 5): Promise<ReadonlyArray<Sch
     include: {
       course: { select: { id: true, slug: true, title: true, price: true } },
       trainer: { select: { id: true, name: true, tier: true } },
-      _count: { select: { students: true } },
+      _count: { select: { students: true, waitlist: true } },
     },
     orderBy: { startDate: "asc" },
     take: limit,

@@ -84,7 +84,8 @@ export function ScheduleTable({ schedules, onEdit }: ScheduleTableProps) {
             <TableHead>Dates</TableHead>
             <TableHead>Days</TableHead>
             <TableHead>Time</TableHead>
-            <TableHead className="w-[150px]">Enrolled / Capacity</TableHead>
+            <TableHead className="w-[160px]">Enrolled / Capacity</TableHead>
+            <TableHead className="w-[80px]">Waitlist</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="w-[80px]" />
           </TableRow>
@@ -121,6 +122,15 @@ export function ScheduleTable({ schedules, onEdit }: ScheduleTableProps) {
                       {enrolled}/{s.maxCapacity}
                     </span>
                   </div>
+                </TableCell>
+                <TableCell>
+                  {s._count.waitlist > 0 ? (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-700">
+                      {s._count.waitlist}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-400">—</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <ScheduleStatusBadge status={s.status} />

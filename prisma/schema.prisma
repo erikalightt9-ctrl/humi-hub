@@ -280,6 +280,7 @@ model Student {
   verifiedSkills        VerifiedSkill[]
   subscriptions         Subscription[]
   trainerRatings        TrainerRating[]
+  sessionAttendances    SessionAttendance[]
 
   @@index([email])
   @@index([trainerId])
@@ -551,6 +552,7 @@ model Schedule {
   students             Student[]
   enrollments          Enrollment[]
   waitlist             Waitlist[]
+  sessionAttendances   SessionAttendance[]
 
   @@index([courseId])
   @@index([trainerId])
@@ -956,6 +958,24 @@ model Waitlist {
   @@index([scheduleId, status])
   @@index([enrollmentId])
   @@map("waitlist")
+}
+
+model SessionAttendance {
+  id          String   @id @default(cuid())
+  scheduleId  String
+  studentId   String
+  sessionDate DateTime @db.Date
+  present     Boolean  @default(false)
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  schedule    Schedule @relation(fields: [scheduleId], references: [id])
+  student     Student  @relation(fields: [studentId], references: [id])
+
+  @@unique([scheduleId, studentId, sessionDate])
+  @@index([scheduleId, sessionDate])
+  @@index([studentId])
+  @@map("session_attendances")
 }
 
 model Organization {

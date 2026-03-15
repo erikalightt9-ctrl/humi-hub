@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 export const dynamic = "force-dynamic";
-import { CalendarClock, Users, Inbox, Clock } from "lucide-react";
+import { CalendarClock, Users, Inbox, Clock, ListOrdered, BarChart2 } from "lucide-react";
 import { AnalyticsCard } from "@/components/admin/AnalyticsCard";
 import { ScheduleFilters } from "@/components/admin/ScheduleFilters";
 import { SchedulePageClient } from "@/components/admin/SchedulePageClient";
@@ -46,7 +46,7 @@ export default async function SchedulesPage({ searchParams }: PageProps) {
   return (
     <>
       {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <AnalyticsCard
           title="Active Batches"
           value={stats.totalActive}
@@ -55,7 +55,7 @@ export default async function SchedulesPage({ searchParams }: PageProps) {
           subtitle="Open + Full"
         />
         <AnalyticsCard
-          title="Students in Batches"
+          title="Students Enrolled"
           value={stats.totalStudents}
           icon={Users}
           colorClass="text-indigo-600 bg-indigo-100"
@@ -74,6 +74,20 @@ export default async function SchedulesPage({ searchParams }: PageProps) {
           icon={Clock}
           colorClass="text-amber-600 bg-amber-100"
           subtitle="Within 7 days"
+        />
+        <AnalyticsCard
+          title="On Waitlist"
+          value={stats.totalWaiting}
+          icon={ListOrdered}
+          colorClass="text-rose-600 bg-rose-100"
+          subtitle="Pending promotion"
+        />
+        <AnalyticsCard
+          title="Seat Utilization"
+          value={`${stats.seatUtilizationPct}%`}
+          icon={BarChart2}
+          colorClass="text-violet-600 bg-violet-100"
+          subtitle="Active batches"
         />
       </div>
 
