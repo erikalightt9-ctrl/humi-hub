@@ -1,75 +1,138 @@
 import type { Metadata } from "next";
-import { Settings, Globe, Bell, Shield, Palette } from "lucide-react";
+export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Settings | HUMI Admin" };
+import Link from "next/link";
+import { Globe, Bell, Shield, Palette } from "lucide-react";
+import {
+  getPlatformSettings,
+  getEmailSettings,
+  getSecuritySettings,
+  getBrandingSettings,
+} from "@/lib/repositories/settings.repository";
+import { GeneralSettingsForm } from "@/components/admin/settings/GeneralSettingsForm";
+import { NotificationsSettingsForm } from "@/components/admin/settings/NotificationsSettingsForm";
+import { SecuritySettingsForm } from "@/components/admin/settings/SecuritySettingsForm";
+import { AppearanceSettingsForm } from "@/components/admin/settings/AppearanceSettingsForm";
 
-export default function SettingsPage() {
-  const sections = [
-    {
-      title: "General",
-      description: "Site name, timezone, default currency, and language.",
-      icon: Globe,
-    },
-    {
-      title: "Notifications",
-      description: "Email templates, SMTP settings, and notification preferences.",
-      icon: Bell,
-    },
-    {
-      title: "Security",
-      description: "Password policies, session timeouts, and admin account management.",
-      icon: Shield,
-    },
-    {
-      title: "Appearance",
-      description: "Logo, brand colors, and landing page customization.",
-      icon: Palette,
-    },
-  ];
+export const metadata: Metadata = { title: "Settings | Admin" };
+
+/* ------------------------------------------------------------------ */
+/*  Tab definitions                                                    */
+/* ------------------------------------------------------------------ */
+
+const TABS = [
+  { id: "general", label: "General", icon: Globe },
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "security", label: "Security", icon: Shield },
+  { id: "appearance", label: "Appearance", icon: Palette },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+
+/* ------------------------------------------------------------------ */
+/*  Page                                                               */
+/* ------------------------------------------------------------------ */
+
+interface SettingsPageProps {
+  readonly searchParams: Promise<{ tab?: string }>;
+}
+
+export default async function SettingsPage({ searchParams }: SettingsPageProps) {
+  const resolvedParams = await searchParams;
+  const activeTab = (TABS.find((t) => t.id === resolvedParams.tab)?.id ?? "general") as TabId;
+
+  // Load only what the active tab needs
+  const [general, email, security, branding] = await Promise.all([
+    activeTab === "general" ? getPlatformSettings() : null,
+    activeTab === "notifications" ? getEmailSettings() : null,
+    activeTab === "security" ? getSecuritySettings() : null,
+    activeTab === "appearance" ? getBrandingSettings() : null,
+  ]);
 
   return (
-    <>
-      <div className="mb-8">
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Platform configuration and preferences
-        </p>
+        <p className="text-gray-500 text-sm mt-1">Platform configuration and preferences</p>
       </div>
 
-      <div className="space-y-4">
-        {sections.map((section) => {
-          const Icon = section.icon;
-          return (
-            <div
-              key={section.title}
-              className="bg-white rounded-xl border border-gray-200 p-6 flex items-start gap-4"
-            >
-              <div className="bg-gray-100 rounded-lg p-2.5">
-                <Icon className="h-5 w-5 text-gray-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900">{section.title}</h3>
-                <p className="text-sm text-gray-500 mt-0.5">{section.description}</p>
-              </div>
-              <span className="text-xs text-gray-400 font-medium mt-1">Coming soon</span>
+      {/* Tab nav */}
+      <div className="border-b border-gray-200">
+        <nav className="flex gap-0 -mb-px overflow-x-auto">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = tab.id === activeTab;
+            return (
+              <Link
+                key={tab.id}
+                href={`/admin/settings?tab=${tab.id}`}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+                  isActive
+                    ? "border-indigo-600 text-indigo-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {tab.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Tab content */}
+      <div className="py-2">
+        {activeTab === "general" && general && (
+          <section>
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">General Settings</h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Site name, timezone, currency, and language used across the platform.
+              </p>
             </div>
-          );
-        })}
-      </div>
+            <GeneralSettingsForm initialValues={general} />
+          </section>
+        )}
 
-      <div className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-5">
-        <div className="flex items-center gap-3">
-          <Settings className="h-5 w-5 text-blue-600" />
-          <div>
-            <p className="text-sm font-medium text-blue-800">
-              Settings are managed via environment variables for now
-            </p>
-            <p className="text-xs text-blue-600 mt-0.5">
-              Edit your <code className="bg-blue-100 px-1 rounded">.env</code> file to update SMTP, admin email, and other configurations.
-            </p>
-          </div>
-        </div>
+        {activeTab === "notifications" && email && (
+          <section>
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">Notification Settings</h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Configure SMTP to send system emails and manage which notifications are sent.
+              </p>
+            </div>
+            <NotificationsSettingsForm
+              initialValues={{ ...email, smtpPassword: email.smtpPassword ? "••••••••" : "" }}
+            />
+          </section>
+        )}
+
+        {activeTab === "security" && security && (
+          <section>
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">Security Settings</h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Password policies, session timeouts, and login attempt limits.
+              </p>
+            </div>
+            <SecuritySettingsForm initialValues={security} />
+          </section>
+        )}
+
+        {activeTab === "appearance" && branding && (
+          <section>
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">Appearance Settings</h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Brand colors, logo, favicon, and landing page customization.
+              </p>
+            </div>
+            <AppearanceSettingsForm initialValues={branding} />
+          </section>
+        )}
       </div>
-    </>
+    </div>
   );
 }

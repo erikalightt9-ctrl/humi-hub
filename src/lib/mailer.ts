@@ -1,36 +1,51 @@
 import nodemailer from "nodemailer";
+import { getEmailSettings } from "@/lib/repositories/settings.repository";
 
-const GMAIL_USER = process.env.GMAIL_USER;
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
-
-function isEmailConfigured(): boolean {
-  return Boolean(GMAIL_USER && GMAIL_APP_PASSWORD);
-}
+/* ------------------------------------------------------------------ */
+/*  Dynamic transporter                                                */
+/* ------------------------------------------------------------------ */
 
 /**
- * Creates a nodemailer transporter if Gmail credentials are configured.
- * Returns null when credentials are missing (dev environment without email).
+ * Creates a nodemailer transporter.
+ * Priority: DB email_settings → env vars (GMAIL_USER / GMAIL_APP_PASSWORD) → null (dev mode)
  */
-function createTransporter(): nodemailer.Transporter | null {
-  if (!isEmailConfigured()) {
-    console.warn(
-      "[Mailer] GMAIL_USER or GMAIL_APP_PASSWORD not set. " +
-        "Emails will be logged to console instead of sent. " +
-        "Set these in .env to enable email delivery.",
-    );
-    return null;
+async function getDynamicTransporter(): Promise<nodemailer.Transporter | null> {
+  // Try DB settings first
+  try {
+    const settings = await getEmailSettings();
+    if (settings.smtpUser && settings.smtpPassword) {
+      return nodemailer.createTransport({
+        host: settings.smtpHost,
+        port: settings.smtpPort,
+        secure: settings.smtpPort === 465,
+        auth: { user: settings.smtpUser, pass: settings.smtpPassword },
+      });
+    }
+  } catch {
+    /* DB unavailable — fall through to env vars */
   }
 
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: GMAIL_USER,
-      pass: GMAIL_APP_PASSWORD,
-    },
-  });
+  // Fall back to env vars
+  const gmailUser = process.env.GMAIL_USER;
+  const gmailPass = process.env.GMAIL_APP_PASSWORD;
+
+  if (gmailUser && gmailPass) {
+    return nodemailer.createTransport({
+      service: "gmail",
+      auth: { user: gmailUser, pass: gmailPass },
+    });
+  }
+
+  console.warn(
+    "[Mailer] No SMTP credentials configured (DB or env vars). " +
+      "Emails will be logged to console only.",
+  );
+  return null;
 }
 
-const transporter = createTransporter();
+/* ------------------------------------------------------------------ */
+/*  Public API                                                         */
+/* ------------------------------------------------------------------ */
 
 export interface SendMailOptions {
   readonly from: string;
@@ -44,6 +59,8 @@ export interface SendMailOptions {
  * Throws on actual send failures so callers can handle retries.
  */
 export async function sendMail(options: SendMailOptions): Promise<void> {
+  const transporter = await getDynamicTransporter();
+
   if (!transporter) {
     console.log(
       `[Mailer][DEV] Would send email:\n` +
@@ -86,4 +103,4 @@ export async function sendMailWithRetry(
 }
 
 /** @deprecated Use sendMail or sendMailWithRetry instead */
-export { transporter };
+export const transporter = null;

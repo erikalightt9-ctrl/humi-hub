@@ -949,11 +949,12 @@ model Subscription {
   @@map("subscriptions")
 }
 
-model PlatformSetting {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  value     String
-  createdAt DateTime @default(now())
+model PlatformSettings {
+  id        String   @id(map: "platform_settings_pk") @default("singleton")
+  siteName  String   @default("HUMI Training Center")
+  timezone  String   @default("Asia/Manila")
+  currency  String   @default("PHP")
+  language  String   @default("en")
   updatedAt DateTime @updatedAt
 
   @@map("platform_settings")
@@ -1209,4 +1210,49 @@ model KnowledgeBaseArticle {
   @@index([category, isPublished])
   @@index([slug])
   @@map("knowledge_base_articles")
+}
+
+// ─── Settings Models (single-row, id = "singleton") ──────────────────────────
+
+model EmailSettings {
+  id                  String   @id(map: "email_settings_pk") @default("singleton")
+  smtpHost            String   @default("smtp.gmail.com")
+  smtpPort            Int      @default(587)
+  smtpUser            String   @default("")
+  smtpPassword        String   @default("")
+  fromName            String   @default("HUMI Training Center")
+  fromEmail           String   @default("")
+  enrollmentEmails    Boolean  @default(true)
+  lessonEmails        Boolean  @default(true)
+  announcementEmails  Boolean  @default(true)
+  certificationEmails Boolean  @default(true)
+  updatedAt           DateTime @updatedAt
+
+  @@map("email_settings")
+}
+
+model SecuritySettings {
+  id                 String   @id(map: "security_settings_pk") @default("singleton")
+  passwordMinLength  Int      @default(8)
+  requireUppercase   Boolean  @default(true)
+  requireNumbers     Boolean  @default(true)
+  requireSymbols     Boolean  @default(false)
+  sessionTimeoutMins Int      @default(60)
+  maxLoginAttempts   Int      @default(5)
+  updatedAt          DateTime @updatedAt
+
+  @@map("security_settings")
+}
+
+model BrandingSettings {
+  id             String   @id(map: "branding_settings_pk") @default("singleton")
+  logoUrl        String   @default("")
+  faviconUrl     String   @default("")
+  primaryColor   String   @default("#1d4ed8")
+  secondaryColor String   @default("#7c3aed")
+  bannerImageUrl String   @default("")
+  bannerTagline  String   @default("Your Path to a VA Career")
+  updatedAt      DateTime @updatedAt
+
+  @@map("branding_settings")
 }

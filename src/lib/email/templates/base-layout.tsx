@@ -12,9 +12,14 @@ import type { ReactNode } from "react";
 interface BaseLayoutProps {
   readonly children: ReactNode;
   readonly previewText?: string;
+  readonly siteName?: string;
 }
 
-export function BaseLayout({ children, previewText }: BaseLayoutProps) {
+export function BaseLayout({
+  children,
+  previewText,
+  siteName = "HUMI Training Center",
+}: BaseLayoutProps) {
   return (
     <Html lang="en">
       <Head />
@@ -27,7 +32,7 @@ export function BaseLayout({ children, previewText }: BaseLayoutProps) {
         <Container style={styles.container}>
           {/* Header */}
           <Section style={styles.header}>
-            <Text style={styles.headerTitle}>HUMI Training Center</Text>
+            <Text style={styles.headerTitle}>{siteName}</Text>
             <Text style={styles.headerSubtitle}>Your Path to a VA Career</Text>
           </Section>
 
@@ -38,7 +43,7 @@ export function BaseLayout({ children, previewText }: BaseLayoutProps) {
           <Section style={styles.footer}>
             <Hr style={styles.footerHr} />
             <Text style={styles.footerText}>
-              HUMI Training Center &bull; Empowering Professional Growth
+              {siteName} &bull; Empowering Professional Growth
             </Text>
             <Text style={styles.footerSmall}>
               This is an automated message. Please do not reply directly to this

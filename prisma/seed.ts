@@ -1114,6 +1114,29 @@ You are now prepared to launch your career as a US Bookkeeping Virtual Assistant
   }
   console.log("✅ US Bookkeeping VA quiz seeded");
 
+  // ── Settings defaults ──────────────────────────────────────────────
+  await prisma.platformSettings.upsert({
+    where: { id: "singleton" },
+    create: { id: "singleton", siteName: "HUMI Training Center", timezone: "Asia/Manila", currency: "PHP", language: "en" },
+    update: {},
+  });
+  await prisma.emailSettings.upsert({
+    where: { id: "singleton" },
+    create: { id: "singleton", smtpHost: "smtp.gmail.com", smtpPort: 587, smtpUser: "", smtpPassword: "", fromName: "HUMI Training Center", fromEmail: "", enrollmentEmails: true, lessonEmails: true, announcementEmails: true, certificationEmails: true },
+    update: {},
+  });
+  await prisma.securitySettings.upsert({
+    where: { id: "singleton" },
+    create: { id: "singleton", passwordMinLength: 8, requireUppercase: true, requireNumbers: true, requireSymbols: false, sessionTimeoutMins: 60, maxLoginAttempts: 5 },
+    update: {},
+  });
+  await prisma.brandingSettings.upsert({
+    where: { id: "singleton" },
+    create: { id: "singleton", logoUrl: "", faviconUrl: "", primaryColor: "#1d4ed8", secondaryColor: "#7c3aed", bannerImageUrl: "", bannerTagline: "Your Path to a VA Career" },
+    update: {},
+  });
+  console.log("✅ Settings defaults seeded");
+
   console.log("\n✅ All seeding complete!");
   console.log("   Admin: gdscapital.168@gmail.com / Admin@123456!");
 }
