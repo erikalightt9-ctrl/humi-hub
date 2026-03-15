@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TIER_MAX_CAPACITY, TRAINER_TIER_LABELS } from "@/lib/constants/pricing";
+import { AlertTriangle } from "lucide-react";
 import type { TrainerTier } from "@prisma/client";
 
 /* ------------------------------------------------------------------ */
@@ -99,6 +100,9 @@ export function ScheduleDialog({
   const [trainers, setTrainers] = React.useState<ReadonlyArray<TrainerOption>>([]);
   const [trainersLoading, setTrainersLoading] = React.useState(false);
 
+  // Conflict detection
+  const [conflictWarning, setConflictWarning] = React.useState<string | null>(null);
+
   // Form state
   const [name, setName] = React.useState("");
   const [courseId, setCourseId] = React.useState("");
@@ -164,6 +168,38 @@ export function ScheduleDialog({
     }
     setError(null);
   }, [schedule, open]);
+
+  // Conflict detection effect — fires when trainer, days, or times change
+  React.useEffect(() => {
+    setConflictWarning(null);
+    if (!trainerId || daysOfWeek.length === 0 || !startTime || !endTime) return;
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({
+          trainerId,
+          checkDays: daysOfWeek.join(","),
+          startTime,
+          endTime,
+        });
+        const res = await fetch(`/api/public/trainer-availability?${params}`, {
+          signal: controller.signal,
+        });
+        const json = await res.json();
+        if (json.success && json.data.conflict?.hasConflict) {
+          setConflictWarning(json.data.conflict.message);
+        }
+      } catch {
+        /* abort or network error — silently ignore */
+      }
+    }, 400);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [trainerId, daysOfWeek, startTime, endTime]);
 
   function handleTrainerChange(newTrainerId: string) {
     setTrainerId(newTrainerId);
@@ -337,6 +373,12 @@ export function ScheduleDialog({
                 </span>
                 {" "}— Recommended capacity: {TIER_MAX_CAPACITY[selectedTrainer.tier]} students
               </p>
+            )}
+            {conflictWarning && (
+              <div className="mt-2 flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+                <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-amber-500" />
+                <span>{conflictWarning}</span>
+              </div>
             )}
           </div>
 

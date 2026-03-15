@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { TrainerForm } from "@/components/admin/TrainerForm";
 import { TrainerAccessPanel } from "@/components/admin/TrainerAccessPanel";
+import { TrainerAvailabilityEditor } from "@/components/admin/TrainerAvailabilityEditor";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -157,6 +158,9 @@ export function TrainerManager() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [expandedTrainer, setExpandedTrainer] = useState<Trainer | null>(null);
   const [expandedLoading, setExpandedLoading] = useState(false);
+  const [expandedAvailability, setExpandedAvailability] = useState<
+    ReadonlyArray<{ id: string; dayOfWeek: number; startTime: string; endTime: string }>
+  >([]);
 
   // Course assignment form
   const [selectedCourseId, setSelectedCourseId] = useState("");
@@ -201,9 +205,16 @@ export function TrainerManager() {
   const fetchTrainerDetail = useCallback(async (id: string) => {
     setExpandedLoading(true);
     try {
-      const res = await fetch(`/api/admin/trainers/${id}`);
-      const json = await res.json();
-      if (json.success) setExpandedTrainer(json.data);
+      const [trainerRes, availRes] = await Promise.all([
+        fetch(`/api/admin/trainers/${id}`),
+        fetch(`/api/admin/trainers/${id}/availability`),
+      ]);
+      const [trainerJson, availJson] = await Promise.all([
+        trainerRes.json(),
+        availRes.json(),
+      ]);
+      if (trainerJson.success) setExpandedTrainer(trainerJson.data);
+      if (availJson.success) setExpandedAvailability(availJson.data.slots ?? []);
     } catch {
       /* silent */
     } finally {
@@ -243,6 +254,7 @@ export function TrainerManager() {
     if (expandedId === trainerId) {
       setExpandedId(null);
       setExpandedTrainer(null);
+      setExpandedAvailability([]);
     } else {
       setExpandedId(trainerId);
       setSelectedCourseId("");
@@ -682,6 +694,21 @@ export function TrainerManager() {
                         </p>
                       </div>
                     )}
+
+                    {/* Availability Editor */}
+                    <div>
+                      <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">
+                        Weekly Availability
+                      </h4>
+                      {expandedLoading ? (
+                        <p className="text-sm text-gray-400">Loading…</p>
+                      ) : (
+                        <TrainerAvailabilityEditor
+                          trainerId={trainer.id}
+                          initialSlots={expandedAvailability}
+                        />
+                      )}
+                    </div>
 
                     {/* Portal Access Panel */}
                     <TrainerAccessPanel

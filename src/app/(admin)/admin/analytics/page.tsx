@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 import { getCourseEngagementMetrics } from "@/lib/repositories/engagement.repository";
+import { getTrainerUtilizationStats } from "@/lib/repositories/trainer-availability.repository";
 import { CourseEngagementCard } from "@/components/admin/CourseEngagementCard";
 import { StudentEngagementTable } from "@/components/admin/StudentEngagementTable";
 import { AttendanceLiveTable } from "@/components/admin/AttendanceLiveTable";
+import { TrainerUtilizationTable } from "@/components/admin/TrainerUtilizationTable";
 
 export const metadata: Metadata = { title: "Analytics | HUMI Admin" };
 
 export default async function AnalyticsPage() {
-  const courseMetrics = await getCourseEngagementMetrics();
+  const [courseMetrics, trainerStats] = await Promise.all([
+    getCourseEngagementMetrics(),
+    getTrainerUtilizationStats(),
+  ]);
 
   const courseOptions = courseMetrics.map((m) => ({
     id: m.courseId,
@@ -20,7 +25,7 @@ export default async function AnalyticsPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Attendance tracking, course engagement, and student activity
+          Attendance tracking, course engagement, student activity, and scheduling
         </p>
       </div>
 
@@ -56,6 +61,17 @@ export default async function AnalyticsPage() {
           Student Activity
         </h2>
         <StudentEngagementTable courses={courseOptions} />
+      </section>
+
+      {/* Section 4: Scheduling Analytics */}
+      <section>
+        <h2 className="mb-1 text-lg font-semibold text-gray-800">
+          Scheduling Analytics
+        </h2>
+        <p className="mb-4 text-sm text-gray-500">
+          Trainer utilization across active and full schedules
+        </p>
+        <TrainerUtilizationTable stats={trainerStats} />
       </section>
     </div>
   );
