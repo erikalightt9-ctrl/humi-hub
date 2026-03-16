@@ -3,10 +3,17 @@
   "configurations": [
     {
       "name": "platform-dev",
-      "runtimeExecutable": "/Users/erikahernando/Desktop/va-training-center/node_modules/.bin/next",
-      "runtimeArgs": ["dev"],
+      "runtimeExecutable": "/usr/bin/env",
+      "runtimeArgs": [
+        "-C", "/Users/erikahernando/Desktop/va-training-center",
+        "node",
+        "/Users/erikahernando/Desktop/va-training-center/node_modules/next/dist/bin/next",
+        "dev",
+        "/Users/erikahernando/Desktop/va-training-center/.claude/worktrees/vigilant-montalcini",
+        "--port", "3000"
+      ],
       "port": 3000,
-      "cwd": "/Users/erikahernando/Desktop/va-training-center"
+      "cwd": "."
     },
     {
       "name": "smart-assistant",
