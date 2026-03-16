@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Mail, Send, Loader2, Plus, MessageSquare, Users } from "lucide-react";
 import { ACTOR_TYPE_LABELS, CONVERSATION_TYPE_LABELS } from "@/lib/constants/communications";
+import { NewConversationModal } from "./NewConversationModal";
 
 interface Participant {
   readonly actorType: string;
@@ -47,6 +48,7 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showCompose, setShowCompose] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const fetchConversations = useCallback(async () => {
@@ -109,9 +111,17 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
     return CONVERSATION_TYPE_LABELS[conv.type] ?? "Conversation";
   }
 
+  function handleConversationCreated(conversationId: string) {
+    setShowCompose(false);
+    fetchConversations();
+    setSelectedId(conversationId);
+  }
+
   function isSelf(msg: Message): boolean {
     return msg.senderType === currentActorType && msg.senderId === currentActorId;
   }
+
+  const selectedConv = conversations.find((c) => c.id === selectedId);
 
   return (
     <div className="space-y-6">
@@ -124,11 +134,19 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
         <div className="flex h-full">
           {/* Conversation list */}
           <div className="w-80 border-r border-gray-200 flex flex-col shrink-0">
-            <div className="p-3 border-b border-gray-100">
+            <div className="p-3 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <Users className="h-4 w-4" />
                 <span>{conversations.length} conversations</span>
               </div>
+              <button
+                onClick={() => setShowCompose(true)}
+                className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition"
+                title="New conversation"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Compose
+              </button>
             </div>
             <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
               {loading ? (
@@ -136,7 +154,13 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
               ) : conversations.length === 0 ? (
                 <div className="p-6 text-center">
                   <Mail className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400">No conversations yet</p>
+                  <p className="text-sm text-gray-400 mb-3">No conversations yet</p>
+                  <button
+                    onClick={() => setShowCompose(true)}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium underline"
+                  >
+                    Start your first conversation
+                  </button>
                 </div>
               ) : (
                 conversations.map((conv) => (
@@ -170,11 +194,29 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
               <div className="flex-1 flex items-center justify-center text-gray-400">
                 <div className="text-center">
                   <MessageSquare className="h-10 w-10 mx-auto mb-2 text-gray-300" />
-                  <p className="text-sm">Select a conversation</p>
+                  <p className="text-sm mb-3">Select a conversation</p>
+                  <button
+                    onClick={() => setShowCompose(true)}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 mx-auto"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    New message
+                  </button>
                 </div>
               </div>
             ) : (
               <>
+                {selectedConv && (
+                  <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm font-medium text-gray-700 truncate">
+                      {getConversationDisplayName(selectedConv)}
+                    </span>
+                    <span className="ml-auto text-[10px] text-gray-400 shrink-0">
+                      {CONVERSATION_TYPE_LABELS[selectedConv.type] ?? selectedConv.type}
+                    </span>
+                  </div>
+                )}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                   {messages.map((msg) => (
                     <div
@@ -216,7 +258,7 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(e); }
                       }}
-                      placeholder="Type a message..."
+                      placeholder="Type a message... (Enter to send, Shift+Enter for newline)"
                       rows={1}
                       className="flex-1 resize-none rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-24"
                     />
@@ -230,6 +272,13 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
           </div>
         </div>
       </div>
+
+      {showCompose && (
+        <NewConversationModal
+          onClose={() => setShowCompose(false)}
+          onConversationCreated={handleConversationCreated}
+        />
+      )}
     </div>
   );
 }

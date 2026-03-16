@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { MessagingView } from "@/components/shared/MessagingView";
+import { BroadcastMessageComposer } from "@/components/admin/BroadcastMessageComposer";
 
 export const metadata: Metadata = { title: "Messages | HUMI Admin" };
 
@@ -12,5 +13,10 @@ export default async function AdminMessagesPage() {
   const user = session?.user as { id?: string; role?: string } | undefined;
   if (!user?.id || user.role !== "admin") redirect("/portal?tab=admin");
 
-  return <MessagingView currentActorType="ADMIN" currentActorId={user.id} />;
+  return (
+    <div className="space-y-6">
+      <BroadcastMessageComposer />
+      <MessagingView currentActorType="ADMIN" currentActorId={user.id} />
+    </div>
+  );
 }
