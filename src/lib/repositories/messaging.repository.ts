@@ -238,6 +238,9 @@ export async function getMessages(
   const [messages, total] = await Promise.all([
     prisma.directMessage.findMany({
       where: { conversationId },
+      include: {
+        reads: { select: { actorType: true, actorId: true } },
+      },
       orderBy: { createdAt: "asc" },
       skip,
       take: limit,
@@ -252,6 +255,30 @@ export async function getMessages(
     limit,
     totalPages: Math.ceil(total / limit),
   };
+}
+
+export async function markMessagesRead(
+  conversationId: string,
+  actorType: ActorType,
+  actorId: string
+) {
+  // Fetch all messages in this conversation not yet read by this actor
+  const unread = await prisma.directMessage.findMany({
+    where: {
+      conversationId,
+      senderType: { not: actorType },
+      senderId: { not: actorId },
+      reads: { none: { actorType, actorId } },
+    },
+    select: { id: true },
+  });
+
+  if (unread.length === 0) return;
+
+  await prisma.messageRead.createMany({
+    data: unread.map((m) => ({ messageId: m.id, actorType, actorId })),
+    skipDuplicates: true,
+  });
 }
 
 export async function markConversationRead(

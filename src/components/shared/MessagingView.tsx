@@ -27,6 +27,11 @@ interface Conversation {
   }[];
 }
 
+interface MessageRead {
+  readonly actorType: string;
+  readonly actorId: string;
+}
+
 interface Message {
   readonly id: string;
   readonly senderType: string;
@@ -35,6 +40,7 @@ interface Message {
   readonly attachmentUrl: string | null;
   readonly attachmentName: string | null;
   readonly createdAt: string;
+  readonly reads?: readonly MessageRead[];
 }
 
 interface Props {
@@ -77,11 +83,35 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
   }, []);
 
   useEffect(() => {
-    if (selectedId) {
-      fetchMessages(selectedId);
+    if (!selectedId) return;
+
+    // Initial load
+    fetchMessages(selectedId);
+
+    // Real-time updates via SSE (falls back gracefully if connection drops)
+    const es = new EventSource(`/api/messages/conversations/${selectedId}/stream`);
+
+    es.onmessage = (event) => {
+      try {
+        const incoming: Message[] = JSON.parse(event.data);
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m.id));
+          const fresh = incoming.filter((m) => !existingIds.has(m.id));
+          return fresh.length > 0 ? [...prev, ...fresh] : prev;
+        });
+        // Mark new messages read
+        fetch(`/api/messages/conversations/${selectedId}/read`, { method: "POST" }).catch(() => {});
+      } catch { /* malformed event */ }
+    };
+
+    es.onerror = () => {
+      // SSE connection lost — fall back to 10s polling
+      es.close();
       const interval = setInterval(() => fetchMessages(selectedId), 10000);
       return () => clearInterval(interval);
-    }
+    };
+
+    return () => es.close();
   }, [selectedId, fetchMessages]);
 
   useEffect(() => {
@@ -297,9 +327,18 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
                             {msg.attachmentName ?? "Attachment"}
                           </a>
                         )}
-                        <p className={`text-[10px] mt-1 ${isSelf(msg) ? "text-blue-200" : "text-gray-400"}`}>
-                          {new Date(msg.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
-                        </p>
+                        <div className={`flex items-center gap-1 mt-1 ${isSelf(msg) ? "justify-end" : "justify-start"}`}>
+                          <span className={`text-[10px] ${isSelf(msg) ? "text-blue-200" : "text-gray-400"}`}>
+                            {new Date(msg.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                          </span>
+                          {isSelf(msg) && (
+                            <span className={`text-[11px] font-bold leading-none ${
+                              msg.reads && msg.reads.length > 0 ? "text-blue-300" : "text-blue-400/50"
+                            }`} title={msg.reads && msg.reads.length > 0 ? "Read" : "Sent"}>
+                              {msg.reads && msg.reads.length > 0 ? "✓✓" : "✓"}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}

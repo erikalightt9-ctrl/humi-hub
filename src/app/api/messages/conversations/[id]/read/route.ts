@@ -15,7 +15,10 @@ export async function POST(
     }
 
     const { id } = await params;
-    await messagingRepo.markConversationRead(id, actor.actorType, actor.actorId);
+    await Promise.all([
+      messagingRepo.markConversationRead(id, actor.actorType, actor.actorId),
+      messagingRepo.markMessagesRead(id, actor.actorType, actor.actorId),
+    ]);
 
     return NextResponse.json({ success: true, data: null, error: null });
   } catch (err) {
