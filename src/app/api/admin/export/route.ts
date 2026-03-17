@@ -1,4 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { requireAdmin } from "@/lib/auth-guards";
 import { getAllEnrollmentsForExport } from "@/lib/repositories/enrollment.repository";
 
 function escapeCsvField(value: string | null | undefined): string {
@@ -14,9 +16,13 @@ function toCsvRow(fields: (string | null | undefined)[]): string {
   return fields.map(escapeCsvField).join(",");
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const enrollments = await getAllEnrollmentsForExport();
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
+
+    const enrollments = await getAllEnrollmentsForExport(guard.tenantId);
 
     const headers = [
       "ID",

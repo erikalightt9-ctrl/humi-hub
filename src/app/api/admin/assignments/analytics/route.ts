@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     if (!guard.ok) return guard.response;
 
     const [analytics, recentSubmissions, trainerStats] = await Promise.all([
-      getAssignmentAnalytics(),
+      getAssignmentAnalytics(guard.tenantId),
       getAllSubmissions({ status: "PENDING" }),
       // Average grading time per trainer (gradedBy)
       prisma.submission.groupBy({

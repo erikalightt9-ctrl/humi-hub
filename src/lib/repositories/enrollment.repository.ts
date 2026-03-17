@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { EnrollmentFormData } from "@/lib/validations/enrollment.schema";
 import type { EnrollmentFilters, PaginatedResult } from "@/types";
+import { scopeViaCourse, type TenantScope } from "@/lib/tenant-isolation";
 import type { Decimal } from "@prisma/client/runtime/client";
 import type {
   Enrollment,
@@ -137,9 +138,9 @@ export async function updateEnrollmentStatus(
   });
 }
 
-export async function getAllEnrollmentsForExport(tenantId?: string): Promise<EnrollmentWithCourse[]> {
+export async function getAllEnrollmentsForExport(scope: TenantScope = null): Promise<EnrollmentWithCourse[]> {
   return prisma.enrollment.findMany({
-    where: tenantId ? { course: { tenantId } } : {},
+    where: scopeViaCourse(scope),
     include: { course: { select: { id: true, slug: true, title: true, price: true } } },
     orderBy: { createdAt: "desc" },
   });

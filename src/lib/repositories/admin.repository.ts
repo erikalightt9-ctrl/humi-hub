@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import type { AnalyticsStats } from "@/types";
+import { scopeToTenant, scopeViaCourse, type TenantScope } from "@/lib/tenant-isolation";
 
-export async function getAnalyticsStats(tenantId: string): Promise<AnalyticsStats> {
+export async function getAnalyticsStats(scope: TenantScope): Promise<AnalyticsStats> {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const courseWhere = { tenantId };
-  const enrollmentWhere = { course: { tenantId } };
+  const courseWhere = scopeToTenant(scope);
+  const enrollmentWhere = scopeViaCourse(scope);
 
   const [total, pending, approved, rejected, recent, courseBreakdown] = await Promise.all([
     prisma.enrollment.count({ where: enrollmentWhere }),

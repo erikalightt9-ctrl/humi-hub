@@ -70,7 +70,7 @@ const ACTIVITY_COLORS: Record<string, string> = {
 export default async function AdminDashboardPage() {
   const [stats, presentNow, scheduleStats, upcomingSchedules, revenue, pipeline, recentActivity, presentStudents] =
     await Promise.all([
-      getAnalyticsStats(process.env.DEFAULT_TENANT_ID ?? ""),
+      getAnalyticsStats(process.env.DEFAULT_TENANT_ID ?? null),
       getPresentNowCount(),
       getScheduleStats(),
       getUpcomingSchedules(5),

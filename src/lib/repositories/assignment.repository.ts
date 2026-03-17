@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import type { Assignment, Submission, SubmissionType } from "@prisma/client";
+import { scopeViaCourse, type TenantScope } from "@/lib/tenant-isolation";
 // ─── Assignment Queries ────────────────────────────────────────────────────────
 
 export async function getAssignmentsByCourse(courseId: string) {
@@ -238,9 +239,9 @@ export async function gradeSubmission(
 
 // ─── Analytics ────────────────────────────────────────────────────────────────
 
-export async function getAssignmentAnalytics(tenantId?: string) {
-  const assignmentFilter = tenantId ? { course: { tenantId } } : {};
-  const submissionFilter = tenantId ? { assignment: { course: { tenantId } } } : {};
+export async function getAssignmentAnalytics(scope: TenantScope = null) {
+  const assignmentFilter = scopeViaCourse(scope);
+  const submissionFilter = scope ? { assignment: { course: { tenantId: scope } } } : {};
 
   const [total, submissions, pending, graded] = await Promise.all([
     prisma.assignment.count({ where: { isPublished: true, ...assignmentFilter } }),

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { Course } from "@prisma/client";
+import { scopeToTenant } from "@/lib/tenant-isolation";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -74,7 +75,7 @@ export async function getAllCoursesByTenant(
   tenantId: string,
 ): Promise<ReadonlyArray<CourseWithCounts>> {
   return prisma.course.findMany({
-    where: { tenantId },
+    where: scopeToTenant(tenantId),
     include: {
       _count: {
         select: {
