@@ -238,12 +238,15 @@ export async function gradeSubmission(
 
 // ─── Analytics ────────────────────────────────────────────────────────────────
 
-export async function getAssignmentAnalytics() {
+export async function getAssignmentAnalytics(tenantId?: string) {
+  const assignmentFilter = tenantId ? { course: { tenantId } } : {};
+  const submissionFilter = tenantId ? { assignment: { course: { tenantId } } } : {};
+
   const [total, submissions, pending, graded] = await Promise.all([
-    prisma.assignment.count({ where: { isPublished: true } }),
-    prisma.submission.count(),
-    prisma.submission.count({ where: { status: "PENDING" } }),
-    prisma.submission.count({ where: { status: "GRADED" } }),
+    prisma.assignment.count({ where: { isPublished: true, ...assignmentFilter } }),
+    prisma.submission.count({ where: submissionFilter }),
+    prisma.submission.count({ where: { status: "PENDING", ...submissionFilter } }),
+    prisma.submission.count({ where: { status: "GRADED", ...submissionFilter } }),
   ]);
 
   const completionRate = submissions > 0 ? Math.round((graded / submissions) * 100) : 0;

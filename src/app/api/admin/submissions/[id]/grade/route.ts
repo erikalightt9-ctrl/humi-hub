@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { requireAdmin } from "@/lib/auth-guards";
 import { z } from "zod";
 import { gradeSubmission } from "@/lib/repositories/assignment.repository";
 
@@ -15,9 +16,8 @@ export async function PATCH(
 ) {
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (!token?.id || token.role !== "admin") {
-      return NextResponse.json({ success: false, data: null, error: "Unauthorized" }, { status: 401 });
-    }
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
     const { id } = await params;
     const body = await request.json();
     const result = gradeSchema.safeParse(body);
@@ -28,7 +28,7 @@ export async function PATCH(
       id,
       result.data.grade,
       result.data.feedback,
-      token.id as string,
+      token!.id as string,
       result.data.rubricScores
     );
     return NextResponse.json({ success: true, data: submission, error: null });

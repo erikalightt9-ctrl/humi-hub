@@ -1,36 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import {
-  getAllCourses,
+  getAllCoursesByTenant,
   createCourse,
 } from "@/lib/repositories/course.repository";
+import { requireAdmin } from "@/lib/auth-guards";
 import { createCourseSchema } from "@/lib/validations/course.schema";
 
 /* ------------------------------------------------------------------ */
-/*  GET — Admin: list all courses with counts                          */
+/*  GET — Admin: list courses scoped to tenant                         */
 /* ------------------------------------------------------------------ */
 
 export async function GET(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
 
-    if (!token?.id || token.role !== "admin") {
-      return NextResponse.json(
-        { success: false, data: null, error: "Unauthorized" },
-        { status: 401 },
-      );
-    }
-
-    const courses = await getAllCourses();
-
-    return NextResponse.json({
-      success: true,
-      data: courses,
-      error: null,
-    });
+    const courses = await getAllCoursesByTenant(guard.tenantId);
+    return NextResponse.json({ success: true, data: courses, error: null });
   } catch (err) {
     console.error("[GET /api/admin/courses]", err);
     return NextResponse.json(
@@ -46,17 +34,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
-
-    if (!token?.id || token.role !== "admin") {
-      return NextResponse.json(
-        { success: false, data: null, error: "Unauthorized" },
-        { status: 401 },
-      );
-    }
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
 
     const body = await request.json();
     const parsed = createCourseSchema.safeParse(body);
@@ -69,20 +49,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const course = await createCourse(parsed.data);
+    const course = await createCourse({ ...parsed.data, tenantId: guard.tenantId });
 
-    return NextResponse.json(
-      { success: true, data: course, error: null },
-      { status: 201 },
-    );
+    return NextResponse.json({ success: true, data: course, error: null }, { status: 201 });
   } catch (err) {
     console.error("[POST /api/admin/courses]", err);
-
     const message =
       err instanceof Error && err.message.includes("Unique constraint")
         ? "A course with this slug already exists"
         : "Internal server error";
-
     return NextResponse.json(
       { success: false, data: null, error: message },
       { status: message === "Internal server error" ? 500 : 409 },

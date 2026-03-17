@@ -1,18 +1,21 @@
 import { prisma } from "@/lib/prisma";
 import type { AnalyticsStats } from "@/types";
 
-export async function getAnalyticsStats(): Promise<AnalyticsStats> {
+export async function getAnalyticsStats(tenantId: string): Promise<AnalyticsStats> {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+  const courseWhere = { tenantId };
+  const enrollmentWhere = { course: { tenantId } };
+
   const [total, pending, approved, rejected, recent, courseBreakdown] = await Promise.all([
-    prisma.enrollment.count(),
-    prisma.enrollment.count({ where: { status: "PENDING" } }),
-    prisma.enrollment.count({ where: { status: "APPROVED" } }),
-    prisma.enrollment.count({ where: { status: "REJECTED" } }),
-    prisma.enrollment.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
+    prisma.enrollment.count({ where: enrollmentWhere }),
+    prisma.enrollment.count({ where: { ...enrollmentWhere, status: "PENDING" } }),
+    prisma.enrollment.count({ where: { ...enrollmentWhere, status: "APPROVED" } }),
+    prisma.enrollment.count({ where: { ...enrollmentWhere, status: "REJECTED" } }),
+    prisma.enrollment.count({ where: { ...enrollmentWhere, createdAt: { gte: thirtyDaysAgo } } }),
     prisma.course.findMany({
-      where: { isActive: true },
+      where: { ...courseWhere, isActive: true },
       select: {
         slug: true,
         title: true,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { requireAdmin } from "@/lib/auth-guards";
 import {
   findEnrolleeById,
   updateEnrolleeBatch,
@@ -16,12 +17,8 @@ export async function GET(
 ) {
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (!token?.role || token.role !== "admin") {
-      return NextResponse.json(
-        { success: false, data: null, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
 
     const { id } = await params;
     const [enrollee, activityLog] = await Promise.all([
@@ -56,12 +53,8 @@ export async function PATCH(
 ) {
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (!token?.role || token.role !== "admin") {
-      return NextResponse.json(
-        { success: false, data: null, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
 
     const { id } = await params;
     const body = await request.json();
@@ -114,12 +107,8 @@ export async function DELETE(
 ) {
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (!token?.role || token.role !== "admin") {
-      return NextResponse.json(
-        { success: false, data: null, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
 
     const { id } = await params;
 

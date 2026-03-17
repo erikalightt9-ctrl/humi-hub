@@ -89,7 +89,7 @@ export interface ActivityLogEntry {
 export async function listEnrollees(
   filters: EnrolleeFilters
 ): Promise<PaginatedResult<EnrolleeWithCourse>> {
-  const { search, courseSlug, paymentStatus, accessGranted, batch, page = 1, limit = 20 } = filters;
+  const { search, courseSlug, paymentStatus, accessGranted, batch, tenantId, page = 1, limit = 20 } = filters;
   const skip = (page - 1) * limit;
 
   const where: Prisma.StudentWhereInput = {};
@@ -98,8 +98,12 @@ export async function listEnrollees(
   if (typeof accessGranted === "boolean") where.accessGranted = accessGranted;
   if (batch) where.batch = { contains: batch, mode: "insensitive" };
 
-  if (courseSlug) {
+  if (courseSlug && tenantId) {
+    where.enrollment = { course: { slug: courseSlug, tenantId } };
+  } else if (courseSlug) {
     where.enrollment = { course: { slug: courseSlug } };
+  } else if (tenantId) {
+    where.enrollment = { course: { tenantId } };
   }
 
   if (search) {
@@ -340,13 +344,15 @@ export async function assignEnrolleeToSchedule(
 /*  Stats for page header                                              */
 /* ------------------------------------------------------------------ */
 
-export async function getEnrolleeStats(): Promise<EnrolleeStats> {
+export async function getEnrolleeStats(tenantId?: string): Promise<EnrolleeStats> {
+  const courseFilter = tenantId ? { enrollment: { course: { tenantId } } } : {};
+
   const [total, paid, partial, unpaid, access] = await Promise.all([
-    prisma.student.count(),
-    prisma.student.count({ where: { paymentStatus: "PAID" } }),
-    prisma.student.count({ where: { paymentStatus: "PARTIAL" } }),
-    prisma.student.count({ where: { paymentStatus: "UNPAID" } }),
-    prisma.student.count({ where: { accessGranted: true } }),
+    prisma.student.count({ where: courseFilter }),
+    prisma.student.count({ where: { ...courseFilter, paymentStatus: "PAID" } }),
+    prisma.student.count({ where: { ...courseFilter, paymentStatus: "PARTIAL" } }),
+    prisma.student.count({ where: { ...courseFilter, paymentStatus: "UNPAID" } }),
+    prisma.student.count({ where: { ...courseFilter, accessGranted: true } }),
   ]);
 
   return { total, paid, partial, unpaid, accessGranted: access };

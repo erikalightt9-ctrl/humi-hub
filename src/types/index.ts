@@ -68,6 +68,7 @@ export interface ApiResponse<T = null> {
 }
 
 export interface EnrollmentFilters {
+  tenantId?: string;
   courseSlug?: CourseSlug;
   status?: EnrollmentStatus;
   search?: string;
@@ -76,6 +77,7 @@ export interface EnrollmentFilters {
 }
 
 export interface EnrolleeFilters {
+  tenantId?: string;
   courseSlug?: CourseSlug;
   paymentStatus?: StudentPaymentStatus;
   accessGranted?: boolean;

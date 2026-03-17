@@ -1,9 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { requireAdmin } from "@/lib/auth-guards";
 import { getAnalyticsStats } from "@/lib/repositories/admin.repository";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const stats = await getAnalyticsStats();
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
+
+    const stats = await getAnalyticsStats(guard.tenantId);
     return NextResponse.json({ success: true, data: stats, error: null });
   } catch (err) {
     console.error("[GET /api/admin/analytics]", err);

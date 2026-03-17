@@ -2,28 +2,30 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { getPlatformSettings, getBrandingSettings } from "@/lib/repositories/settings.repository";
+import { resolveTenantFromSubdomain } from "@/lib/tenant";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const [platform, branding] = await Promise.all([
-      getPlatformSettings(),
-      getBrandingSettings(),
-    ]);
+    const tenant = await resolveTenantFromSubdomain();
 
-    const icons: Metadata["icons"] = branding.faviconUrl
-      ? { icon: branding.faviconUrl }
-      : undefined;
+    // Tenant branding takes precedence over the global singleton
+    const siteName =
+      tenant?.tenant.siteName ?? (await getPlatformSettings()).siteName;
+    const faviconUrl =
+      tenant?.tenant.faviconUrl ?? (await getBrandingSettings()).faviconUrl;
+
+    const icons: Metadata["icons"] = faviconUrl ? { icon: faviconUrl } : undefined;
 
     return {
       title: {
-        default: `${platform.siteName} — Professional Training Programs`,
-        template: `%s | ${platform.siteName}`,
+        default: `${siteName} — Professional Training Programs`,
+        template: `%s | ${siteName}`,
       },
-      description: `${platform.siteName} offers world-class professional training programs across multiple industries and career paths.`,
+      description: `${siteName} offers world-class professional training programs across multiple industries and career paths.`,
       metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
-      openGraph: { siteName: platform.siteName, type: "website" },
+      openGraph: { siteName, type: "website" },
       icons,
     };
   } catch {
@@ -44,13 +46,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let language = "en";
 
   try {
-    const [platform, branding] = await Promise.all([
-      getPlatformSettings(),
-      getBrandingSettings(),
-    ]);
-    primaryColor = branding.primaryColor;
-    secondaryColor = branding.secondaryColor;
-    language = platform.language;
+    const tenant = await resolveTenantFromSubdomain();
+
+    if (tenant) {
+      primaryColor = tenant.tenant.primaryColor ?? primaryColor;
+      secondaryColor = tenant.tenant.secondaryColor ?? secondaryColor;
+    } else {
+      const [platform, branding] = await Promise.all([
+        getPlatformSettings(),
+        getBrandingSettings(),
+      ]);
+      primaryColor = branding.primaryColor;
+      secondaryColor = branding.secondaryColor;
+      language = platform.language;
+    }
   } catch {
     /* fall back to defaults on DB unavailability */
   }

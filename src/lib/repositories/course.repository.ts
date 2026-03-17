@@ -70,6 +70,27 @@ export async function getAllCourses(): Promise<ReadonlyArray<CourseWithCounts>> 
   });
 }
 
+export async function getAllCoursesByTenant(
+  tenantId: string,
+): Promise<ReadonlyArray<CourseWithCounts>> {
+  return prisma.course.findMany({
+    where: { tenantId },
+    include: {
+      _count: {
+        select: {
+          enrollments: true,
+          lessons: true,
+          quizzes: true,
+          assignments: true,
+          trainers: true,
+          resources: true,
+        },
+      },
+    },
+    orderBy: { title: "asc" },
+  });
+}
+
 // ── Admin: Get single course with full details ────────────────────
 
 export async function getCourseById(id: string) {
@@ -99,7 +120,9 @@ export async function getCourseById(id: string) {
 
 // ── Admin: Create course ──────────────────────────────────────────
 
-export async function createCourse(data: CreateCourseData): Promise<Course> {
+export async function createCourse(
+  data: CreateCourseData & { tenantId?: string },
+): Promise<Course> {
   return prisma.course.create({
     data: {
       slug: data.slug,
@@ -113,6 +136,7 @@ export async function createCourse(data: CreateCourseData): Promise<Course> {
       currency: data.currency ?? "PHP",
       outcomes: [...data.outcomes],
       isActive: data.isActive ?? true,
+      ...(data.tenantId && { tenantId: data.tenantId }),
     },
   });
 }

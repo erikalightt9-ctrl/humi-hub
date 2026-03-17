@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 import { EnrollmentForm } from "@/components/enrollment/EnrollmentForm";
 import { prisma } from "@/lib/prisma";
+import { resolveTenantFromSubdomain } from "@/lib/tenant";
 
 export const metadata: Metadata = {
   title: "Enroll Now",
@@ -10,8 +11,13 @@ export const metadata: Metadata = {
 };
 
 export default async function EnrollPage() {
+  const tenant = await resolveTenantFromSubdomain();
+
   const courses = await prisma.course.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      ...(tenant ? { tenantId: tenant.tenantId } : {}),
+    },
     select: { id: true, title: true, slug: true },
     orderBy: { createdAt: "asc" },
   });

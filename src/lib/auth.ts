@@ -36,6 +36,8 @@ export const authOptions: NextAuthOptions = {
           email: admin.email,
           name: admin.name,
           role: "admin" as const,
+          isSuperAdmin: admin.isSuperAdmin,
+          tenantId: null,
         };
       },
     }),
@@ -82,6 +84,8 @@ export const authOptions: NextAuthOptions = {
           role: "student" as const,
           mustChangePassword: student.mustChangePassword,
           accessExpiry: student.accessExpiry?.toISOString() ?? null,
+          tenantId: student.organizationId ?? null,
+          isSuperAdmin: false,
         };
       },
     }),
@@ -124,6 +128,8 @@ export const authOptions: NextAuthOptions = {
           email: trainer.email,
           name: trainer.name,
           role: "trainer" as const,
+          tenantId: null,
+          isSuperAdmin: false,
         };
       },
     }),
@@ -166,8 +172,12 @@ export const authOptions: NextAuthOptions = {
           id: manager.id,
           email: manager.email,
           name: manager.name,
-          role: "corporate" as const,
+          role: manager.isTenantAdmin ? ("tenant_admin" as const) : ("corporate" as const),
           organizationId: manager.organizationId,
+          tenantId: manager.organizationId,
+          isSuperAdmin: false,
+          isTenantAdmin: manager.isTenantAdmin,
+          mustChangePassword: manager.mustChangePassword,
         };
       },
     }),
@@ -187,6 +197,9 @@ export const authOptions: NextAuthOptions = {
         token.mustChangePassword = (user as typeof user & { mustChangePassword?: boolean }).mustChangePassword ?? false;
         token.accessExpiry = (user as typeof user & { accessExpiry?: string | null }).accessExpiry ?? null;
         token.organizationId = (user as typeof user & { organizationId?: string }).organizationId ?? null;
+        token.tenantId = (user as typeof user & { tenantId?: string | null }).tenantId ?? null;
+        token.isSuperAdmin = (user as typeof user & { isSuperAdmin?: boolean }).isSuperAdmin ?? false;
+        token.isTenantAdmin = (user as typeof user & { isTenantAdmin?: boolean }).isTenantAdmin ?? false;
       }
       return token;
     },
@@ -197,13 +210,25 @@ export const authOptions: NextAuthOptions = {
           role: string;
           mustChangePassword: boolean;
           organizationId: string | null;
+          tenantId: string | null;
+          isSuperAdmin: boolean;
+          isTenantAdmin: boolean;
         };
         user.id = token.id as string;
         user.role = token.role as string;
         user.mustChangePassword = (token.mustChangePassword as boolean) ?? false;
         user.organizationId = (token.organizationId as string) ?? null;
+        user.tenantId = (token.tenantId as string) ?? null;
+        user.isSuperAdmin = (token.isSuperAdmin as boolean) ?? false;
+        user.isTenantAdmin = (token.isTenantAdmin as boolean) ?? false;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Let the default NextAuth redirect logic handle it
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     },
   },
 };

@@ -127,6 +127,13 @@ enum SubmissionType {
   TASK_COMPLETION
 }
 
+enum TenantPlan {
+  TRIAL
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
 model Course {
   id            String       @id @default(cuid())
   slug          String       @unique
@@ -140,8 +147,10 @@ model Course {
   currency      String       @default("PHP")
   outcomes      String[]
   isActive      Boolean      @default(true)
+  tenantId      String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+  tenant          Organization?  @relation(fields: [tenantId], references: [id])
   enrollments     Enrollment[]
   modules         Module[]
   lessons         Lesson[]
@@ -154,6 +163,7 @@ model Course {
   trainers        CourseTrainer[]
   resources       CourseResource[]
 
+  @@index([tenantId])
   @@map("courses")
 }
 
@@ -254,6 +264,7 @@ model Admin {
   email        String   @unique
   passwordHash String
   name         String
+  isSuperAdmin Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -784,6 +795,7 @@ model Trainer {
   students             Student[]
   schedules            Schedule[]
   availability         TrainerAvailability[]
+  tenantAssignments    TenantTrainer[]
 
   @@index([isActive])
   @@index([tier])
@@ -1048,34 +1060,65 @@ model SessionAttendance {
 }
 
 model Organization {
-  id          String    @id @default(cuid())
-  name        String
-  slug        String    @unique
-  email       String    @unique
-  industry    String?
-  logoUrl     String?
-  maxSeats    Int       @default(10)
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id             String      @id @default(cuid())
+  name           String
+  slug           String      @unique
+  subdomain      String?     @unique
+  customDomain   String?     @unique
+  email          String      @unique
+  industry       String?
+  logoUrl        String?
+  maxSeats       Int         @default(10)
+  isActive       Boolean     @default(true)
+  isDefault      Boolean     @default(false)
+  plan           TenantPlan  @default(TRIAL)
+  planExpiresAt  DateTime?
+  billingEmail   String?
+  // Per-tenant branding
+  siteName       String?
+  tagline        String?
+  primaryColor   String?
+  secondaryColor String?
+  faviconUrl     String?
+  bannerImageUrl String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
-  managers    CorporateManager[]
-  enrollments Enrollment[]
-  students    Student[]
+  managers       CorporateManager[]
+  enrollments    Enrollment[]
+  students       Student[]
+  courses        Course[]
+  tenantTrainers TenantTrainer[]
 
   @@map("organizations")
 }
 
+model TenantTrainer {
+  id         String       @id @default(cuid())
+  tenantId   String
+  trainerId  String
+  isActive   Boolean      @default(true)
+  assignedAt DateTime     @default(now())
+  tenant     Organization @relation(fields: [tenantId], references: [id])
+  trainer    Trainer      @relation(fields: [trainerId], references: [id])
+
+  @@unique([tenantId, trainerId])
+  @@index([tenantId])
+  @@map("tenant_trainers")
+}
+
 model CorporateManager {
-  id              String       @id @default(cuid())
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id])
-  email           String       @unique
-  passwordHash    String
-  name            String
-  role            String       @default("manager")
-  isActive        Boolean      @default(true)
-  createdAt       DateTime     @default(now())
+  id                 String       @id @default(cuid())
+  organizationId     String
+  organization       Organization @relation(fields: [organizationId], references: [id])
+  email              String       @unique
+  passwordHash       String
+  name               String
+  role               String       @default("manager")
+  isActive           Boolean      @default(true)
+  isTenantAdmin      Boolean      @default(false)
+  mustChangePassword Boolean      @default(false)
+  createdAt          DateTime     @default(now())
 
   @@index([organizationId])
   @@map("corporate_managers")

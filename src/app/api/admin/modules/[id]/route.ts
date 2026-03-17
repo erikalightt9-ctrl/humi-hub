@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { requireAdmin } from "@/lib/auth-guards";
 import { z } from "zod";
 import {
   updateModule,
@@ -20,9 +21,8 @@ export async function PATCH(
 ) {
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (!token?.id || token.role !== "admin") {
-      return NextResponse.json({ success: false, data: null, error: "Unauthorized" }, { status: 401 });
-    }
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
     const { id } = await params;
     const body = await request.json();
     const result = updateSchema.safeParse(body);
@@ -43,9 +43,8 @@ export async function DELETE(
 ) {
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (!token?.id || token.role !== "admin") {
-      return NextResponse.json({ success: false, data: null, error: "Unauthorized" }, { status: 401 });
-    }
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
     const { id } = await params;
     await deleteModule(id);
     return NextResponse.json({ success: true, data: null, error: null });
@@ -61,9 +60,8 @@ export async function GET(
 ) {
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (!token?.id || token.role !== "admin") {
-      return NextResponse.json({ success: false, data: null, error: "Unauthorized" }, { status: 401 });
-    }
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
     const { id } = await params;
     const module = await getModuleById(id);
     if (!module) {

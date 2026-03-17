@@ -31,7 +31,7 @@ describe("getAnalyticsStats", () => {
       { slug: "US_BOOKKEEPING_VA", title: "US Bookkeeping VA", _count: { enrollments: 2 } },
     ]);
 
-    const stats = await getAnalyticsStats();
+    const stats = await getAnalyticsStats("test-tenant-id");
 
     expect(stats.totalEnrollments).toBe(10);
     expect(stats.pendingCount).toBe(4);
@@ -47,7 +47,7 @@ describe("getAnalyticsStats", () => {
     (mockEnrollmentCount as jest.Mock).mockResolvedValue(0);
     (mockCourseFindMany as jest.Mock).mockResolvedValue([]);
 
-    const stats = await getAnalyticsStats();
+    const stats = await getAnalyticsStats("test-tenant-id");
 
     expect(stats.totalEnrollments).toBe(0);
     expect(stats.enrollmentsByCourse).toHaveLength(0);

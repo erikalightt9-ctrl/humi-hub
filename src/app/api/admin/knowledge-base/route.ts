@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { requireAdmin } from "@/lib/auth-guards";
 import { createArticleSchema } from "@/lib/validations/knowledge-base.schema";
 import * as kbService from "@/lib/services/knowledge-base.service";
 
@@ -10,9 +11,8 @@ import * as kbService from "@/lib/services/knowledge-base.service";
 export async function GET(request: NextRequest) {
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (!token?.id || token.role !== "admin") {
-      return NextResponse.json({ success: false, data: null, error: "Unauthorized" }, { status: 401 });
-    }
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
 
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category") as never ?? undefined;
@@ -33,9 +33,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (!token?.id || token.role !== "admin") {
-      return NextResponse.json({ success: false, data: null, error: "Unauthorized" }, { status: 401 });
-    }
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
 
     const body = await request.json();
     const result = createArticleSchema.safeParse(body);
@@ -48,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     const article = await kbService.createArticle({
       ...result.data,
-      createdBy: token.id as string,
+      createdBy: token!.id as string,
     });
 
     return NextResponse.json({ success: true, data: article, error: null }, { status: 201 });

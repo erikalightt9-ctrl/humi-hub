@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { requireAdmin } from "@/lib/auth-guards";
 import {
   getTrainerAvailability,
   replaceTrainerAvailability,
@@ -15,10 +16,9 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const token = await getToken({ req });
-  if (!token || token.role !== "admin") {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const token = await getToken({ req: req, secret: process.env.NEXTAUTH_SECRET });
+  const guard = requireAdmin(token);
+  if (!guard.ok) return guard.response;
 
   const { id: trainerId } = await params;
   const { searchParams } = req.nextUrl;
@@ -47,10 +47,9 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const token = await getToken({ req });
-  if (!token || token.role !== "admin") {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const token = await getToken({ req: req, secret: process.env.NEXTAUTH_SECRET });
+  const guard = requireAdmin(token);
+  if (!guard.ok) return guard.response;
 
   const { id: trainerId } = await params;
   const body = await req.json();

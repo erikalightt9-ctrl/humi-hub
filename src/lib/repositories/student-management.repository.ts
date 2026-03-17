@@ -22,6 +22,7 @@ export interface ActiveStudentRow {
 export interface ActiveStudentFilters {
   search?: string;
   courseId?: string;
+  tenantId?: string;
   page?: number;
   limit?: number;
 }
@@ -75,7 +76,7 @@ export interface StudentDetail {
 /* ------------------------------------------------------------------ */
 
 export async function listActiveStudents(filters: ActiveStudentFilters = {}) {
-  const { search, courseId, page = 1, limit = 20 } = filters;
+  const { search, courseId, tenantId, page = 1, limit = 20 } = filters;
   const skip = (page - 1) * limit;
 
   // Build where clause
@@ -86,8 +87,12 @@ export async function listActiveStudents(filters: ActiveStudentFilters = {}) {
       { email: { contains: search, mode: "insensitive" } },
     ];
   }
-  if (courseId) {
+  if (courseId && tenantId) {
+    where.enrollment = { courseId, course: { tenantId } };
+  } else if (courseId) {
     where.enrollment = { courseId };
+  } else if (tenantId) {
+    where.enrollment = { course: { tenantId } };
   }
 
   const [students, total] = await Promise.all([

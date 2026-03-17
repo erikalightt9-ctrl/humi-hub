@@ -82,13 +82,19 @@ export async function findEnrollmentById(id: string): Promise<EnrollmentWithCour
 export async function listEnrollments(
   filters: EnrollmentFilters
 ): Promise<PaginatedResult<EnrollmentWithCourse>> {
-  const { courseSlug, status, search, page = 1, limit = 20 } = filters;
+  const { courseSlug, status, search, tenantId, page = 1, limit = 20 } = filters;
   const skip = (page - 1) * limit;
 
   const where: Prisma.EnrollmentWhereInput = {};
 
   if (status) where.status = status;
-  if (courseSlug) where.course = { slug: courseSlug };
+  if (courseSlug && tenantId) {
+    where.course = { slug: courseSlug, tenantId };
+  } else if (courseSlug) {
+    where.course = { slug: courseSlug };
+  } else if (tenantId) {
+    where.course = { tenantId };
+  }
   if (search) {
     where.OR = [
       { fullName: { contains: search, mode: "insensitive" } },
@@ -131,8 +137,9 @@ export async function updateEnrollmentStatus(
   });
 }
 
-export async function getAllEnrollmentsForExport(): Promise<EnrollmentWithCourse[]> {
+export async function getAllEnrollmentsForExport(tenantId?: string): Promise<EnrollmentWithCourse[]> {
   return prisma.enrollment.findMany({
+    where: tenantId ? { course: { tenantId } } : {},
     include: { course: { select: { id: true, slug: true, title: true, price: true } } },
     orderBy: { createdAt: "desc" },
   });
