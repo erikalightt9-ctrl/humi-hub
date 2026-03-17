@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { requireAdmin } from "@/lib/auth-guards";
 import { getEmailSettings, upsertEmailSettings } from "@/lib/repositories/settings.repository";
 import { emailSettingsSchema } from "@/lib/validations/settings.schema";
 
 export async function GET(request: NextRequest) {
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (!token?.id) {
-      return NextResponse.json({ success: false, data: null, error: "Unauthorized" }, { status: 401 });
-    }
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
     const settings = await getEmailSettings();
     // Mask the SMTP password — never expose plaintext to the client
     return NextResponse.json({
@@ -25,9 +25,8 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (!token?.id) {
-      return NextResponse.json({ success: false, data: null, error: "Unauthorized" }, { status: 401 });
-    }
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
 
     const body = await request.json();
     const result = emailSettingsSchema.safeParse(body);

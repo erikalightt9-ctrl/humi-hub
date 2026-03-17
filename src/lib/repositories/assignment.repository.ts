@@ -193,10 +193,12 @@ export async function getPendingSubmissions() {
 export async function getAllSubmissions(filters?: {
   status?: string;
   courseId?: string;
+  scope?: TenantScope;
 }) {
   return prisma.submission.findMany({
     where: {
       ...(filters?.status && { status: filters.status as "PENDING" | "GRADED" | "RETURNED" }),
+      ...(filters?.scope && { assignment: { course: { tenantId: filters.scope } } }),
     },
     include: {
       student: { select: { name: true, email: true } },

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 import { z } from "zod";
+import { requireAdmin } from "@/lib/auth-guards";
 import { getStudentEngagement } from "@/lib/repositories/engagement.repository";
 
 const SORT_FIELDS = [
@@ -23,6 +25,10 @@ const querySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
+
     const rawParams = Object.fromEntries(
       request.nextUrl.searchParams.entries()
     );

@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const guard = requireAdmin(token);
     if (!guard.ok) return guard.response;
     const status = request.nextUrl.searchParams.get("status") ?? "PENDING";
-    const submissions = await getAllSubmissions({ status });
+    const submissions = await getAllSubmissions({ status, scope: guard.tenantId });
     return NextResponse.json({ success: true, data: submissions, error: null });
   } catch (err) {
     console.error("[GET /api/admin/submissions]", err);

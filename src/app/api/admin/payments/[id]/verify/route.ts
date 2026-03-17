@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { requireAdmin } from "@/lib/auth-guards";
 import { verifyPaymentSchema } from "@/lib/validations/payment.schema";
 import { approvePayment, rejectPayment } from "@/lib/services/payment.service";
 import { findPaymentById } from "@/lib/repositories/payment.repository";
@@ -11,13 +12,8 @@ export async function POST(
   try {
     const { id } = await params;
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-
-    if (!token?.id) {
-      return NextResponse.json(
-        { success: false, data: null, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const guard = requireAdmin(token);
+    if (!guard.ok) return guard.response;
 
     const body = await request.json();
     const result = verifyPaymentSchema.safeParse(body);
@@ -45,9 +41,9 @@ export async function POST(
     }
 
     if (result.data.approved) {
-      await approvePayment(id, token.id as string);
+      await approvePayment(id, token!.id as string);
     } else {
-      await rejectPayment(id, token.id as string);
+      await rejectPayment(id, token!.id as string);
     }
 
     return NextResponse.json({
