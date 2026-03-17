@@ -120,6 +120,13 @@ enum CourseTier {
   ADVANCED
 }
 
+enum SubmissionType {
+  FILE_UPLOAD
+  TEXT_RESPONSE
+  EXTERNAL_LINK
+  TASK_COMPLETION
+}
+
 model Course {
   id            String       @id @default(cuid())
   slug          String       @unique
@@ -136,6 +143,7 @@ model Course {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   enrollments     Enrollment[]
+  modules         Module[]
   lessons         Lesson[]
   quizzes         Quiz[]
   certificates    Certificate[]
@@ -147,6 +155,23 @@ model Course {
   resources       CourseResource[]
 
   @@map("courses")
+}
+
+model Module {
+  id          String       @id @default(cuid())
+  courseId    String
+  title       String
+  description String?      @db.Text
+  order       Int          @default(0)
+  isPublished Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  course      Course       @relation(fields: [courseId], references: [id])
+  lessons     Lesson[]
+  assignments Assignment[]
+
+  @@index([courseId, order])
+  @@map("modules")
 }
 
 model Enrollment {
@@ -294,6 +319,7 @@ model Student {
 model Lesson {
   id          String   @id @default(cuid())
   courseId    String
+  moduleId    String?
   title       String
   content     String   @db.Text
   order       Int
@@ -304,8 +330,10 @@ model Lesson {
   videoUrl      String?
   createdAt     DateTime @default(now())
   course      Course             @relation(fields: [courseId], references: [id])
+  module      Module?            @relation(fields: [moduleId], references: [id])
   completions LessonCompletion[]
   resources   CourseResource[]
+  assignments Assignment[]
 
   @@index([courseId, tier, order])
   @@map("lessons")
@@ -426,40 +454,64 @@ model ForumPost {
 }
 
 model Assignment {
-  id           String       @id @default(cuid())
-  courseId     String
-  title        String
-  instructions String       @db.Text
-  dueDate      DateTime?
-  maxPoints    Int          @default(100)
-  isPublished  Boolean      @default(false)
-  createdAt    DateTime     @default(now())
-  course       Course       @relation(fields: [courseId], references: [id])
-  submissions  Submission[]
+  id                  String         @id @default(cuid())
+  courseId            String
+  lessonId            String?
+  moduleId            String?
+  title               String
+  description         String?        @db.Text
+  instructions        String         @db.Text
+  submissionType      SubmissionType @default(FILE_UPLOAD)
+  dueDate             DateTime?
+  startDate           DateTime?
+  maxPoints           Int            @default(100)
+  passingScore        Int            @default(70)
+  allowLateSubmission Boolean        @default(false)
+  allowResubmission   Boolean        @default(false)
+  maxFileSizeMB       Int            @default(10)
+  allowedFileTypes    String[]       @default(["pdf", "docx", "xlsx", "jpg", "png"])
+  rubric              Json?
+  isPublished         Boolean        @default(false)
+  isRequired          Boolean        @default(true)
+  order               Int            @default(0)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  course              Course         @relation(fields: [courseId], references: [id])
+  lesson              Lesson?        @relation(fields: [lessonId], references: [id])
+  module              Module?        @relation(fields: [moduleId], references: [id])
+  submissions         Submission[]
 
   @@index([courseId])
+  @@index([lessonId])
+  @@index([moduleId])
   @@map("assignments")
 }
 
 model Submission {
-  id              String           @id @default(cuid())
-  assignmentId    String
-  studentId       String
-  filePath        String
-  fileName        String
-  fileSize        Int
-  status          SubmissionStatus @default(PENDING)
-  grade           Int?
-  feedback        String?          @db.Text
-  aiEvaluation    Json?
-  aiEvaluatedAt   DateTime?
-  submittedAt     DateTime         @default(now())
-  gradedAt        DateTime?
-  assignment      Assignment       @relation(fields: [assignmentId], references: [id])
-  student         Student          @relation(fields: [studentId], references: [id])
+  id            String           @id @default(cuid())
+  assignmentId  String
+  studentId     String
+  filePath      String?
+  fileName      String?
+  fileSize      Int?
+  textAnswer    String?          @db.Text
+  linkUrl       String?
+  taskCompleted Boolean?
+  status        SubmissionStatus @default(PENDING)
+  grade         Int?
+  feedback      String?          @db.Text
+  rubricScores  Json?
+  gradedBy      String?
+  aiEvaluation  Json?
+  aiEvaluatedAt DateTime?
+  submittedAt   DateTime         @default(now())
+  gradedAt      DateTime?
+  assignment    Assignment       @relation(fields: [assignmentId], references: [id])
+  student       Student          @relation(fields: [studentId], references: [id])
 
   @@unique([assignmentId, studentId])
   @@index([assignmentId])
+  @@index([studentId])
   @@map("submissions")
 }
 
@@ -1078,6 +1130,9 @@ enum NotificationType {
   JOB_ALERT
   COURSE_UPDATE
   SYSTEM
+  ASSIGNMENT_SUBMITTED
+  ASSIGNMENT_GRADED
+  ASSIGNMENT_DUE_SOON
 }
 
 enum KBCategory {

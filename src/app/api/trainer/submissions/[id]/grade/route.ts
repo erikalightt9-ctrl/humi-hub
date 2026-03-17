@@ -50,15 +50,16 @@ export async function PATCH(
     const body = await request.json();
     const grade = Number(body.grade);
     const feedback = String(body.feedback ?? "");
+    const rubricScores = body.rubricScores;
 
-    if (isNaN(grade) || grade < 0 || grade > 100) {
+    if (isNaN(grade) || grade < 0 || grade > 1000) {
       return NextResponse.json(
-        { success: false, data: null, error: "Grade must be between 0 and 100" },
+        { success: false, data: null, error: "Invalid grade value" },
         { status: 400 },
       );
     }
 
-    const graded = await gradeSubmission(submissionId, grade, feedback);
+    const graded = await gradeSubmission(submissionId, grade, feedback, trainerId, rubricScores);
 
     return NextResponse.json({
       success: true,

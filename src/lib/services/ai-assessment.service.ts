@@ -77,7 +77,7 @@ export async function assessSubmission(
 **Max Points**: ${submission.assignment.maxPoints}
 
 **Submission Details**:
-- File: ${submission.fileName} (${formatFileSize(submission.fileSize)})
+- File: ${submission.fileName ?? "N/A"}${submission.fileSize ? ` (${formatFileSize(submission.fileSize)})` : ""}
 - Submitted: ${submission.submittedAt.toISOString()}
 - Status: ${submission.status}
 ${submission.grade !== null ? `- Human Grade: ${submission.grade}/${submission.assignment.maxPoints}` : "- Not yet graded by instructor"}

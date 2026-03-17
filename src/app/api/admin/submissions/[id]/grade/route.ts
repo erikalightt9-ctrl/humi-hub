@@ -4,8 +4,9 @@ import { z } from "zod";
 import { gradeSubmission } from "@/lib/repositories/assignment.repository";
 
 const gradeSchema = z.object({
-  grade: z.number().int().min(0).max(100),
+  grade: z.number().int().min(0).max(1000),
   feedback: z.string().min(1),
+  rubricScores: z.record(z.string(), z.number()).optional(),
 });
 
 export async function PATCH(
@@ -21,9 +22,15 @@ export async function PATCH(
     const body = await request.json();
     const result = gradeSchema.safeParse(body);
     if (!result.success) {
-      return NextResponse.json({ success: false, data: null, error: "Invalid input" }, { status: 422 });
+      return NextResponse.json({ success: false, data: null, error: result.error.issues[0].message }, { status: 422 });
     }
-    const submission = await gradeSubmission(id, result.data.grade, result.data.feedback);
+    const submission = await gradeSubmission(
+      id,
+      result.data.grade,
+      result.data.feedback,
+      token.id as string,
+      result.data.rubricScores
+    );
     return NextResponse.json({ success: true, data: submission, error: null });
   } catch (err) {
     console.error("[PATCH /api/admin/submissions/[id]/grade]", err);

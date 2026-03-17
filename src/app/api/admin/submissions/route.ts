@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { getPendingSubmissions } from "@/lib/repositories/assignment.repository";
+import { getAllSubmissions } from "@/lib/repositories/assignment.repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,7 +8,8 @@ export async function GET(request: NextRequest) {
     if (!token?.id || token.role !== "admin") {
       return NextResponse.json({ success: false, data: null, error: "Unauthorized" }, { status: 401 });
     }
-    const submissions = await getPendingSubmissions();
+    const status = request.nextUrl.searchParams.get("status") ?? "PENDING";
+    const submissions = await getAllSubmissions({ status });
     return NextResponse.json({ success: true, data: submissions, error: null });
   } catch (err) {
     console.error("[GET /api/admin/submissions]", err);

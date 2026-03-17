@@ -19,7 +19,7 @@ interface AIAssessment {
 interface Submission {
   readonly id: string;
   readonly assignmentTitle: string;
-  readonly fileName: string;
+  readonly fileName: string | null;
   readonly status: string;
   readonly grade: number | null;
   readonly maxPoints: number;

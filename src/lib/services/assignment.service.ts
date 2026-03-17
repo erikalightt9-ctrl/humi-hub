@@ -7,9 +7,12 @@ const ALLOWED_TYPES = [
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "image/jpeg",
   "image/png",
   "image/gif",
+  "application/zip",
 ];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -19,12 +22,13 @@ export interface UploadResult {
   fileSize: number;
 }
 
-export async function handleFileUpload(file: File): Promise<UploadResult> {
+export async function handleFileUpload(file: File, maxFileSizeMB?: number): Promise<UploadResult> {
   if (!ALLOWED_TYPES.includes(file.type)) {
-    throw new Error("Invalid file type. Only PDF, DOC, DOCX, and images are allowed.");
+    throw new Error("Invalid file type. Only PDF, DOC, DOCX, XLSX, and images are allowed.");
   }
-  if (file.size > MAX_FILE_SIZE) {
-    throw new Error("File too large. Maximum size is 10MB.");
+  const maxSize = (maxFileSizeMB ?? 10) * 1024 * 1024;
+  if (file.size > maxSize) {
+    throw new Error(`File too large. Maximum size is ${maxFileSizeMB ?? 10}MB.`);
   }
 
   const ext = file.name.split(".").pop() ?? "bin";
