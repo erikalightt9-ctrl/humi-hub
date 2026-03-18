@@ -219,7 +219,6 @@ model Enrollment {
   trainer               Trainer?          @relation(fields: [trainerId], references: [id])
   courseTier            CourseTier        @default(BASIC)
   baseProgramPrice      Decimal?          @db.Decimal(10, 2)
-  trainerUpgradeFee     Decimal?          @db.Decimal(10, 2)
   scheduleId            String?
   schedule              Schedule?         @relation(fields: [scheduleId], references: [id])
   ipAddress             String?

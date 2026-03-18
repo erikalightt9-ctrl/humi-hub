@@ -30,12 +30,9 @@ export default async function PaymentPage({
   const baseProgramPrice = enrollment.baseProgramPrice
     ? Number(enrollment.baseProgramPrice)
     : null;
-  const trainerUpgradeFee = enrollment.trainerUpgradeFee
-    ? Number(enrollment.trainerUpgradeFee)
-    : null;
   const hasTierPricing = baseProgramPrice !== null;
   const coursePrice = hasTierPricing
-    ? baseProgramPrice + (trainerUpgradeFee ?? 0)
+    ? baseProgramPrice
     : Number(enrollment.course.price);
   const referenceCode = enrollment.referenceCode;
 
@@ -123,10 +120,9 @@ export default async function PaymentPage({
                 <p className="text-3xl font-bold text-green-800">
                   PHP {coursePrice.toLocaleString()}
                 </p>
-                {hasTierPricing && trainerUpgradeFee !== null && trainerUpgradeFee > 0 && (
-                  <div className="mt-2 text-xs text-green-600 space-y-0.5">
+                {hasTierPricing && (
+                  <div className="mt-2 text-xs text-green-600">
                     <p>Base Program: ₱{baseProgramPrice.toLocaleString()}</p>
-                    <p>Upgrade Fee: ₱{trainerUpgradeFee.toLocaleString()}</p>
                   </div>
                 )}
               </div>

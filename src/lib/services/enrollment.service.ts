@@ -133,7 +133,6 @@ export async function processEnrollment(
     courseTier,
     trainerId: resolvedTrainerId,
     baseProgramPrice,
-    trainerUpgradeFee: null,
     scheduleId: resolvedScheduleId,
   });
 
