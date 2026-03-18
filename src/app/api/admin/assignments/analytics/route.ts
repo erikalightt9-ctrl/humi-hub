@@ -12,11 +12,11 @@ export async function GET(request: NextRequest) {
 
     const [analytics, recentSubmissions, trainerStats] = await Promise.all([
       getAssignmentAnalytics(guard.tenantId),
-      getAllSubmissions({ status: "PENDING" }),
+      getAllSubmissions({ status: "PENDING", scope: guard.tenantId }),
       // Average grading time per trainer (gradedBy)
       prisma.submission.groupBy({
         by: ["gradedBy"],
-        where: { status: "GRADED", gradedBy: { not: null } },
+        where: { status: "GRADED", gradedBy: { not: null }, assignment: { course: { tenantId: guard.tenantId } } },
         _avg: { grade: true },
         _count: { id: true },
       }),
