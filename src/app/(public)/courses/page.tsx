@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 import { CourseCard } from "@/components/public/CourseCard";
 import { prisma } from "@/lib/prisma";
+import { resolveTenantFromSubdomain } from "@/lib/tenant";
 
 export const metadata: Metadata = {
   title: "Courses",
@@ -16,8 +17,13 @@ const courseHrefs: Record<string, string> = {
 };
 
 export default async function CoursesPage() {
+  const tenant = await resolveTenantFromSubdomain();
+
   const courses = await prisma.course.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      ...(tenant ? { tenantId: tenant.tenantId } : {}),
+    },
     orderBy: { createdAt: "asc" },
   });
 

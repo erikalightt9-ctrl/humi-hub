@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { CourseCard } from "@/components/public/CourseCard";
 import { ProgramComparisonTable } from "@/components/public/ProgramComparisonTable";
 import { prisma } from "@/lib/prisma";
+import { resolveTenantFromSubdomain } from "@/lib/tenant";
 
 export const metadata: Metadata = {
   title: "Programs \u2014 HUMI Training Center",
@@ -17,8 +18,13 @@ const courseHrefs: Record<string, string> = {
 };
 
 export default async function ProgramsPage() {
+  const tenant = await resolveTenantFromSubdomain();
+
   const courses = await prisma.course.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      ...(tenant ? { tenantId: tenant.tenantId } : {}),
+    },
     orderBy: { createdAt: "asc" },
   });
 

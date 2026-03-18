@@ -11,6 +11,7 @@ import { TestimonialsSection } from "@/components/public/TestimonialsSection";
 import { CareerPathwaysSection } from "@/components/public/CareerPathwaysSection";
 import { EnrollmentCTASection } from "@/components/public/EnrollmentCTASection";
 import { prisma } from "@/lib/prisma";
+import { resolveTenantFromSubdomain } from "@/lib/tenant";
 
 export const metadata: Metadata = {
   title: "HUMI Training Center — Professional Training Programs",
@@ -30,8 +31,13 @@ function buildCourseHrefs(
 }
 
 export default async function HomePage() {
+  const tenant = await resolveTenantFromSubdomain();
+
   const courses = await prisma.course.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      ...(tenant ? { tenantId: tenant.tenantId } : {}),
+    },
     orderBy: { createdAt: "asc" },
   });
 
