@@ -12,12 +12,9 @@ import type { Course, CourseTier } from "@prisma/client";
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type TrainerTierValue = "BASIC" | "PROFESSIONAL" | "PREMIUM";
-
 interface PublicTrainer {
   readonly id: string;
   readonly name: string;
-  readonly tier: TrainerTierValue;
   readonly photoUrl: string | null;
 }
 
@@ -45,18 +42,6 @@ interface StepReviewProps {
 /* ------------------------------------------------------------------ */
 /*  Pricing constants                                                  */
 /* ------------------------------------------------------------------ */
-
-const TRAINER_TIER_LABELS: Readonly<Record<TrainerTierValue, string>> = {
-  BASIC: "Basic",
-  PROFESSIONAL: "Professional",
-  PREMIUM: "Premium",
-};
-
-const TRAINER_UPGRADE_FEES: Readonly<Record<TrainerTierValue, number>> = {
-  BASIC: 0,
-  PROFESSIONAL: 2000,
-  PREMIUM: 6000,
-};
 
 const DEFAULT_COURSE_TIER_PRICES: Readonly<Record<CourseTier, number>> = {
   BASIC: 1500,
@@ -107,7 +92,6 @@ export function StepReview({ form, courses }: StepReviewProps) {
   const data = useWatch({ control: form.control });
   const course = courses.find((c) => c.id === data.courseId);
   const [trainerName, setTrainerName] = useState<string | null>(null);
-  const [trainerTier, setTrainerTier] = useState<TrainerTierValue>("BASIC");
   const [scheduleName, setScheduleName] = useState<string | null>(null);
   const [scheduleInfo, setScheduleInfo] = useState<ScheduleInfo | null>(null);
   const [courseTierPricing, setCourseTierPricing] = useState<CourseTierPricing | null>(null);
@@ -139,7 +123,6 @@ export function StepReview({ form, courses }: StepReviewProps) {
   useEffect(() => {
     if (!data.trainerId) {
       setTrainerName(null);
-      setTrainerTier("BASIC");
       return;
     }
 
@@ -153,7 +136,6 @@ export function StepReview({ form, courses }: StepReviewProps) {
           );
           if (found) {
             setTrainerName(found.name);
-            setTrainerTier(found.tier);
           }
         }
       } catch {
@@ -192,8 +174,6 @@ export function StepReview({ form, courses }: StepReviewProps) {
   }, [data.scheduleId, data.courseId]);
 
   const courseTierPrice = getCourseTierPrice(courseTierPricing, selectedCourseTier);
-  const trainerUpgradeFee = TRAINER_UPGRADE_FEES[trainerTier];
-  const totalPrice = courseTierPrice + trainerUpgradeFee;
 
   return (
     <div className="space-y-6">
@@ -242,27 +222,17 @@ export function StepReview({ form, courses }: StepReviewProps) {
         <dl>
           <ReviewRow
             label="Trainer"
-            value={
-              trainerName
-                ? `${trainerName} (${TRAINER_TIER_LABELS[trainerTier]})`
-                : "Auto-assign Basic Trainer"
-            }
+            value={trainerName ?? "Auto-assign Trainer"}
           />
           <ReviewRow
             label="Course Tier Price"
             value={`\u20B1${courseTierPrice.toLocaleString()}`}
           />
-          {trainerUpgradeFee > 0 && (
-            <ReviewRow
-              label="Trainer Upgrade"
-              value={`\u20B1${trainerUpgradeFee.toLocaleString()}`}
-            />
-          )}
           <ReviewRow
             label="Total"
             value={
               <span className="font-bold text-green-700">
-                {"\u20B1"}{totalPrice.toLocaleString()}
+                {"\u20B1"}{courseTierPrice.toLocaleString()}
               </span>
             }
           />

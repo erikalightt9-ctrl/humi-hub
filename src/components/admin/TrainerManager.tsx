@@ -35,8 +35,6 @@ import { TrainerAvailabilityEditor } from "@/components/admin/TrainerAvailabilit
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type TierValue = "BASIC" | "PROFESSIONAL" | "PREMIUM";
-
 interface CourseAssignment {
   readonly id: string;
   readonly courseId: string;
@@ -59,7 +57,6 @@ interface Trainer {
   readonly bio: string | null;
   readonly photoUrl: string | null;
   readonly specializations: ReadonlyArray<string>;
-  readonly tier: TierValue;
   readonly credentials: string | null;
   readonly certifications: ReadonlyArray<string>;
   readonly industryExperience: string | null;
@@ -87,20 +84,6 @@ interface Course {
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
-
-const TIER_BADGE_STYLES: Readonly<
-  Record<TierValue, { readonly bg: string; readonly text: string }>
-> = {
-  BASIC: { bg: "bg-gray-100", text: "text-gray-700" },
-  PROFESSIONAL: { bg: "bg-blue-100", text: "text-blue-700" },
-  PREMIUM: { bg: "bg-amber-100", text: "text-amber-700" },
-};
-
-const TIER_LABELS: Readonly<Record<TierValue, string>> = {
-  BASIC: "Basic",
-  PROFESSIONAL: "Professional",
-  PREMIUM: "Premium",
-};
 
 const TRAINER_ROLES = [
   { value: "instructor", label: "Instructor" },
@@ -453,7 +436,7 @@ export function TrainerManager() {
             No Trainers Yet
           </h2>
           <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
-            Add trainers to manage instructor assignments, tier levels, and
+            Add trainers to manage instructor assignments and
             portal access.
           </p>
           <Button onClick={openCreateForm} className="gap-2">
@@ -465,7 +448,6 @@ export function TrainerManager() {
         <div className="space-y-4">
           {trainers.map((trainer) => {
             const isExpanded = expandedId === trainer.id;
-            const tierStyle = TIER_BADGE_STYLES[trainer.tier] ?? TIER_BADGE_STYLES.BASIC;
 
             return (
               <div
@@ -495,12 +477,6 @@ export function TrainerManager() {
                         <h3 className="font-semibold text-gray-900 truncate">
                           {trainer.name}
                         </h3>
-                        {/* Tier badge */}
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full shrink-0 font-medium ${tierStyle.bg} ${tierStyle.text}`}
-                        >
-                          {TIER_LABELS[trainer.tier] ?? "Basic"}
-                        </span>
                         {/* Active/Inactive badge */}
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${

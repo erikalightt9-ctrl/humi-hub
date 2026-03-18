@@ -158,7 +158,6 @@ export async function getAvailabilityByTrainer(
 export type TrainerUtilizationStat = {
   readonly trainerId: string;
   readonly trainerName: string;
-  readonly trainerTier: string;
   readonly activeSchedules: number;
   readonly totalStudents: number;
   readonly totalCapacity: number;
@@ -173,7 +172,6 @@ export async function getTrainerUtilizationStats(): Promise<
     select: {
       id: true,
       name: true,
-      tier: true,
       schedules: {
         where: { status: { in: ["OPEN", "FULL"] } },
         select: {
@@ -194,7 +192,6 @@ export async function getTrainerUtilizationStats(): Promise<
     return {
       trainerId: t.id,
       trainerName: t.name,
-      trainerTier: t.tier,
       activeSchedules,
       totalStudents,
       totalCapacity,

@@ -126,10 +126,7 @@ export default async function PaymentPage({
                 {hasTierPricing && trainerUpgradeFee !== null && trainerUpgradeFee > 0 && (
                   <div className="mt-2 text-xs text-green-600 space-y-0.5">
                     <p>Base Program: ₱{baseProgramPrice.toLocaleString()}</p>
-                    <p>
-                      Trainer Upgrade ({enrollment.trainerTier ?? "BASIC"}): ₱
-                      {trainerUpgradeFee.toLocaleString()}
-                    </p>
+                    <p>Upgrade Fee: ₱{trainerUpgradeFee.toLocaleString()}</p>
                   </div>
                 )}
               </div>

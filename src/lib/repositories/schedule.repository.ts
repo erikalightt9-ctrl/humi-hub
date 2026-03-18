@@ -9,7 +9,7 @@ import type { Decimal } from "@prisma/client/runtime/client";
 
 export type ScheduleWithCourse = Schedule & {
   course: { id: string; slug: string; title: string; price: Decimal };
-  trainer: { id: string; name: string; tier: string } | null;
+  trainer: { id: string; name: string } | null;
   _count: { students: number; waitlist: number };
 };
 
@@ -27,7 +27,7 @@ export type WaitlistEntryDetail = {
 
 export type ScheduleDetail = Schedule & {
   course: { id: string; slug: string; title: string; price: Decimal };
-  trainer: { id: string; name: string; tier: string } | null;
+  trainer: { id: string; name: string } | null;
   students: ReadonlyArray<{
     id: string;
     name: string;
@@ -85,7 +85,7 @@ export async function listSchedules(
       where,
       include: {
         course: { select: { id: true, slug: true, title: true, price: true } },
-        trainer: { select: { id: true, name: true, tier: true } },
+        trainer: { select: { id: true, name: true } },
         _count: { select: { students: true, waitlist: true } },
       },
       orderBy: { startDate: "desc" },
@@ -113,7 +113,7 @@ export async function findScheduleById(id: string): Promise<ScheduleDetail | nul
     where: { id },
     include: {
       course: { select: { id: true, slug: true, title: true, price: true } },
-      trainer: { select: { id: true, name: true, tier: true } },
+      trainer: { select: { id: true, name: true } },
       students: {
         select: {
           id: true,
@@ -359,7 +359,7 @@ export async function getUpcomingSchedules(limit = 5): Promise<ReadonlyArray<Sch
     },
     include: {
       course: { select: { id: true, slug: true, title: true, price: true } },
-      trainer: { select: { id: true, name: true, tier: true } },
+      trainer: { select: { id: true, name: true } },
       _count: { select: { students: true, waitlist: true } },
     },
     orderBy: { startDate: "asc" },

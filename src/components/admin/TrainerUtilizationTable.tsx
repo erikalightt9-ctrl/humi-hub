@@ -1,6 +1,4 @@
-import { TRAINER_TIER_COLORS, TRAINER_TIER_LABELS } from "@/lib/constants/pricing";
 import type { TrainerUtilizationStat } from "@/lib/repositories/trainer-availability.repository";
-import type { TrainerTier } from "@prisma/client";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -85,9 +83,6 @@ export function TrainerUtilizationTable({ stats }: TrainerUtilizationTableProps)
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
                 Trainer
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide hidden sm:table-cell">
-                Tier
-              </th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">
                 Schedules
               </th>
@@ -101,25 +96,10 @@ export function TrainerUtilizationTable({ stats }: TrainerUtilizationTableProps)
           </thead>
           <tbody className="divide-y divide-gray-100">
             {stats.map((t) => {
-              const tierColors = TRAINER_TIER_COLORS[t.trainerTier as TrainerTier];
-              const tierLabel = TRAINER_TIER_LABELS[t.trainerTier as TrainerTier];
               return (
                 <tr key={t.trainerId} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-medium text-gray-900">
                     {t.trainerName}
-                    {/* Tier badge visible on mobile only */}
-                    <span
-                      className={`sm:hidden ml-2 inline-block px-1.5 py-0.5 rounded text-xs font-medium ${tierColors.bg} ${tierColors.text}`}
-                    >
-                      {tierLabel}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 hidden sm:table-cell">
-                    <span
-                      className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${tierColors.bg} ${tierColors.text}`}
-                    >
-                      {tierLabel}
-                    </span>
                   </td>
                   <td className="px-4 py-3 text-center text-gray-700">
                     {t.activeSchedules === 0 ? (

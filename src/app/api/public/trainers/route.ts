@@ -16,7 +16,6 @@ export async function GET(_request: NextRequest) {
       name: t.name,
       photoUrl: t.photoUrl,
       bio: t.bio,
-      tier: t.tier,
       specializations: t.specializations,
       credentials: t.credentials,
       certifications: t.certifications,

@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-const TRAINER_TIERS = ["BASIC", "PROFESSIONAL", "PREMIUM"] as const;
-
 export const createTrainerSchema = z.object({
   name: z
     .string()
@@ -24,7 +22,6 @@ export const createTrainerSchema = z.object({
   specializations: z
     .array(z.string().min(1, "Specialization cannot be empty"))
     .optional(),
-  tier: z.enum(TRAINER_TIERS).optional(),
   credentials: z
     .string()
     .max(5000, "Credentials must be 5000 characters or fewer")

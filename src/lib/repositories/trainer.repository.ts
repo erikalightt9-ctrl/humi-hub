@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { Trainer, CourseTrainer, TrainerTier } from "@prisma/client";
+import type { Trainer, CourseTrainer } from "@prisma/client";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -10,7 +10,6 @@ interface CreateTrainerData {
   readonly bio?: string | null;
   readonly photoUrl?: string | null;
   readonly specializations?: ReadonlyArray<string>;
-  readonly tier?: TrainerTier;
   readonly credentials?: string | null;
   readonly certifications?: ReadonlyArray<string>;
   readonly industryExperience?: string | null;
@@ -25,7 +24,6 @@ interface UpdateTrainerData {
   readonly photoUrl?: string | null;
   readonly specializations?: ReadonlyArray<string>;
   readonly isActive?: boolean;
-  readonly tier?: TrainerTier;
   readonly credentials?: string | null;
   readonly certifications?: ReadonlyArray<string>;
   readonly industryExperience?: string | null;
@@ -92,7 +90,7 @@ export async function getActiveTrainersByCourse(
 export async function getActiveTrainers(): Promise<ReadonlyArray<Trainer>> {
   return prisma.trainer.findMany({
     where: { isActive: true },
-    orderBy: [{ tier: "desc" }, { averageRating: "desc" }, { name: "asc" }],
+    orderBy: [{ averageRating: "desc" }, { name: "asc" }],
   });
 }
 
@@ -152,7 +150,6 @@ export async function createTrainer(
       specializations: data.specializations
         ? [...data.specializations]
         : [],
-      tier: data.tier ?? "BASIC",
       credentials: data.credentials ?? null,
       certifications: data.certifications
         ? [...data.certifications]
@@ -175,7 +172,6 @@ export async function updateTrainer(
   if (data.bio !== undefined) updatePayload.bio = data.bio;
   if (data.photoUrl !== undefined) updatePayload.photoUrl = data.photoUrl;
   if (data.isActive !== undefined) updatePayload.isActive = data.isActive;
-  if (data.tier !== undefined) updatePayload.tier = data.tier;
   if (data.credentials !== undefined) updatePayload.credentials = data.credentials;
   if (data.industryExperience !== undefined) updatePayload.industryExperience = data.industryExperience;
   if (data.yearsOfExperience !== undefined) updatePayload.yearsOfExperience = data.yearsOfExperience;

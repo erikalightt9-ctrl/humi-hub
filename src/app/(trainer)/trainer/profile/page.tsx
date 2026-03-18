@@ -32,7 +32,6 @@ interface TrainerProfile {
   readonly bio: string | null;
   readonly photoUrl: string | null;
   readonly specializations: ReadonlyArray<string>;
-  readonly tier: string;
   readonly credentials: string | null;
   readonly certifications: ReadonlyArray<string>;
   readonly industryExperience: string | null;
@@ -53,12 +52,6 @@ interface ApiResponse<T> {
 // ---------------------------------------------------------------------------
 
 const MAX_PHOTO_SIZE_BYTES = 500_000; // ~500KB
-
-const TIER_BADGE_STYLES: Record<string, string> = {
-  BASIC: "bg-gray-100 text-gray-700",
-  PROFESSIONAL: "bg-blue-100 text-blue-700",
-  PREMIUM: "bg-amber-100 text-amber-700",
-};
 
 // ---------------------------------------------------------------------------
 // Component
@@ -373,13 +366,6 @@ export default function TrainerProfilePage() {
                   <h2 className="text-xl font-bold text-gray-900">
                     {profile.name}
                   </h2>
-                  <span
-                    className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
-                      TIER_BADGE_STYLES[profile.tier] ?? TIER_BADGE_STYLES.BASIC
-                    }`}
-                  >
-                    {profile.tier}
-                  </span>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-3">

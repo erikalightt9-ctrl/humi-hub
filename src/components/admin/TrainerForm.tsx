@@ -5,20 +5,11 @@ import { X, Camera, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { TagInput } from "@/components/admin/TagInput";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
-
-type TierValue = "BASIC" | "PROFESSIONAL" | "PREMIUM";
 
 interface TrainerData {
   readonly id: string;
@@ -28,7 +19,6 @@ interface TrainerData {
   readonly bio: string | null;
   readonly photoUrl: string | null;
   readonly specializations: ReadonlyArray<string>;
-  readonly tier: TierValue;
   readonly credentials: string | null;
   readonly certifications: ReadonlyArray<string>;
   readonly industryExperience: string | null;
@@ -46,20 +36,6 @@ interface TrainerFormProps {
 /* ------------------------------------------------------------------ */
 
 const MAX_PHOTO_SIZE_BYTES = 500_000;
-
-const TIER_OPTIONS: ReadonlyArray<{
-  readonly value: TierValue;
-  readonly label: string;
-  readonly description: string;
-}> = [
-  { value: "BASIC", label: "Basic", description: "₱0 upgrade fee" },
-  {
-    value: "PROFESSIONAL",
-    label: "Professional",
-    description: "₱2,000 upgrade fee",
-  },
-  { value: "PREMIUM", label: "Premium", description: "₱6,000 upgrade fee" },
-] as const;
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -84,9 +60,6 @@ export function TrainerForm({
   const [specializations, setSpecializations] = useState<
     ReadonlyArray<string>
   >(editingTrainer?.specializations ?? []);
-  const [tier, setTier] = useState<TierValue>(
-    editingTrainer?.tier ?? "BASIC",
-  );
   const [credentials, setCredentials] = useState(
     editingTrainer?.credentials ?? "",
   );
@@ -153,7 +126,6 @@ export function TrainerForm({
       photoUrl: photoUrl || null,
       specializations:
         specializations.length > 0 ? [...specializations] : undefined,
-      tier,
       credentials: credentials.trim() || undefined,
       certifications:
         certifications.length > 0 ? [...certifications] : undefined,
@@ -294,24 +266,6 @@ export function TrainerForm({
               maxLength={20}
             />
           </div>
-          <div>
-            <Label htmlFor="tr-tier">Trainer Tier *</Label>
-            <Select value={tier} onValueChange={(v) => setTier(v as TierValue)}>
-              <SelectTrigger id="tr-tier">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TIER_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label} — {opt.description}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="tr-years">Years of Experience</Label>
             <Input

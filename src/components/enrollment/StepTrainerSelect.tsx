@@ -20,14 +20,11 @@ import type { EnrollmentFormData } from "@/lib/validations/enrollment.schema";
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type TierValue = "BASIC" | "PROFESSIONAL" | "PREMIUM";
-
 interface PublicTrainer {
   readonly id: string;
   readonly name: string;
   readonly photoUrl: string | null;
   readonly bio: string | null;
-  readonly tier: TierValue;
   readonly specializations: ReadonlyArray<string>;
   readonly credentials: string | null;
   readonly certifications: ReadonlyArray<string>;
@@ -41,57 +38,6 @@ interface PublicTrainer {
 interface StepTrainerSelectProps {
   readonly form: UseFormReturn<EnrollmentFormData>;
 }
-
-/* ------------------------------------------------------------------ */
-/*  Constants                                                          */
-/* ------------------------------------------------------------------ */
-
-const TIER_CONFIG: Readonly<
-  Record<
-    TierValue,
-    {
-      readonly label: string;
-      readonly upgradeFee: number;
-      readonly totalPrice: number;
-      readonly bg: string;
-      readonly text: string;
-      readonly border: string;
-      readonly ring: string;
-      readonly description: string;
-    }
-  >
-> = {
-  BASIC: {
-    label: "Basic",
-    upgradeFee: 0,
-    totalPrice: 1500,
-    bg: "bg-gray-50",
-    text: "text-gray-700",
-    border: "border-gray-200",
-    ring: "ring-gray-400",
-    description: "Standard training program",
-  },
-  PROFESSIONAL: {
-    label: "Professional",
-    upgradeFee: 2000,
-    totalPrice: 3500,
-    bg: "bg-blue-50",
-    text: "text-blue-700",
-    border: "border-blue-200",
-    ring: "ring-blue-500",
-    description: "Enhanced training with experienced mentors",
-  },
-  PREMIUM: {
-    label: "Premium",
-    upgradeFee: 6000,
-    totalPrice: 7500,
-    bg: "bg-amber-50",
-    text: "text-amber-700",
-    border: "border-amber-200",
-    ring: "ring-amber-500",
-    description: "Elite training with top-rated professionals",
-  },
-};
 
 /* ------------------------------------------------------------------ */
 /*  TrainerCard                                                        */
@@ -110,18 +56,17 @@ function TrainerCard({
   readonly onSelect: () => void;
   readonly onToggleExpand: () => void;
 }) {
-  const config = TIER_CONFIG[trainer.tier];
   const numRating = trainer.averageRating ? Number(trainer.averageRating) : 0;
 
   return (
     <div
       className={`relative w-full text-left rounded-xl border-2 transition-all ${
         isSelected
-          ? `${config.border} ring-2 ${config.ring} shadow-md`
+          ? "border-blue-300 ring-2 ring-blue-400 shadow-md"
           : "border-gray-200 hover:border-gray-300"
       }`}
     >
-      {/* Compact row — photo, name, tier, price. Click name to expand. */}
+      {/* Compact row — photo, name. Click name to expand. */}
       <div className="flex items-center gap-3 p-4">
         {/* Photo */}
         {trainer.photoUrl ? (
@@ -136,7 +81,7 @@ function TrainerCard({
           </div>
         )}
 
-        {/* Name + tier — clickable to expand */}
+        {/* Name — clickable to expand */}
         <button
           type="button"
           onClick={onToggleExpand}
@@ -145,11 +90,6 @@ function TrainerCard({
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors">
               {trainer.name}
-            </span>
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.bg} ${config.text}`}
-            >
-              {config.label}
             </span>
             {isExpanded ? (
               <ChevronUp className="h-3.5 w-3.5 text-gray-400" />
@@ -163,18 +103,6 @@ function TrainerCard({
             </p>
           )}
         </button>
-
-        {/* Price */}
-        <div className="text-right shrink-0">
-          <p className="text-lg font-bold text-gray-900">
-            ₱{config.totalPrice.toLocaleString()}
-          </p>
-          {config.upgradeFee > 0 && (
-            <p className="text-[10px] text-gray-400">
-              ₱1,500 + ₱{config.upgradeFee.toLocaleString()}
-            </p>
-          )}
-        </div>
 
         {/* Selected indicator */}
         {isSelected && (
@@ -280,29 +208,6 @@ function TrainerCard({
             </div>
           )}
 
-          {/* Pricing breakdown */}
-          <div className={`rounded-lg p-3 ${config.bg}`}>
-            <h4 className={`text-xs font-semibold ${config.text} mb-2`}>
-              Pricing Breakdown
-            </h4>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between text-gray-600">
-                <span>Base Program Fee</span>
-                <span>₱1,500</span>
-              </div>
-              {config.upgradeFee > 0 && (
-                <div className="flex justify-between text-gray-600">
-                  <span>{config.label} Tier Upgrade</span>
-                  <span>₱{config.upgradeFee.toLocaleString()}</span>
-                </div>
-              )}
-              <div className="flex justify-between font-bold text-gray-900 pt-1 border-t border-gray-200">
-                <span>Total</span>
-                <span>₱{config.totalPrice.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-
           {/* Select button */}
           <button
             type="button"
@@ -354,15 +259,11 @@ function AutoAssignCard({
         </div>
         <div className="flex-1">
           <p className="font-semibold text-gray-900 text-sm">
-            Auto-Assign Basic Trainer
+            Auto-Assign Trainer
           </p>
           <p className="text-xs text-gray-500">
-            We&apos;ll assign an available trainer for you at the lowest rate
+            We&apos;ll assign an available trainer for you
           </p>
-        </div>
-        <div className="text-right shrink-0">
-          <p className="text-lg font-bold text-gray-900">₱1,500</p>
-          <p className="text-[10px] text-gray-400">Base price</p>
         </div>
       </div>
     </button>
@@ -407,13 +308,6 @@ export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
     setExpandedTrainerId((prev) => (prev === trainerId ? null : trainerId));
   }
 
-  // Group trainers by tier
-  const premiumTrainers = trainers.filter((t) => t.tier === "PREMIUM");
-  const professionalTrainers = trainers.filter(
-    (t) => t.tier === "PROFESSIONAL",
-  );
-  const basicTrainers = trainers.filter((t) => t.tier === "BASIC");
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -432,16 +326,8 @@ export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
           Choose Your Trainer
         </h2>
         <p className="text-sm text-gray-500 mt-1">
-          Select a trainer based on your preferred level of mentorship and
-          budget. All tiers include the full training program.
+          Select a trainer or let us auto-assign one for you.
         </p>
-      </div>
-
-      {/* Pricing breakdown info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-800">
-        <strong>How pricing works:</strong> Base program fee is ₱1,500.
-        Professional and Premium trainers have an additional upgrade fee based on
-        their expertise and experience.
       </div>
 
       {/* Auto-assign option */}
@@ -450,67 +336,19 @@ export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
         onSelect={() => handleSelectTrainer(null)}
       />
 
-      {/* Premium trainers */}
-      {premiumTrainers.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-amber-700 mb-2 flex items-center gap-1">
-            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-            Premium Trainers
-          </h3>
-          <div className="space-y-2">
-            {premiumTrainers.map((t) => (
-              <TrainerCard
-                key={t.id}
-                trainer={t}
-                isSelected={selectedTrainerId === t.id}
-                isExpanded={expandedTrainerId === t.id}
-                onSelect={() => handleSelectTrainer(t.id)}
-                onToggleExpand={() => handleToggleExpand(t.id)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Professional trainers */}
-      {professionalTrainers.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-blue-700 mb-2">
-            Professional Trainers
-          </h3>
-          <div className="space-y-2">
-            {professionalTrainers.map((t) => (
-              <TrainerCard
-                key={t.id}
-                trainer={t}
-                isSelected={selectedTrainerId === t.id}
-                isExpanded={expandedTrainerId === t.id}
-                onSelect={() => handleSelectTrainer(t.id)}
-                onToggleExpand={() => handleToggleExpand(t.id)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Basic trainers */}
-      {basicTrainers.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">
-            Basic Trainers
-          </h3>
-          <div className="space-y-2">
-            {basicTrainers.map((t) => (
-              <TrainerCard
-                key={t.id}
-                trainer={t}
-                isSelected={selectedTrainerId === t.id}
-                isExpanded={expandedTrainerId === t.id}
-                onSelect={() => handleSelectTrainer(t.id)}
-                onToggleExpand={() => handleToggleExpand(t.id)}
-              />
-            ))}
-          </div>
+      {/* Trainers list */}
+      {trainers.length > 0 && (
+        <div className="space-y-2">
+          {trainers.map((t) => (
+            <TrainerCard
+              key={t.id}
+              trainer={t}
+              isSelected={selectedTrainerId === t.id}
+              isExpanded={expandedTrainerId === t.id}
+              onSelect={() => handleSelectTrainer(t.id)}
+              onToggleExpand={() => handleToggleExpand(t.id)}
+            />
+          ))}
         </div>
       )}
 

@@ -96,7 +96,7 @@ export default async function ScheduleDetailPage({
             <p className="text-gray-500 text-sm mt-1">{schedule.course.title}</p>
             {schedule.trainer && (
               <p className="text-gray-400 text-xs mt-0.5">
-                Trainer: {schedule.trainer.name} · {schedule.trainer.tier}
+                Trainer: {schedule.trainer.name}
               </p>
             )}
           </div>

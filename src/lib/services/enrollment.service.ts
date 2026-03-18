@@ -9,10 +9,9 @@ import {
   sendEnrollmentConfirmationWithPayment,
   sendNewEnrollmentAdminNotification,
 } from "@/lib/services/notification.service";
-import { calculateEnrollmentPrice } from "@/lib/constants/pricing";
 import { getCourseTierPricing } from "@/lib/repositories/course.repository";
 import type { EnrollmentFormData } from "@/lib/validations/enrollment.schema";
-import type { Enrollment, TrainerTier, CourseTier } from "@prisma/client";
+import type { Enrollment, CourseTier } from "@prisma/client";
 
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_ENROLLMENT_MAX ?? "5", 10);
 const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_ENROLLMENT_WINDOW_MS ?? "900000", 10);
@@ -86,22 +85,18 @@ export async function processEnrollment(
     technicalSkills: data.technicalSkills.map(sanitizeText).filter(Boolean),
   };
 
-  // Resolve trainer tier and pricing
-  let trainerTier: TrainerTier = "BASIC";
+  // Resolve trainer
   let resolvedTrainerId: string | null = null;
 
   if (sanitized.trainerId) {
     const trainer = await prisma.trainer.findUnique({
       where: { id: sanitized.trainerId },
-      select: { id: true, tier: true, isActive: true, accessGranted: true },
+      select: { id: true, isActive: true },
     });
     if (trainer?.isActive) {
       resolvedTrainerId = trainer.id;
-      trainerTier = trainer.tier;
     }
   }
-
-  const trainerPricing = calculateEnrollmentPrice(trainerTier);
 
   // Resolve course tier pricing
   const courseTier: CourseTier = sanitized.courseTier ?? "BASIC";
@@ -137,9 +132,8 @@ export async function processEnrollment(
     ipAddress,
     courseTier,
     trainerId: resolvedTrainerId,
-    trainerTier,
     baseProgramPrice,
-    trainerUpgradeFee: trainerPricing.trainerUpgradeFee,
+    trainerUpgradeFee: null,
     scheduleId: resolvedScheduleId,
   });
 

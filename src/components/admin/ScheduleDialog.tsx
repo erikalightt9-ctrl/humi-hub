@@ -12,9 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { TIER_MAX_CAPACITY, TRAINER_TIER_LABELS } from "@/lib/constants/pricing";
 import { AlertTriangle } from "lucide-react";
-import type { TrainerTier } from "@prisma/client";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -28,7 +26,6 @@ interface Course {
 interface TrainerOption {
   readonly id: string;
   readonly name: string;
-  readonly tier: TrainerTier;
 }
 
 interface ScheduleItem {
@@ -75,12 +72,6 @@ const DAY_OPTIONS = [
   { value: 0, label: "Sun" },
 ] as const;
 
-const TIER_BADGE_CLASSES: Readonly<Record<TrainerTier, string>> = {
-  BASIC: "bg-gray-100 text-gray-700",
-  PROFESSIONAL: "bg-blue-100 text-blue-700",
-  PREMIUM: "bg-amber-100 text-amber-700",
-};
-
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -114,7 +105,6 @@ export function ScheduleDialog({
   const [endTime, setEndTime] = React.useState("11:30");
   const [maxCapacity, setMaxCapacity] = React.useState(25);
   const [cutOffDays, setCutOffDays] = React.useState(2);
-  const [capacityManuallySet, setCapacityManuallySet] = React.useState(false);
 
   // Fetch trainers on mount
   React.useEffect(() => {
@@ -125,8 +115,8 @@ export function ScheduleDialog({
         const json = await res.json();
         if (json.success) {
           setTrainers(
-            (json.data as ReadonlyArray<{ id: string; name: string; tier: TrainerTier }>).map(
-              (t) => ({ id: t.id, name: t.name, tier: t.tier })
+            (json.data as ReadonlyArray<{ id: string; name: string }>).map(
+              (t) => ({ id: t.id, name: t.name })
             )
           );
         }
@@ -152,7 +142,6 @@ export function ScheduleDialog({
       setEndTime(schedule.endTime);
       setMaxCapacity(schedule.maxCapacity);
       setCutOffDays(schedule.enrollmentCutOffDays);
-      setCapacityManuallySet(true);
     } else {
       setName("");
       setCourseId("");
@@ -164,7 +153,6 @@ export function ScheduleDialog({
       setEndTime("11:30");
       setMaxCapacity(25);
       setCutOffDays(2);
-      setCapacityManuallySet(false);
     }
     setError(null);
   }, [schedule, open]);
@@ -203,21 +191,11 @@ export function ScheduleDialog({
 
   function handleTrainerChange(newTrainerId: string) {
     setTrainerId(newTrainerId);
-
-    if (!capacityManuallySet && newTrainerId) {
-      const selected = trainers.find((t) => t.id === newTrainerId);
-      if (selected) {
-        setMaxCapacity(TIER_MAX_CAPACITY[selected.tier]);
-      }
-    }
   }
 
   function handleCapacityChange(value: number) {
     setMaxCapacity(value);
-    setCapacityManuallySet(true);
   }
-
-  const selectedTrainer = trainers.find((t) => t.id === trainerId);
 
   function toggleDay(day: number) {
     setDaysOfWeek((prev) =>
@@ -362,18 +340,10 @@ export function ScheduleDialog({
               <option value="">No trainer assigned</option>
               {trainers.map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.name} ({TRAINER_TIER_LABELS[t.tier]})
+                  {t.name}
                 </option>
               ))}
             </select>
-            {selectedTrainer && (
-              <p className="text-xs mt-1 text-gray-500">
-                <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${TIER_BADGE_CLASSES[selectedTrainer.tier]}`}>
-                  {TRAINER_TIER_LABELS[selectedTrainer.tier]}
-                </span>
-                {" "}— Recommended capacity: {TIER_MAX_CAPACITY[selectedTrainer.tier]} students
-              </p>
-            )}
             {conflictWarning && (
               <div className="mt-2 flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
                 <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-amber-500" />
