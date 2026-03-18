@@ -91,6 +91,7 @@ enum SubscriptionPlan {
 enum SubscriptionStatus {
   PENDING
   ACTIVE
+  PAST_DUE
   EXPIRED
   CANCELLED
 }
@@ -1114,8 +1115,31 @@ model Organization {
   tenantTrainers TenantTrainer[]
   conversations  Conversation[]
   notifications  Notification[]
+  subscriptions  TenantSubscription[]
 
   @@map("organizations")
+}
+
+model TenantSubscription {
+  id            String             @id @default(cuid())
+  tenantId      String
+  plan          TenantPlan
+  status        SubscriptionStatus @default(PENDING)
+  periodStart   DateTime
+  periodEnd     DateTime
+  amountCents   Int                @default(0)
+  currency      String             @default("PHP") @db.VarChar(3)
+  paymentMethod String?
+  paymentRef    String?
+  paidAt        DateTime?
+  cancelledAt   DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  tenant        Organization       @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, status])
+  @@index([periodEnd])
+  @@map("tenant_subscriptions")
 }
 
 model TenantTrainer {
