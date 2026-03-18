@@ -280,13 +280,15 @@ model Payment {
 }
 
 model Admin {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  isSuperAdmin Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  passwordHash          String
+  name                  String
+  isSuperAdmin          Boolean   @default(true)
+  resetToken            String?   @unique
+  resetTokenExpiresAt   DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   @@map("admins")
 }
@@ -299,7 +301,9 @@ model Student {
   name               String
   bio                String?              @db.Text
   avatarUrl          String?
-  mustChangePassword Boolean              @default(true)
+  mustChangePassword    Boolean              @default(true)
+  resetToken            String?              @unique
+  resetTokenExpiresAt   DateTime?
   batch              String?
   scheduleId         String?
   paymentStatus      StudentPaymentStatus @default(UNPAID)
@@ -1183,9 +1187,11 @@ model CorporateManager {
   name               String
   role               String       @default("manager")
   isActive           Boolean      @default(true)
-  isTenantAdmin      Boolean      @default(false)
-  mustChangePassword Boolean      @default(false)
-  createdAt          DateTime     @default(now())
+  isTenantAdmin         Boolean      @default(false)
+  mustChangePassword    Boolean      @default(false)
+  resetToken            String?      @unique
+  resetTokenExpiresAt   DateTime?
+  createdAt             DateTime     @default(now())
 
   @@index([organizationId])
   @@map("corporate_managers")
