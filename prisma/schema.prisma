@@ -330,6 +330,7 @@ model Student {
   mentorshipRequests MentorshipRequest[]
   emailPracticeSessions EmailPracticeSession[]
   jobApplications       JobApplication[]
+  placement             Placement?
   verifiedSkills        VerifiedSkill[]
   subscriptions         Subscription[]
   trainerRatings        TrainerRating[]
@@ -1006,6 +1007,7 @@ model JobApplication {
   updatedAt    DateTime          @updatedAt
   student      Student           @relation(fields: [studentId], references: [id])
   jobPosting   JobPosting        @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  placement    Placement?
 
   @@unique([studentId, jobPostingId])
   @@index([studentId])
@@ -1440,4 +1442,35 @@ model BrandingSettings {
   updatedAt      DateTime @updatedAt
 
   @@map("branding_settings")
+}
+
+/* ------------------------------------------------------------------ */
+/*  Job Placement Tracking                                              */
+/* ------------------------------------------------------------------ */
+
+enum PlacementType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  FREELANCE
+}
+
+model Placement {
+  id               String          @id @default(cuid())
+  studentId        String          @unique
+  jobApplicationId String?         @unique
+  companyName      String
+  jobTitle         String
+  employmentType   PlacementType   @default(FULL_TIME)
+  monthlyRate      Decimal?        @db.Decimal(10, 2)
+  currency         String          @default("USD")
+  startDate        DateTime        @db.Date
+  notes            String?         @db.Text
+  placedAt         DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  student          Student         @relation(fields: [studentId], references: [id])
+  jobApplication   JobApplication? @relation(fields: [jobApplicationId], references: [id])
+
+  @@index([placedAt])
+  @@map("placements")
 }

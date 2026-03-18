@@ -101,6 +101,7 @@ const adminNavGroups: ReadonlyArray<NavGroup> = [
     items: [
       { href: "/admin/job-postings", label: "Job Listings", icon: Briefcase },
       { href: "/admin/job-applications", label: "Job Applications", icon: ClipboardCheck },
+      { href: "/admin/placements", label: "Placements", icon: TrendingUp },
       { href: "/admin/student-ranking", label: "Student Ranking", icon: Trophy },
     ],
   },
