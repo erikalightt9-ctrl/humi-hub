@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
 /* ------------------------------------------------------------------ */
@@ -9,6 +10,10 @@ export type UserType = "student" | "admin" | "manager";
 
 export type RequestPasswordResetResult =
   | { success: true; token: string }
+  | { success: false; error: string };
+
+export type ResetPasswordResult =
+  | { success: true }
   | { success: false; error: string };
 
 /* ------------------------------------------------------------------ */
@@ -93,6 +98,92 @@ export async function requestPasswordReset(
     });
 
     return { success: true, token };
+  }
+
+  return { success: false, error: "Invalid user type." };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Reset Password                                                      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Finds user by token, validates expiry, updates password, clears token.
+ */
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+  userType: UserType,
+): Promise<ResetPasswordResult> {
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  const now = new Date();
+
+  if (userType === "student") {
+    const student = await prisma.student.findFirst({
+      where: { resetToken: token },
+      select: { id: true, resetTokenExpiresAt: true },
+    });
+
+    if (!student) return { success: false, error: "Invalid or expired token." };
+    if (!student.resetTokenExpiresAt || student.resetTokenExpiresAt < now)
+      return { success: false, error: "Token has expired." };
+
+    await prisma.student.update({
+      where: { id: student.id },
+      data: {
+        passwordHash,
+        resetToken: null,
+        resetTokenExpiresAt: null,
+        mustChangePassword: false,
+      },
+    });
+
+    return { success: true };
+  }
+
+  if (userType === "manager") {
+    const manager = await prisma.corporateManager.findFirst({
+      where: { resetToken: token },
+      select: { id: true, resetTokenExpiresAt: true },
+    });
+
+    if (!manager) return { success: false, error: "Invalid or expired token." };
+    if (!manager.resetTokenExpiresAt || manager.resetTokenExpiresAt < now)
+      return { success: false, error: "Token has expired." };
+
+    await prisma.corporateManager.update({
+      where: { id: manager.id },
+      data: {
+        passwordHash,
+        resetToken: null,
+        resetTokenExpiresAt: null,
+        mustChangePassword: false,
+      },
+    });
+
+    return { success: true };
+  }
+
+  if (userType === "admin") {
+    const admin = await prisma.admin.findFirst({
+      where: { resetToken: token },
+      select: { id: true, resetTokenExpiresAt: true },
+    });
+
+    if (!admin) return { success: false, error: "Invalid or expired token." };
+    if (!admin.resetTokenExpiresAt || admin.resetTokenExpiresAt < now)
+      return { success: false, error: "Token has expired." };
+
+    await prisma.admin.update({
+      where: { id: admin.id },
+      data: {
+        passwordHash,
+        resetToken: null,
+        resetTokenExpiresAt: null,
+      },
+    });
+
+    return { success: true };
   }
 
   return { success: false, error: "Invalid user type." };
