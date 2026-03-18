@@ -160,13 +160,31 @@ model Course {
   certificates    Certificate[]
   threads         ForumThread[]
   assignments     Assignment[]
-  calendarEvents  CalendarEvent[]
-  schedules       Schedule[]
-  trainers        CourseTrainer[]
-  resources       CourseResource[]
+  calendarEvents   CalendarEvent[]
+  schedules        Schedule[]
+  trainers         CourseTrainer[]
+  resources        CourseResource[]
+  usageSnapshots   CourseUsageSnapshot[]
 
   @@index([tenantId])
   @@map("courses")
+}
+
+model CourseUsageSnapshot {
+  id             String        @id @default(cuid())
+  courseId       String
+  tenantId       String?
+  snapshotDate   DateTime      @db.Date
+  totalEnrolled  Int           @default(0)
+  activeStudents Int           @default(0)
+  completions    Int           @default(0)
+  avgProgress    Int           @default(0)
+  lessonViews    Int           @default(0)
+  course         Course        @relation(fields: [courseId], references: [id])
+
+  @@unique([courseId, snapshotDate])
+  @@index([tenantId, snapshotDate])
+  @@map("course_usage_snapshots")
 }
 
 model Module {
