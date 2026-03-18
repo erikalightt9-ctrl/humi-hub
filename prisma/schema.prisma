@@ -1102,6 +1102,8 @@ model Organization {
   secondaryColor String?
   faviconUrl     String?
   bannerImageUrl String?
+  mission        String?     @db.Text
+  vision         String?     @db.Text
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 

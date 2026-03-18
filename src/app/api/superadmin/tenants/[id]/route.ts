@@ -24,6 +24,8 @@ const updateTenantSchema = z.object({
   logoUrl: z.string().url().nullable().optional(),
   faviconUrl: z.string().url().nullable().optional(),
   bannerImageUrl: z.string().url().nullable().optional(),
+  mission: z.string().max(1000).nullable().optional(),
+  vision: z.string().max(1000).nullable().optional(),
 });
 
 export async function GET(

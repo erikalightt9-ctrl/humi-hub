@@ -107,6 +107,8 @@ export async function updateTenant(
     logoUrl: string | null;
     faviconUrl: string | null;
     bannerImageUrl: string | null;
+    mission: string | null;
+    vision: string | null;
   }>
 ) {
   return prisma.organization.update({ where: { id }, data });
