@@ -20,11 +20,14 @@ function computeEngagementStatus(lastActiveAt: Date | null): EngagementStatus {
   return "inactive";
 }
 
-export async function getCourseEngagementMetrics(): Promise<
-  ReadonlyArray<CourseEngagementMetrics>
-> {
+export async function getCourseEngagementMetrics(
+  tenantId?: string | null,
+): Promise<ReadonlyArray<CourseEngagementMetrics>> {
   const activeCourses = await prisma.course.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      ...(tenantId ? { tenantId } : {}),
+    },
     select: { id: true, title: true },
   });
 
@@ -135,14 +138,15 @@ async function buildCourseMetrics(
 }
 
 export async function getStudentEngagement(
-  params: EngagementQueryParams
+  params: EngagementQueryParams & { tenantId?: string | null },
 ): Promise<StudentEngagementResponse> {
-  const { courseId, search, sortBy, sortOrder, page, limit } = params;
+  const { courseId, search, sortBy, sortOrder, page, limit, tenantId } = params;
   const offset = (page - 1) * limit;
 
   const enrollmentWhere = {
     status: "APPROVED" as const,
     ...(courseId ? { courseId } : {}),
+    ...(tenantId ? { course: { tenantId } } : {}),
     ...(search
       ? { fullName: { contains: search, mode: "insensitive" as const } }
       : {}),

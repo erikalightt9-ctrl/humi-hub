@@ -14,6 +14,7 @@ import {
   sendEnrollmentRejected,
 } from "@/lib/services/notification.service";
 import { prisma } from "@/lib/prisma";
+import { assertTenantOwns, TenantMismatchError } from "@/lib/tenant-isolation";
 import type { EnrollmentStatus } from "@prisma/client";
 
 const patchSchema = z.object({
@@ -48,8 +49,13 @@ export async function GET(
       );
     }
 
+    assertTenantOwns(enrollment.course.tenantId, guard.tenantId);
+
     return NextResponse.json({ success: true, data: enrollment, error: null });
   } catch (err) {
+    if (err instanceof TenantMismatchError) {
+      return NextResponse.json({ success: false, data: null, error: "Forbidden" }, { status: 403 });
+    }
     console.error("[GET /api/admin/enrollments/[id]]", err);
     return NextResponse.json(
       { success: false, data: null, error: "Internal server error" },
@@ -88,6 +94,8 @@ export async function PATCH(
         );
       }
 
+      assertTenantOwns(existing.course.tenantId, guard.tenantId);
+
       // Only allow editing non-approved enrollments
       if (existing.status === "ENROLLED") {
         return NextResponse.json(
@@ -116,6 +124,8 @@ export async function PATCH(
         { status: 404 }
       );
     }
+
+    assertTenantOwns(existing.course.tenantId, guard.tenantId);
 
     const courseTitle = existing.course.title;
     const coursePrice = Number(existing.course.price);
@@ -217,6 +227,9 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, data: updated, error: null });
   } catch (err) {
+    if (err instanceof TenantMismatchError) {
+      return NextResponse.json({ success: false, data: null, error: "Forbidden" }, { status: 403 });
+    }
     console.error("[PATCH /api/admin/enrollments/[id]]", err);
     return NextResponse.json(
       { success: false, data: null, error: "Internal server error" },
@@ -248,10 +261,15 @@ export async function DELETE(
       );
     }
 
+    assertTenantOwns(existing.course.tenantId, guard.tenantId);
+
     await deleteEnrollment(id);
 
     return NextResponse.json({ success: true, data: null, error: null });
   } catch (err) {
+    if (err instanceof TenantMismatchError) {
+      return NextResponse.json({ success: false, data: null, error: "Forbidden" }, { status: 403 });
+    }
     console.error("[DELETE /api/admin/enrollments/[id]]", err);
     return NextResponse.json(
       { success: false, data: null, error: "Internal server error" },

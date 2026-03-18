@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const data = await getStudentEngagement(result.data);
+    const data = await getStudentEngagement({ ...result.data, tenantId: guard.tenantId });
 
     return NextResponse.json({ success: true, data, error: null });
   } catch (error) {

@@ -48,7 +48,7 @@ export type EnrolleeDetail = Student & {
     referenceCode: string | null;
     paymentStatus: string;
     createdAt: Date;
-    course: { id: string; slug: string; title: string; price: Decimal };
+    course: { id: string; slug: string; title: string; price: Decimal; tenantId: string | null };
     payments: Array<{
       id: string;
       amount: Decimal;
@@ -182,7 +182,7 @@ export async function findEnrolleeById(id: string): Promise<EnrolleeDetail | nul
           referenceCode: true,
           paymentStatus: true,
           createdAt: true,
-          course: { select: { id: true, slug: true, title: true, price: true } },
+          course: { select: { id: true, slug: true, title: true, price: true, tenantId: true } },
           payments: {
             select: {
               id: true,

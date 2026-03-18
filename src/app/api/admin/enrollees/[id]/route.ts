@@ -10,6 +10,7 @@ import {
   deleteEnrollee,
 } from "@/lib/repositories/enrollee.repository";
 import { enrolleeGeneralUpdateSchema } from "@/lib/validations/enrollee.schema";
+import { assertTenantOwns, TenantMismatchError } from "@/lib/tenant-isolation";
 
 export async function GET(
   request: NextRequest,
@@ -33,12 +34,17 @@ export async function GET(
       );
     }
 
+    assertTenantOwns(enrollee.enrollment.course.tenantId, guard.tenantId);
+
     return NextResponse.json({
       success: true,
       data: { ...enrollee, activityLog },
       error: null,
     });
   } catch (err) {
+    if (err instanceof TenantMismatchError) {
+      return NextResponse.json({ success: false, data: null, error: "Forbidden" }, { status: 403 });
+    }
     console.error("[GET /api/admin/enrollees/[id]]", err);
     return NextResponse.json(
       { success: false, data: null, error: "Internal server error" },
@@ -75,6 +81,8 @@ export async function PATCH(
       );
     }
 
+    assertTenantOwns(existing.enrollment.course.tenantId, guard.tenantId);
+
     // Apply updates
     if (result.data.scheduleId !== undefined) {
       await assignEnrolleeToSchedule(id, result.data.scheduleId);
@@ -89,6 +97,9 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, data: updated, error: null });
   } catch (err) {
+    if (err instanceof TenantMismatchError) {
+      return NextResponse.json({ success: false, data: null, error: "Forbidden" }, { status: 403 });
+    }
     console.error("[PATCH /api/admin/enrollees/[id]]", err);
     return NextResponse.json(
       { success: false, data: null, error: "Internal server error" },
@@ -120,10 +131,15 @@ export async function DELETE(
       );
     }
 
+    assertTenantOwns(existing.enrollment.course.tenantId, guard.tenantId);
+
     await deleteEnrollee(id);
 
     return NextResponse.json({ success: true, data: null, error: null });
   } catch (err) {
+    if (err instanceof TenantMismatchError) {
+      return NextResponse.json({ success: false, data: null, error: "Forbidden" }, { status: 403 });
+    }
     console.error("[DELETE /api/admin/enrollees/[id]]", err);
     return NextResponse.json(
       { success: false, data: null, error: "Internal server error" },

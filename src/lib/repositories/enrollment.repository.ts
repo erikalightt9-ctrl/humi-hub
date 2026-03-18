@@ -14,7 +14,7 @@ import type {
 } from "@prisma/client";
 
 export type EnrollmentWithCourse = Enrollment & {
-  course: { id: string; slug: string; title: string; price: Decimal };
+  course: { id: string; slug: string; title: string; price: Decimal; tenantId: string | null };
 };
 
 interface CreateEnrollmentInput {
@@ -76,7 +76,7 @@ export async function countEnrollmentsByEmail(email: string): Promise<number> {
 export async function findEnrollmentById(id: string): Promise<EnrollmentWithCourse | null> {
   return prisma.enrollment.findUnique({
     where: { id },
-    include: { course: { select: { id: true, slug: true, title: true, price: true } } },
+    include: { course: { select: { id: true, slug: true, title: true, price: true, tenantId: true } } },
   });
 }
 
@@ -106,7 +106,7 @@ export async function listEnrollments(
   const [data, total] = await Promise.all([
     prisma.enrollment.findMany({
       where,
-      include: { course: { select: { id: true, slug: true, title: true, price: true } } },
+      include: { course: { select: { id: true, slug: true, title: true, price: true, tenantId: true } } },
       orderBy: { createdAt: "desc" },
       skip,
       take: limit,
@@ -141,7 +141,7 @@ export async function updateEnrollmentStatus(
 export async function getAllEnrollmentsForExport(scope: TenantScope = null): Promise<EnrollmentWithCourse[]> {
   return prisma.enrollment.findMany({
     where: scopeViaCourse(scope),
-    include: { course: { select: { id: true, slug: true, title: true, price: true } } },
+    include: { course: { select: { id: true, slug: true, title: true, price: true, tenantId: true } } },
     orderBy: { createdAt: "desc" },
   });
 }
