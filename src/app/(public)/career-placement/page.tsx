@@ -7,6 +7,7 @@ import {
   TrendingUp,
   Users,
   Building2,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JobBoard } from "@/components/public/JobBoard";
@@ -44,6 +45,8 @@ interface PlacementService {
   readonly icon: React.ComponentType<{ readonly className?: string }>;
   readonly title: string;
   readonly description: string;
+  readonly href: string;
+  readonly cta: string;
 }
 
 const SERVICES: readonly PlacementService[] = [
@@ -52,24 +55,32 @@ const SERVICES: readonly PlacementService[] = [
     title: "Resume & Portfolio Building",
     description:
       "Craft a professional resume and portfolio that highlights your skills, AI proficiency, and specialization expertise.",
+    href: "/placement/resume",
+    cta: "Build Resume",
   },
   {
     icon: MessageSquare,
     title: "AI Mock Interview Practice",
     description:
       "Practice with our AI interview simulator to sharpen your answers, build confidence, and ace your first interview.",
+    href: "/placement/interview",
+    cta: "Start Interview",
   },
   {
     icon: Target,
     title: "AI Job Matching",
     description:
       "Our AI matching engine pairs your skills and preferences with the best-fit job openings from our global partner network.",
+    href: "/placement/jobs",
+    cta: "Browse Jobs",
   },
   {
     icon: TrendingUp,
     title: "Career Coaching",
     description:
       "Get one-on-one guidance from experienced career coaches on salary negotiation, client management, and long-term growth.",
+    href: "/placement/coaching",
+    cta: "Book Session",
   },
 ] as const;
 
@@ -117,27 +128,38 @@ export default function CareerPlacementPage() {
             <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
               Placement Services
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-gray-600 max-w-2xl mx-auto mb-4">
               From resume writing to your first paycheck, we support every step
               of your job search.
             </p>
+            <Link
+              href="/placement"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700"
+            >
+              View all placement tools <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {SERVICES.map((service) => (
-              <div
+              <Link
                 key={service.title}
-                className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm"
+                href={service.href}
+                className="group bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 flex flex-col"
               >
-                <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
                   <service.icon className="h-6 w-6 text-blue-700" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">
                   {service.title}
                 </h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
+                <p className="text-sm text-gray-600 leading-relaxed flex-1">
                   {service.description}
                 </p>
-              </div>
+                <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-blue-600 group-hover:text-blue-700">
+                  {service.cta}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </div>
+              </Link>
             ))}
           </div>
         </div>
