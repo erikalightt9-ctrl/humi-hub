@@ -8,6 +8,14 @@ export async function getResourcesByCourse(courseId: string): Promise<CourseReso
   });
 }
 
+export async function getResourcesByCourses(courseIds: string[]): Promise<CourseResource[]> {
+  if (courseIds.length === 0) return [];
+  return prisma.courseResource.findMany({
+    where: { courseId: { in: courseIds } },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export async function getResourcesByLesson(lessonId: string): Promise<CourseResource[]> {
   return prisma.courseResource.findMany({
     where: { lessonId },
