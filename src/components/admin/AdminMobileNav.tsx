@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 const mobileNavItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/students", label: "Users", icon: Users, exact: false },
+  { href: "/admin/users", label: "Users", icon: Users, exact: false },
   { href: "/admin/courses", label: "Courses", icon: BookOpen, exact: false },
   { href: "/admin/messages", label: "Messages", icon: MessageSquare, exact: false },
   { href: "/admin/settings", label: "Settings", icon: Settings, exact: false },

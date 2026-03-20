@@ -62,6 +62,7 @@ const adminNavGroups: ReadonlyArray<NavGroup> = [
     label: "Students",
     icon: Users,
     items: [
+      { href: "/admin/users", label: "All Users", icon: Users },
       { href: "/admin/students", label: "Student Directory", icon: Users },
       { href: "/admin/engagement", label: "Student Progress", icon: TrendingUp },
       { href: "/admin/attendance", label: "Attendance Records", icon: ClipboardCheck },
@@ -165,7 +166,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
 
       {/* Mobile backdrop */}
       {sidebarOpen && (
@@ -246,7 +247,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
-        <header className="flex items-center gap-3 px-4 md:px-6 py-3 border-b border-gray-200 bg-white shrink-0">
+        <header className="flex items-center gap-3 px-4 md:px-6 h-16 border-b border-gray-200 bg-white shrink-0">
           {/* Hamburger — mobile only */}
           <button
             className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors shrink-0"
