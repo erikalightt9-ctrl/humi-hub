@@ -59,20 +59,13 @@ interface NavGroup {
 
 const adminNavGroups: ReadonlyArray<NavGroup> = [
   {
-    label: "Students",
+    label: "Users",
     icon: Users,
     items: [
       { href: "/admin/users", label: "All Users", icon: Users },
-      { href: "/admin/students", label: "Student Directory", icon: Users },
-      { href: "/admin/engagement", label: "Student Progress", icon: TrendingUp },
-      { href: "/admin/attendance", label: "Attendance Records", icon: ClipboardCheck },
-    ],
-  },
-  {
-    label: "Trainers",
-    icon: UserCog,
-    items: [
-      { href: "/admin/trainers", label: "Trainer Management", icon: UserCog },
+      { href: "/admin/students", label: "Students", icon: Users },
+      { href: "/admin/trainers", label: "Trainers", icon: UserCog },
+      { href: "/admin/users/corporate", label: "Corporate", icon: Building2 },
     ],
   },
   {
@@ -138,13 +131,6 @@ const adminNavGroups: ReadonlyArray<NavGroup> = [
       { href: "/admin/ai-insights", label: "AI Insights", icon: Brain },
       { href: "/admin/control-tower", label: "Control Tower", icon: Rocket },
       { href: "/admin/reports", label: "Reports", icon: FileBarChart },
-    ],
-  },
-  {
-    label: "Corporate",
-    icon: Building2,
-    items: [
-      { href: "/admin/organizations", label: "Organizations", icon: Building2 },
     ],
   },
   {
