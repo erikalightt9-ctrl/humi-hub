@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { User, Settings, LogOut, ChevronDown } from "lucide-react";
+import { User, LogOut, ChevronDown } from "lucide-react";
 
 export function AdminProfileDropdown() {
   const { data: session } = useSession();
@@ -66,14 +66,6 @@ export function AdminProfileDropdown() {
             >
               <User className="h-4 w-4 text-gray-400" />
               My Profile
-            </Link>
-            <Link
-              href="/admin/settings"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              <Settings className="h-4 w-4 text-gray-400" />
-              Settings
             </Link>
           </div>
 
