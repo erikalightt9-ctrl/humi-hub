@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
   GraduationCap,
   LayoutDashboard,
@@ -34,6 +35,8 @@ import {
   HelpCircle,
   Mail,
   Search,
+  Menu,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SidebarNavGroup } from "@/components/shared/SidebarNavGroup";
@@ -42,6 +45,7 @@ import { NotificationBell } from "@/components/shared/NotificationBell";
 import { ChatWidgetEnhanced } from "@/components/shared/ChatWidgetEnhanced";
 import { AdminProfileDropdown } from "@/components/admin/AdminProfileDropdown";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
+import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 
 // ---------------------------------------------------------------------------
 // Navigation group definitions
@@ -158,22 +162,50 @@ const adminNavGroups: ReadonlyArray<NavGroup> = [
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isDashboardActive = pathname === "/admin";
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
+
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-blue-950 text-white flex flex-col shrink-0">
-        <div className="px-6 py-5 border-b border-blue-800">
+      <aside
+        className={cn(
+          "w-64 bg-blue-950 text-white flex flex-col shrink-0",
+          // Mobile: fixed overlay drawer
+          "fixed inset-y-0 left-0 z-50 transition-transform duration-200",
+          // Desktop: always visible inline
+          "md:relative md:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        )}
+      >
+        <div className="px-6 py-5 border-b border-blue-800 flex items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-lg">
             <GraduationCap className="h-6 w-6 text-blue-400" />
             <span>HUMI Admin</span>
           </div>
+          {/* Close button — mobile only */}
+          <button
+            className="md:hidden p-1 rounded-lg text-blue-300 hover:text-white hover:bg-blue-800 transition-colors"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {/* Dashboard — standalone link */}
           <Link
             href="/admin"
+            onClick={() => setSidebarOpen(false)}
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
               isDashboardActive
@@ -195,6 +227,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               label={group.label}
               icon={group.icon}
               items={group.items}
+              onNavigate={() => setSidebarOpen(false)}
             />
           ))}
         </nav>
@@ -211,17 +244,31 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
-        <header className="flex items-center justify-between gap-4 px-6 py-3 border-b border-gray-200 bg-white shrink-0">
-          {/* Left: breadcrumb */}
-          <div className="min-w-0 flex-1">
+        <header className="flex items-center gap-3 px-4 md:px-6 py-3 border-b border-gray-200 bg-white shrink-0">
+          {/* Hamburger — mobile only */}
+          <button
+            className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors shrink-0"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+
+          {/* Logo — mobile only */}
+          <div className="flex items-center gap-2 font-bold text-base text-blue-950 md:hidden">
+            <GraduationCap className="h-5 w-5 text-blue-600" />
+            <span>HUMI Admin</span>
+          </div>
+
+          {/* Breadcrumb — desktop only */}
+          <div className="hidden md:block min-w-0 flex-1">
             <AdminBreadcrumb />
           </div>
 
-          {/* Right: search + notifications + profile */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Search */}
+          {/* Right: search (desktop) + notifications + profile */}
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
             <div className="relative hidden md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -230,14 +277,18 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 className="w-48 pl-9 pr-3 py-1.5 text-sm rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
               />
             </div>
-
             <NotificationBell />
             <AdminProfileDropdown />
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-8">{children}</main>
+        {/* Page content — extra bottom padding on mobile for bottom nav */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8">{children}</main>
       </div>
+
+      {/* Mobile bottom navigation */}
+      <AdminMobileNav />
+
       <ChatWidgetEnhanced role="admin" currentPage={pathname} />
     </div>
   );
