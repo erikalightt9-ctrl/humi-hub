@@ -6,7 +6,6 @@ import {
   Target,
   TrendingUp,
   Users,
-  DollarSign,
   Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ import { JobBoard } from "@/components/public/JobBoard";
 export const metadata: Metadata = {
   title: "Career Placement — HUMI Training Center",
   description:
-    "Get placed in your dream VA role. Resume building, AI mock interviews, job matching, and career coaching to launch your virtual assistant career.",
+    "Launch your professional career with our comprehensive placement services. Resume building, AI mock interviews, job matching, and career coaching to help you land the right role.",
 };
 
 /* ------------------------------------------------------------------ */
@@ -35,11 +34,6 @@ const STATS: readonly StatCard[] = [
     icon: Users,
   },
   {
-    value: "$800\u2013$1,500/mo",
-    label: "Average Starting Salary",
-    icon: DollarSign,
-  },
-  {
     value: "150+",
     label: "Hiring Partners (Global companies)",
     icon: Building2,
@@ -57,13 +51,13 @@ const SERVICES: readonly PlacementService[] = [
     icon: Briefcase,
     title: "Resume & Portfolio Building",
     description:
-      "Craft a professional resume and portfolio that highlights your VA skills, AI proficiency, and specialization expertise.",
+      "Craft a professional resume and portfolio that highlights your skills, AI proficiency, and specialization expertise.",
   },
   {
     icon: MessageSquare,
     title: "AI Mock Interview Practice",
     description:
-      "Practice with our AI interview simulator to sharpen your answers, build confidence, and nail your first client call.",
+      "Practice with our AI interview simulator to sharpen your answers, build confidence, and ace your first interview.",
   },
   {
     icon: Target,
@@ -92,7 +86,7 @@ export default function CareerPlacementPage() {
           <h1 className="text-4xl font-extrabold mb-4">Career Placement</h1>
           <p className="text-blue-100 text-lg leading-relaxed">
             Your training does not end with a certificate. We provide
-            comprehensive placement support to help you land your first VA role
+            comprehensive placement support to help you land the right role
             quickly and confidently.
           </p>
         </div>
@@ -100,7 +94,7 @@ export default function CareerPlacementPage() {
 
       {/* Stats Bar */}
       <section className="py-12 px-4 bg-white">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
           {STATS.map((stat) => (
             <div
               key={stat.label}
@@ -157,7 +151,7 @@ export default function CareerPlacementPage() {
               Current Openings
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Browse the latest VA job opportunities from our hiring partners
+              Browse the latest job opportunities from our industry partners
               worldwide.
             </p>
           </div>
@@ -171,7 +165,8 @@ export default function CareerPlacementPage() {
           <h2 className="text-3xl font-extrabold mb-4">Get Career-Ready</h2>
           <p className="text-blue-100 mb-8 text-lg">
             Enroll today and gain access to our full suite of career placement
-            services, AI-powered tools, and a network of 150+ hiring partners.
+            services, AI-powered tools, and a growing network of global hiring
+            partners.
           </p>
           <Button
             asChild
