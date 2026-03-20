@@ -335,6 +335,8 @@ model Student {
   subscriptions         Subscription[]
   trainerRatings        TrainerRating[]
   sessionAttendances    SessionAttendance[]
+  placementResumes      PlacementResume[]
+  coachingSessions      CoachingSession[]
 
   @@index([email])
   @@index([trainerId])
@@ -1473,4 +1475,60 @@ model Placement {
 
   @@index([placedAt])
   @@map("placements")
+}
+
+// ============================================================
+// Placement Services Module
+// ============================================================
+
+model PlacementResume {
+  id         String   @id @default(cuid())
+  studentId  String?
+  fullName   String
+  email      String
+  phone      String?
+  headline   String?
+  summary    String?  @db.Text
+  skills     String[]
+  experience String   @db.Text
+  education  String   @db.Text
+  fileUrl    String?
+  fileName   String?
+  fileType   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  student    Student? @relation(fields: [studentId], references: [id])
+
+  @@index([studentId])
+  @@index([email])
+  @@map("placement_resumes")
+}
+
+enum CoachingSessionStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model CoachingSession {
+  id            String                @id @default(cuid())
+  studentId     String?
+  fullName      String
+  email         String
+  phone         String?
+  topic         String
+  message       String                @db.Text
+  preferredDate DateTime?
+  status        CoachingSessionStatus @default(PENDING)
+  adminNotes    String?               @db.Text
+  scheduledAt   DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  student       Student?              @relation(fields: [studentId], references: [id])
+
+  @@index([studentId])
+  @@index([status])
+  @@map("coaching_sessions")
 }
