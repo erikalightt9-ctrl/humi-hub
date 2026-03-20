@@ -2,13 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import {
   GraduationCap,
   LayoutDashboard,
   Users,
   UserCheck,
-  LogOut,
   Download,
   CreditCard,
   BookOpen,
@@ -38,7 +36,6 @@ import {
   Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { SidebarNavGroup } from "@/components/shared/SidebarNavGroup";
 import type { NavItem } from "@/components/shared/SidebarNavGroup";
 import { NotificationBell } from "@/components/shared/NotificationBell";
@@ -202,7 +199,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
-        <div className="px-3 py-4 border-t border-blue-800 space-y-1">
+        <div className="px-3 py-4 border-t border-blue-800">
           <a
             href="/api/admin/export"
             className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-blue-200 hover:bg-blue-800 hover:text-white transition-colors"
@@ -210,15 +207,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <Download className="h-4 w-4" />
             Export CSV
           </a>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-blue-200 hover:bg-blue-800 hover:text-white gap-3 px-3"
-            onClick={() => signOut({ callbackUrl: "/portal?tab=admin" })}
-          >
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </Button>
         </div>
       </aside>
 
