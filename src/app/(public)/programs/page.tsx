@@ -8,7 +8,7 @@ import { resolveTenantFromSubdomain } from "@/lib/tenant";
 export const metadata: Metadata = {
   title: "Programs \u2014 HUMI Training Center",
   description:
-    "Explore HUMI Training Center's professional training programs across multiple specializations.",
+    "Explore HUMI Training Center's professional training programs designed for every industry and career path.",
 };
 
 const courseHrefs: Record<string, string> = {
@@ -35,9 +35,10 @@ export default async function ProgramsPage() {
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-4xl font-extrabold mb-4">Our Training Programs</h1>
           <p className="text-blue-100 text-lg">
-            Each program is designed by industry experts to give you the exact skills that US,
-            Australian, and UK employers are looking for. Choose a specialization and start
-            your journey to becoming an AI-powered virtual assistant.
+            Each program is designed by industry experts to equip you with the skills and
+            knowledge needed to thrive in today&apos;s competitive workforce. Whether you&apos;re
+            starting fresh or upskilling, choose a specialization and begin your
+            professional training journey.
           </p>
         </div>
       </section>
@@ -63,23 +64,25 @@ export default async function ProgramsPage() {
       </section>
 
       {/* Comparison section */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-3">
-              Not sure which program?
-            </h2>
-            <p className="text-gray-600 max-w-xl mx-auto">
-              Compare our three specializations side by side to find the best fit
-              for your background and career goals.
-            </p>
-          </div>
+      {courses.length > 1 && (
+        <section className="py-16 px-4 bg-gray-50">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-10">
+              <h2 className="text-2xl font-extrabold text-gray-900 mb-3">
+                Not sure which program?
+              </h2>
+              <p className="text-gray-600 max-w-xl mx-auto">
+                Compare our programs side by side to find the best fit
+                for your background and career goals.
+              </p>
+            </div>
 
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8">
-            <ProgramComparisonTable />
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8">
+              <ProgramComparisonTable courses={courses} />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }
