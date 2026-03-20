@@ -16,9 +16,10 @@ interface SidebarNavGroupProps {
   readonly label: string;
   readonly icon: React.ComponentType<{ className?: string }>;
   readonly items: ReadonlyArray<NavItem>;
+  readonly onNavigate?: () => void;
 }
 
-export function SidebarNavGroup({ label, icon: GroupIcon, items }: SidebarNavGroupProps) {
+export function SidebarNavGroup({ label, icon: GroupIcon, items, onNavigate }: SidebarNavGroupProps) {
   const pathname = usePathname();
   const hasActiveChild = items.some(
     (item) => pathname === item.href || pathname.startsWith(item.href + "/")
@@ -64,6 +65,7 @@ export function SidebarNavGroup({ label, icon: GroupIcon, items }: SidebarNavGro
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onNavigate}
                 className={cn(
                   "flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors",
                   isActive
