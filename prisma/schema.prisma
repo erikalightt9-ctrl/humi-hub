@@ -148,6 +148,9 @@ model Course {
   popularTier   String?
   industry      String?
   tenantId      String?
+  discountBasic        Json?
+  discountProfessional Json?
+  discountAdvanced     Json?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   tenant          Organization?  @relation(fields: [tenantId], references: [id])
@@ -164,9 +167,23 @@ model Course {
   trainers         CourseTrainer[]
   resources        CourseResource[]
   usageSnapshots   CourseUsageSnapshot[]
+  priceHistory     CoursePriceHistory[]
 
   @@index([tenantId])
   @@map("courses")
+}
+
+model CoursePriceHistory {
+  id        String   @id @default(cuid())
+  courseId  String
+  tier      String
+  oldPrice  Decimal  @db.Decimal(10, 2)
+  newPrice  Decimal  @db.Decimal(10, 2)
+  updatedAt DateTime @default(now()) @db.Timestamptz
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@map("course_price_history")
 }
 
 model CourseUsageSnapshot {
