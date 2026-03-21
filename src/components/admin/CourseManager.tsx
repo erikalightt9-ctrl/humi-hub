@@ -166,6 +166,20 @@ export function CourseManager() {
   // Consolidated tier state
   const [tierState, setTierState] = useState<TierEditorState>(INITIAL_TIER_STATE);
 
+  // When creating a new course, auto-sync the base price to all three tier
+  // inputs so the tier pricing editor always starts from the entered price,
+  // not from stale hardcoded defaults.
+  useEffect(() => {
+    if (!editingId && price > 0) {
+      setTierState((prev) => ({
+        ...prev,
+        priceBasic: price,
+        priceProfessional: price,
+        priceAdvanced: price,
+      }));
+    }
+  }, [price, editingId]);
+
   /* ---------------------------------------------------------------- */
   /*  Fetch courses                                                    */
   /* ---------------------------------------------------------------- */
