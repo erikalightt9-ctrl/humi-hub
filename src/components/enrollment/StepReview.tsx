@@ -91,7 +91,8 @@ export function StepReview({ form, courses }: StepReviewProps) {
 
   const selectedCourseTier = (data.courseTier as CourseTier) ?? "BASIC";
 
-  // Fetch course tier pricing
+  // Fetch course tier pricing — always bypass cache so the Review step
+  // reflects the latest prices saved by the admin.
   useEffect(() => {
     if (!data.courseId) {
       setCourseTierPricing(null);
@@ -100,7 +101,9 @@ export function StepReview({ form, courses }: StepReviewProps) {
 
     async function fetchPricing() {
       try {
-        const res = await fetch(`/api/courses/${data.courseId}/pricing`);
+        const res = await fetch(`/api/courses/${data.courseId}/pricing`, {
+          cache: "no-store",
+        });
         const json = await res.json();
         if (json.success) {
           setCourseTierPricing(json.data);

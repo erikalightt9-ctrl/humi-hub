@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { CheckCircle, Loader2, Star, Zap, Crown } from "lucide-react";
 import type { EnrollmentFormData } from "@/lib/validations/enrollment.schema";
@@ -83,22 +83,40 @@ const TIER_ORDER: readonly CourseTierValue[] = ["BASIC", "PROFESSIONAL", "ADVANC
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
+const POLL_INTERVAL_MS = 10_000; // re-fetch every 10 s while visible
+
 export function StepCourseTierSelect({ form, courseId }: StepCourseTierSelectProps) {
   const [pricing, setPricing] = useState<CoursePricing | null>(null);
   const [loading, setLoading] = useState(true);
   const selectedTier = form.watch("courseTier") as CourseTierValue | undefined;
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
+  const fetchPricing = useCallback(async (isInitial = false) => {
     if (!courseId) return;
-    setLoading(true);
-    fetch(`/api/courses/${courseId}/pricing`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success) setPricing(data.data);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    if (isInitial) setLoading(true);
+    try {
+      // cache: "no-store" bypasses the browser cache so we always get the
+      // latest price that was saved by the admin.
+      const res = await fetch(`/api/courses/${courseId}/pricing`, {
+        cache: "no-store",
+      });
+      const data = await res.json();
+      if (data.success) setPricing(data.data);
+    } catch {
+      // silently ignore network errors on background polls
+    } finally {
+      if (isInitial) setLoading(false);
+    }
   }, [courseId]);
+
+  // Initial fetch + start polling while this step is mounted
+  useEffect(() => {
+    fetchPricing(true);
+    intervalRef.current = setInterval(() => fetchPricing(false), POLL_INTERVAL_MS);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [fetchPricing]);
 
   function selectTier(tier: CourseTierValue) {
     form.setValue("courseTier", tier, { shouldValidate: true });
