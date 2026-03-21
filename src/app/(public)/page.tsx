@@ -8,7 +8,6 @@ import { HowItWorksSection } from "@/components/public/HowItWorksSection";
 import { LearningExperienceSection } from "@/components/public/LearningExperienceSection";
 import { TrainersSection } from "@/components/public/TrainersSection";
 import { TestimonialsSection } from "@/components/public/TestimonialsSection";
-import { CareerPathwaysSection } from "@/components/public/CareerPathwaysSection";
 import { EnrollmentCTASection } from "@/components/public/EnrollmentCTASection";
 import { prisma } from "@/lib/prisma";
 import { resolveTenantFromSubdomain } from "@/lib/tenant";
@@ -67,10 +66,7 @@ export default async function HomePage() {
       {/* 8. Testimonials — dynamic from DB */}
       <TestimonialsSection />
 
-      {/* 9. Career Pathways — outcomes + career table */}
-      <CareerPathwaysSection />
-
-      {/* 10. Final CTA — dual audience enrollment */}
+      {/* 9. Final CTA — dual audience enrollment */}
       <EnrollmentCTASection />
     </>
   );
