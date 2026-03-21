@@ -141,7 +141,32 @@ export function CoachingForm() {
     }
   }
 
-  /* Step 2 alt: Skip payment (free / admin will bill separately) */
+  /* Step 2 alt-a: Pay with PayMongo */
+  async function handlePayMongoCheckout() {
+    if (!sessionId) return;
+    setLoading(true);
+    setServerError(null);
+    try {
+      const res = await fetch("/api/placement/coaching/paymongo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
+      const json = await res.json() as { success: boolean; data?: { checkoutUrl: string }; error?: string };
+      if (!json.success || !json.data?.checkoutUrl) {
+        setStep("confirmed");
+        return;
+      }
+      window.location.href = json.data.checkoutUrl;
+    } catch {
+      setServerError("PayMongo unavailable. Your session is booked — we'll contact you.");
+      setStep("confirmed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /* Step 2 alt-b: Skip payment (free / admin will bill separately) */
   function handleSkipPayment() {
     setStep("confirmed");
   }
@@ -208,6 +233,16 @@ export function CoachingForm() {
           >
             <CreditCard className="h-4 w-4" />
             {loading ? "Redirecting to payment…" : "Pay $49 with Card (Stripe)"}
+          </Button>
+
+          <Button
+            onClick={handlePayMongoCheckout}
+            disabled={loading}
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold gap-2"
+            size="lg"
+          >
+            <CreditCard className="h-4 w-4" />
+            {loading ? "Redirecting to payment…" : "Pay ₱2,900 via GCash / Maya (PayMongo) 🇵🇭"}
           </Button>
 
           <button
