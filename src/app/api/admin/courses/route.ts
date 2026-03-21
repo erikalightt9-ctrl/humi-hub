@@ -6,6 +6,7 @@ import {
 } from "@/lib/repositories/course.repository";
 import { requireAdmin } from "@/lib/auth-guards";
 import { createCourseSchema } from "@/lib/validations/course.schema";
+import { prisma } from "@/lib/prisma";
 
 /* ------------------------------------------------------------------ */
 /*  GET — Admin: list courses scoped to tenant                         */
@@ -49,15 +50,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const course = await createCourse({ ...parsed.data, tenantId: guard.tenantId });
+    // Verify the tenant org exists to prevent FK constraint errors.
+    // If DEFAULT_TENANT_ID is misconfigured, create as a global course (no tenant).
+    const orgExists = await prisma.organization.findUnique({
+      where: { id: guard.tenantId },
+      select: { id: true },
+    });
+    if (!orgExists) {
+      console.warn(
+        `[POST /api/admin/courses] tenantId "${guard.tenantId}" not found in organizations — creating course without tenant scope`,
+      );
+    }
+
+    const course = await createCourse({
+      ...parsed.data,
+      tenantId: orgExists ? guard.tenantId : undefined,
+    });
 
     return NextResponse.json({ success: true, data: course, error: null }, { status: 201 });
   } catch (err) {
     console.error("[POST /api/admin/courses]", err);
-    const message =
-      err instanceof Error && err.message.includes("Unique constraint")
-        ? "A course with this slug already exists"
-        : "Internal server error";
+    const errMsg = err instanceof Error ? err.message : "";
+    const message = errMsg.includes("Unique constraint")
+      ? "A course with this slug already exists"
+      : "Internal server error";
     return NextResponse.json(
       { success: false, data: null, error: message },
       { status: message === "Internal server error" ? 500 : 409 },
