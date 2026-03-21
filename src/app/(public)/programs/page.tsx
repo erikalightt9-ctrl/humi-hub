@@ -7,7 +7,7 @@ import { resolveTenantFromSubdomain } from "@/lib/tenant";
 export const metadata: Metadata = {
   title: "Programs — HUMI Training Center",
   description:
-    "Explore HUMI Training Center's professional training programs across multiple industries.",
+    "Explore HUMI Training Center's professional training programs across multiple industries. Designed by industry experts for global employers.",
 };
 
 function buildCourseHrefs(

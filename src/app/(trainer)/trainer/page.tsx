@@ -8,6 +8,8 @@ import {
   Star,
   MessageSquare,
   Clock,
+  ArrowRight,
+  ClipboardList,
 } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import {
@@ -26,7 +28,7 @@ export const dynamic = "force-dynamic";
 
 function renderStars(rating: number): string {
   const full = Math.round(rating);
-  return Array.from({ length: 5 }, (_, i) => (i < full ? "\u2605" : "\u2606")).join("");
+  return Array.from({ length: 5 }, (_, i) => (i < full ? "★" : "☆")).join("");
 }
 
 function formatDate(date: Date): string {
@@ -44,8 +46,40 @@ function timeAgo(date: Date): string {
   if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+// ---------------------------------------------------------------------------
+// Clickable stat card (same style as admin dashboard)
+// ---------------------------------------------------------------------------
+
+interface StatCardProps {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  iconClass: string;
+  bgClass: string;
+  label: string;
+  value: number | string;
+  sub?: string;
+}
+
+function StatCard({ href, icon: Icon, iconClass, bgClass, label, value, sub }: StatCardProps) {
+  return (
+    <Link
+      href={href}
+      className="group bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-start gap-4 hover:border-blue-300 hover:shadow-md transition-all"
+    >
+      <div className={`rounded-xl p-2.5 shrink-0 ${bgClass}`}>
+        <Icon className={`h-5 w-5 ${iconClass}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-gray-500 mb-1">{label}</p>
+        <p className="text-2xl font-bold text-gray-900 leading-none">{value}</p>
+        {sub && <p className="text-xs text-gray-400 mt-1.5">{sub}</p>}
+      </div>
+      <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-blue-500 transition-colors self-center shrink-0" />
+    </Link>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -78,188 +112,174 @@ export default async function TrainerDashboardPage() {
 
   return (
     <>
-      <div className="mb-8">
+      {/* Header */}
+      <div className="mb-7">
         <h1 className="text-2xl font-bold text-gray-900">
           Welcome back, {user.name ?? "Trainer"}
         </h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Here is an overview of your training activity.
+        <p className="text-sm text-gray-400 mt-0.5">
+          Your training activity — click any card to view details
         </p>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="rounded-lg p-2 bg-blue-100 text-blue-600">
-              <Users className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-gray-500">
-              Total Students
-            </span>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {stats.totalStudents}
-          </p>
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="rounded-lg p-2 bg-indigo-100 text-indigo-600">
-              <CalendarClock className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-gray-500">
-              Active Schedules
-            </span>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {stats.activeSchedules}
-          </p>
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="rounded-lg p-2 bg-amber-100 text-amber-600">
-              <Star className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-gray-500">
-              Average Rating
-            </span>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <p className="text-2xl font-bold text-gray-900">
-              {stats.averageRating !== null
-                ? stats.averageRating.toFixed(1)
-                : "N/A"}
-            </p>
-            {stats.averageRating !== null && (
-              <span className="text-amber-500 text-lg">
-                {renderStars(stats.averageRating)}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="rounded-lg p-2 bg-purple-100 text-purple-600">
-              <MessageSquare className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-gray-500">
-              Total Ratings
-            </span>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {stats.totalRatings}
-          </p>
-        </div>
+      {/* ── Clickable Stat Cards ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+        <StatCard
+          href="/trainer/students"
+          icon={Users}
+          iconClass="text-blue-600"
+          bgClass="bg-blue-100"
+          label="My Students"
+          value={stats.totalStudents}
+          sub="Across all courses"
+        />
+        <StatCard
+          href="/trainer/schedule"
+          icon={CalendarClock}
+          iconClass="text-indigo-600"
+          bgClass="bg-indigo-100"
+          label="Active Schedules"
+          value={stats.activeSchedules}
+          sub="Currently running"
+        />
+        <StatCard
+          href="/trainer/ratings"
+          icon={Star}
+          iconClass="text-amber-600"
+          bgClass="bg-amber-100"
+          label="Avg Rating"
+          value={
+            stats.averageRating !== null
+              ? `${stats.averageRating.toFixed(1)} ${renderStars(stats.averageRating)}`
+              : "N/A"
+          }
+          sub="From student feedback"
+        />
+        <StatCard
+          href="/trainer/ratings"
+          icon={MessageSquare}
+          iconClass="text-purple-600"
+          bgClass="bg-purple-100"
+          label="Total Ratings"
+          value={stats.totalRatings}
+          sub="Reviews received"
+        />
       </div>
 
-      {/* Two-column: Upcoming Schedules + Recent Ratings */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* ── Two-column: Schedules + Ratings ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Upcoming Schedules */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-5">
             <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-              <CalendarClock className="h-5 w-5 text-blue-600" />
+              <CalendarClock className="h-4 w-4 text-blue-600" />
               Upcoming Schedules
             </h2>
-            <Link
-              href="/trainer/schedule"
-              className="text-sm text-blue-600 hover:underline"
-            >
-              View all
+            <Link href="/trainer/schedule" className="text-xs text-blue-600 hover:underline">
+              View all →
             </Link>
           </div>
 
           {upcomingSchedules.length > 0 ? (
-            <div className="space-y-3">
-              {upcomingSchedules.map((schedule) => {
-                const enrolled = schedule._count.students;
-                return (
-                  <div
-                    key={schedule.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {schedule.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {schedule.course.title} &middot;{" "}
-                        {formatDate(schedule.startDate)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 ml-4 shrink-0">
-                      <span className="text-xs text-gray-500">
-                        {enrolled}/{schedule.maxCapacity}
-                      </span>
-                      <ScheduleStatusBadge status={schedule.status} />
-                    </div>
+            <div className="space-y-2">
+              {upcomingSchedules.map((schedule) => (
+                <Link
+                  key={schedule.id}
+                  href="/trainer/schedule"
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-blue-50 hover:border-blue-100 border border-transparent transition-all group"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-700 transition-colors">
+                      {schedule.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {schedule.course.title} · {formatDate(schedule.startDate)}
+                    </p>
                   </div>
-                );
-              })}
+                  <div className="flex items-center gap-3 ml-4 shrink-0">
+                    <span className="text-xs text-gray-500">
+                      {schedule._count.students}/{schedule.maxCapacity}
+                    </span>
+                    <ScheduleStatusBadge status={schedule.status} />
+                  </div>
+                </Link>
+              ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <Clock className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-400">
-                No upcoming schedules at the moment.
-              </p>
+            <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+              <Clock className="h-8 w-8 mb-3 opacity-40" />
+              <p className="text-sm">No upcoming schedules</p>
             </div>
           )}
         </div>
 
         {/* Recent Ratings */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-5">
             <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-              <Star className="h-5 w-5 text-amber-500" />
+              <Star className="h-4 w-4 text-amber-500" />
               Recent Ratings
             </h2>
-            <Link
-              href="/trainer/ratings"
-              className="text-sm text-blue-600 hover:underline"
-            >
-              View all
+            <Link href="/trainer/ratings" className="text-xs text-blue-600 hover:underline">
+              View all →
             </Link>
           </div>
 
           {recentRatings.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {recentRatings.map((rating) => (
-                <div
+                <Link
                   key={rating.id}
-                  className="p-3 bg-gray-50 rounded-lg"
+                  href="/trainer/ratings"
+                  className="block p-3 bg-gray-50 rounded-xl hover:bg-amber-50 border border-transparent hover:border-amber-100 transition-all"
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium text-gray-900">
                       {rating.student.name}
                     </span>
-                    <span className="text-xs text-gray-400">
-                      {timeAgo(rating.createdAt)}
-                    </span>
+                    <span className="text-xs text-gray-400">{timeAgo(rating.createdAt)}</span>
                   </div>
                   <div className="text-amber-500 text-sm mb-1">
                     {renderStars(rating.rating)}
                   </div>
                   {rating.review && (
-                    <p className="text-xs text-gray-500 line-clamp-2">
-                      {rating.review}
-                    </p>
+                    <p className="text-xs text-gray-500 line-clamp-2">{rating.review}</p>
                   )}
-                </div>
+                </Link>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <Star className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-400">
-                No ratings received yet.
-              </p>
+            <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+              <Star className="h-8 w-8 mb-3 opacity-40" />
+              <p className="text-sm">No ratings received yet</p>
             </div>
           )}
         </div>
+      </div>
+
+      {/* ── Quick Links ── */}
+      <div className="flex flex-wrap gap-3 mt-5">
+        <Link
+          href="/trainer/courses"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors"
+        >
+          <ClipboardList className="h-4 w-4" />
+          My Courses
+        </Link>
+        <Link
+          href="/trainer/submissions"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors"
+        >
+          <ClipboardList className="h-4 w-4" />
+          Grade Submissions
+        </Link>
+        <Link
+          href="/trainer/messages"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-800 text-white rounded-xl text-sm font-semibold hover:bg-gray-700 transition-colors"
+        >
+          <MessageSquare className="h-4 w-4" />
+          Messages
+        </Link>
       </div>
     </>
   );

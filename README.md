@@ -1,6 +1,6 @@
-# VA Training Center
+# HUMI Training Hub
 
-A full-stack Learning Management System (LMS) built for training Filipino professionals to become AI-powered Virtual Assistants. The platform manages the entire student lifecycle — from enrollment and payment to course delivery, AI-powered practice, assessments, certifications, and job placement.
+A full-stack Learning Management System (LMS) built for training professionals across any field or industry. The platform manages the entire student lifecycle — from enrollment and payment to course delivery, AI-powered practice, assessments, certifications, and job placement.
 
 **Live:** [va-training-center.vercel.app](https://va-training-center.vercel.app)
 
@@ -9,7 +9,7 @@ A full-stack Learning Management System (LMS) built for training Filipino profes
 ## Platform Overview
 
 ```
-va-training-center/
+humi-training-hub/
 │
 ├── platform/
 │   ├── marketing-site/        # Landing page, about, contact, testimonials
@@ -45,11 +45,11 @@ va-training-center/
 
 ### Public Pages
 - **Landing Page** — Hero section, course previews, testimonials, and value propositions
-- **Course Catalog** — Browse 3 specialized VA courses with pricing and outcomes
+- **Course Catalog** — Browse available programs with pricing and outcomes
 - **Free Lesson Previews** — Preview select lessons before enrolling
 - **Multi-Step Enrollment** — Personal info, skills assessment, and motivation capture
 - **Online Payment** — PayMongo checkout (GCash, PayMaya, cards) or manual proof upload
-- **Job Board** — Browse VA job postings with search and type filters
+- **Job Board** — Browse job postings with search and type filters
 - **Certificate Verification** — Public verification of issued certificates by cert number
 - **Contact Form** — Direct inquiry with email notification
 
@@ -72,7 +72,7 @@ va-training-center/
 - **AI Control Tower** — AI-powered risk indicators, anomaly detection, recommendations
 - **AI Insights** — Performance predictions and dropout risk scores
 - **Testimonials** — Curate and publish student success stories
-- **Job Postings** — Create and manage VA job listings
+- **Job Postings** — Create and manage job listings
 - **Reports & Export** — CSV/Excel data export
 - **Certificate Issuance** — Generate and manage completion certificates
 
@@ -120,7 +120,7 @@ va-training-center/
 ## Project Structure
 
 ```
-va-training-center/
+humi-training-hub/
 ├── prisma/
 │   ├── schema.prisma              # Database schema (30+ models)
 │   └── seed.ts                    # Seed data (courses, admin, badges, lessons)
@@ -249,7 +249,7 @@ Student account created ──▸ Welcome email with credentials
 Student logs in ──▸ Must change password on first login
         │
         ▼
-90-day course access begins
+Course access begins
 ```
 
 ---
@@ -268,13 +268,9 @@ Student logs in ──▸ Must change password on first login
 
 ---
 
-## Available Courses
+## Available Programs
 
-| Course | Duration | Price |
-|--------|----------|-------|
-| Medical Virtual Assistant | 8 weeks | PHP 15,000 |
-| Real Estate Virtual Assistant | 8 weeks | PHP 12,000 |
-| US Bookkeeping Virtual Assistant | 8 weeks | PHP 12,000 |
+Courses are fully configurable from the Admin Dashboard. The platform supports any training program — professional skills, technical courses, certifications, and more.
 
 ---
 
@@ -311,7 +307,7 @@ NEXTAUTH_URL="http://localhost:3000"
 # Email - Gmail SMTP (Required)
 GMAIL_USER="your-email@gmail.com"
 GMAIL_APP_PASSWORD="your-app-password"
-EMAIL_FROM_NAME="VA Training Center"
+EMAIL_FROM_NAME="HUMI Training Hub"
 EMAIL_FROM_ADDRESS="your-email@gmail.com"
 
 # AI Features (Required for AI features)
@@ -351,7 +347,7 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000).
 
 ### Default Admin Credentials
-- **Email:** admin@vatrainingcenter.com
+- **Email:** admin@humitraininghub.com
 - **Password:** Admin@123456!
 
 ---

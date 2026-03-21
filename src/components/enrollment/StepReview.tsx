@@ -12,12 +12,6 @@ import type { Course, CourseTier } from "@prisma/client";
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-interface PublicTrainer {
-  readonly id: string;
-  readonly name: string;
-  readonly photoUrl: string | null;
-}
-
 interface ScheduleInfo {
   readonly id: string;
   readonly name: string;
@@ -91,7 +85,6 @@ function getCourseTierPrice(
 export function StepReview({ form, courses }: StepReviewProps) {
   const data = useWatch({ control: form.control });
   const course = courses.find((c) => c.id === data.courseId);
-  const [trainerName, setTrainerName] = useState<string | null>(null);
   const [scheduleName, setScheduleName] = useState<string | null>(null);
   const [scheduleInfo, setScheduleInfo] = useState<ScheduleInfo | null>(null);
   const [courseTierPricing, setCourseTierPricing] = useState<CourseTierPricing | null>(null);
@@ -118,32 +111,6 @@ export function StepReview({ form, courses }: StepReviewProps) {
     }
     fetchPricing();
   }, [data.courseId]);
-
-  // Fetch trainer name if one was selected
-  useEffect(() => {
-    if (!data.trainerId) {
-      setTrainerName(null);
-      return;
-    }
-
-    async function fetchTrainer() {
-      try {
-        const res = await fetch("/api/public/trainers");
-        const json = await res.json();
-        if (json.success) {
-          const found = (json.data as ReadonlyArray<PublicTrainer>).find(
-            (t) => t.id === data.trainerId,
-          );
-          if (found) {
-            setTrainerName(found.name);
-          }
-        }
-      } catch {
-        /* silent */
-      }
-    }
-    fetchTrainer();
-  }, [data.trainerId]);
 
   // Fetch schedule info if one was selected
   useEffect(() => {
@@ -214,16 +181,12 @@ export function StepReview({ form, courses }: StepReviewProps) {
         </dl>
       </div>
 
-      {/* Trainer & Pricing */}
+      {/* Pricing */}
       <div className="bg-gray-50 rounded-xl p-5">
         <h3 className="font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wide">
-          Trainer & Pricing
+          Pricing
         </h3>
         <dl>
-          <ReviewRow
-            label="Trainer"
-            value={trainerName ?? "Auto-assign Trainer"}
-          />
           <ReviewRow
             label="Course Tier Price"
             value={`\u20B1${courseTierPrice.toLocaleString()}`}
