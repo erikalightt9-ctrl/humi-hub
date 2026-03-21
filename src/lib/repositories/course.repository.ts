@@ -185,9 +185,11 @@ export async function createCourse(
       description: data.description,
       durationWeeks: data.durationWeeks,
       price: data.price,
+      // All tier prices fall back to the base price so every new course
+      // starts with consistent pricing rather than stale hardcoded defaults.
       priceBasic: data.priceBasic ?? data.price,
-      priceProfessional: data.priceProfessional ?? 3500,
-      priceAdvanced: data.priceAdvanced ?? 5500,
+      priceProfessional: data.priceProfessional ?? data.price,
+      priceAdvanced: data.priceAdvanced ?? data.price,
       currency: data.currency ?? "PHP",
       outcomes: [...data.outcomes],
       ...(data.featuresBasic && { featuresBasic: [...data.featuresBasic] }),
