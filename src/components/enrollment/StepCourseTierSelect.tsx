@@ -113,6 +113,7 @@ export function StepCourseTierSelect({ form, courseId }: StepCourseTierSelectPro
       const res = await fetch(`/api/courses/${courseId}/pricing`, {
         cache: "no-store",
       });
+      if (!res.ok) return; // non-2xx: skip update, keep last-known-good pricing
       const data = await res.json();
       if (data.success) setPricing(data.data);
     } catch {

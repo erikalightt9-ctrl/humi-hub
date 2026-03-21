@@ -87,12 +87,18 @@ export function EnrollmentForm({ courses }: EnrollmentFormProps) {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        // Guard: if the saved courseId is no longer in the active course list
+        // (e.g. course was deleted or deactivated), fall back to the first course.
+        const validIds = new Set(courses.map((c) => c.id));
+        if (parsed.courseId && !validIds.has(parsed.courseId)) {
+          parsed.courseId = courses[0]?.id ?? "";
+        }
         reset(parsed);
       } catch {
         // ignore corrupted draft
       }
     }
-  }, [reset]);
+  }, [reset, courses]);
 
   useEffect(() => {
     const subscription = form.watch((values) => {

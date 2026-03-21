@@ -742,15 +742,31 @@ export function CourseManager() {
 
               {/* Footer */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <span className="flex items-center gap-1">
+                <div className="flex flex-col gap-1">
+                  <span className="flex items-center gap-1 text-sm text-gray-600">
                     <Clock className="h-3.5 w-3.5" />
                     {course.durationWeeks}w
                   </span>
-                  <span className="flex items-center gap-1">
-                    {CURRENCY_SYMBOLS[(course.currency as CurrencyCode) || "PHP"]}
-                    {Number(course.price).toLocaleString()}
-                  </span>
+                  {/* Show tier prices — these are what students see on the enrollment page */}
+                  <div className="flex items-center gap-1.5 text-xs flex-wrap">
+                    <span className="text-gray-400">Basic:</span>
+                    <span className="font-semibold text-gray-700">
+                      {CURRENCY_SYMBOLS[(course.currency as CurrencyCode) || "PHP"]}
+                      {Number(course.priceBasic).toLocaleString()}
+                    </span>
+                    <span className="text-gray-300">·</span>
+                    <span className="text-gray-400">Pro:</span>
+                    <span className="font-semibold text-gray-700">
+                      {CURRENCY_SYMBOLS[(course.currency as CurrencyCode) || "PHP"]}
+                      {Number(course.priceProfessional).toLocaleString()}
+                    </span>
+                    <span className="text-gray-300">·</span>
+                    <span className="text-gray-400">Adv:</span>
+                    <span className="font-semibold text-gray-700">
+                      {CURRENCY_SYMBOLS[(course.currency as CurrencyCode) || "PHP"]}
+                      {Number(course.priceAdvanced).toLocaleString()}
+                    </span>
+                  </div>
                 </div>
                 <button
                   type="button"
