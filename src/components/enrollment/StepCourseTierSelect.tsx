@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { CheckCircle, Loader2, Star, Zap, Crown } from "lucide-react";
 import type { EnrollmentFormData } from "@/lib/validations/enrollment.schema";
+import { type DiscountConfig, formatDiscountLabel } from "@/lib/types/discount";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -15,6 +16,12 @@ interface CoursePricing {
   readonly priceBasic: number;
   readonly priceProfessional: number;
   readonly priceAdvanced: number;
+  readonly finalPriceBasic: number;
+  readonly finalPriceProfessional: number;
+  readonly finalPriceAdvanced: number;
+  readonly discountBasic: DiscountConfig | null;
+  readonly discountProfessional: DiscountConfig | null;
+  readonly discountAdvanced: DiscountConfig | null;
   readonly featuresBasic: readonly string[];
   readonly featuresProfessional: readonly string[];
   readonly featuresAdvanced: readonly string[];
@@ -27,7 +34,7 @@ interface StepCourseTierSelectProps {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Constants — UI-only config (no pricing or features)               */
+/*  Constants — UI-only config                                         */
 /* ------------------------------------------------------------------ */
 
 const TIER_UI: Readonly<
@@ -41,6 +48,8 @@ const TIER_UI: Readonly<
       readonly badge: string;
       readonly icon: typeof Star;
       readonly priceKey: keyof Pick<CoursePricing, "priceBasic" | "priceProfessional" | "priceAdvanced">;
+      readonly finalPriceKey: keyof Pick<CoursePricing, "finalPriceBasic" | "finalPriceProfessional" | "finalPriceAdvanced">;
+      readonly discountKey: keyof Pick<CoursePricing, "discountBasic" | "discountProfessional" | "discountAdvanced">;
       readonly featuresKey: keyof Pick<CoursePricing, "featuresBasic" | "featuresProfessional" | "featuresAdvanced">;
     }
   >
@@ -53,6 +62,8 @@ const TIER_UI: Readonly<
     badge: "bg-gray-100 text-gray-700",
     icon: Star,
     priceKey: "priceBasic",
+    finalPriceKey: "finalPriceBasic",
+    discountKey: "discountBasic",
     featuresKey: "featuresBasic",
   },
   PROFESSIONAL: {
@@ -63,6 +74,8 @@ const TIER_UI: Readonly<
     badge: "bg-blue-100 text-blue-700",
     icon: Zap,
     priceKey: "priceProfessional",
+    finalPriceKey: "finalPriceProfessional",
+    discountKey: "discountProfessional",
     featuresKey: "featuresProfessional",
   },
   ADVANCED: {
@@ -73,6 +86,8 @@ const TIER_UI: Readonly<
     badge: "bg-purple-100 text-purple-700",
     icon: Crown,
     priceKey: "priceAdvanced",
+    finalPriceKey: "finalPriceAdvanced",
+    discountKey: "discountAdvanced",
     featuresKey: "featuresAdvanced",
   },
 };
@@ -83,22 +98,39 @@ const TIER_ORDER: readonly CourseTierValue[] = ["BASIC", "PROFESSIONAL", "ADVANC
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
+const POLL_INTERVAL_MS = 5_000; // re-fetch every 5 s while visible
+
 export function StepCourseTierSelect({ form, courseId }: StepCourseTierSelectProps) {
   const [pricing, setPricing] = useState<CoursePricing | null>(null);
   const [loading, setLoading] = useState(true);
   const selectedTier = form.watch("courseTier") as CourseTierValue | undefined;
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
+  const fetchPricing = useCallback(async (isInitial = false) => {
     if (!courseId) return;
-    setLoading(true);
-    fetch(`/api/courses/${courseId}/pricing`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success) setPricing(data.data);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    if (isInitial) setLoading(true);
+    try {
+      const res = await fetch(`/api/courses/${courseId}/pricing`, {
+        cache: "no-store",
+      });
+      if (!res.ok) return; // non-2xx: skip update, keep last-known-good pricing
+      const data = await res.json();
+      if (data.success) setPricing(data.data);
+    } catch {
+      // silently ignore network errors on background polls
+    } finally {
+      if (isInitial) setLoading(false);
+    }
   }, [courseId]);
+
+  // Initial fetch + start polling while this step is mounted
+  useEffect(() => {
+    fetchPricing(true);
+    intervalRef.current = setInterval(() => fetchPricing(false), POLL_INTERVAL_MS);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [fetchPricing]);
 
   function selectTier(tier: CourseTierValue) {
     form.setValue("courseTier", tier, { shouldValidate: true });
@@ -128,8 +160,12 @@ export function StepCourseTierSelect({ form, courseId }: StepCourseTierSelectPro
           const isSelected = selectedTier === tierKey;
           const isPopular = pricing?.popularTier === tierKey;
           const Icon = ui.icon;
+
           const tierPrice = pricing ? pricing[ui.priceKey] : 0;
+          const finalPrice = pricing ? pricing[ui.finalPriceKey] : 0;
+          const discount = pricing ? pricing[ui.discountKey] : null;
           const features: readonly string[] = pricing ? pricing[ui.featuresKey] : [];
+          const hasDiscount = !!discount && discount.active && finalPrice < tierPrice;
 
           return (
             <button
@@ -164,10 +200,20 @@ export function StepCourseTierSelect({ form, courseId }: StepCourseTierSelectPro
                 </span>
               </div>
 
-              {/* Price */}
-              <div className="mb-3">
+              {/* Price display */}
+              <div className="mb-3 space-y-0.5">
+                {hasDiscount && discount && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm line-through text-gray-400">
+                      ₱{tierPrice.toLocaleString()}
+                    </span>
+                    <span className="text-xs font-semibold bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full">
+                      {formatDiscountLabel(discount)}
+                    </span>
+                  </div>
+                )}
                 <span className="text-2xl font-bold text-gray-900">
-                  ₱{tierPrice.toLocaleString()}
+                  ₱{(hasDiscount ? finalPrice : tierPrice).toLocaleString()}
                 </span>
               </div>
 

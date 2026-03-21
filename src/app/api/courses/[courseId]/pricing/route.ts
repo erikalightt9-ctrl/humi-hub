@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { computeTierFinalPrices } from "@/lib/repositories/course.repository";
+
+// Always read live pricing from DB — never serve a cached response
+export const dynamic = "force-dynamic";
 
 export async function GET(
   _request: NextRequest,
@@ -18,6 +22,9 @@ export async function GET(
         featuresProfessional: true,
         featuresAdvanced: true,
         popularTier: true,
+        discountBasic: true,
+        discountProfessional: true,
+        discountAdvanced: true,
       },
     });
 
@@ -28,12 +35,12 @@ export async function GET(
       );
     }
 
+    const prices = computeTierFinalPrices(course);
+
     return NextResponse.json({
       success: true,
       data: {
-        priceBasic: Number(course.priceBasic),
-        priceProfessional: Number(course.priceProfessional),
-        priceAdvanced: Number(course.priceAdvanced),
+        ...prices,
         featuresBasic: course.featuresBasic,
         featuresProfessional: course.featuresProfessional,
         featuresAdvanced: course.featuresAdvanced,

@@ -10,6 +10,32 @@ export const CURRENCY_SYMBOLS: Readonly<Record<CurrencyCode, string>> = {
   GBP: "£",
 };
 
+/* ------------------------------------------------------------------ */
+/*  Discount config schema                                              */
+/* ------------------------------------------------------------------ */
+
+const discountConfigSchema = z
+  .union([
+    z.object({
+      type: z.literal("percent"),
+      value: z.number().min(0).max(100, "Percent discount must be 0–100"),
+      active: z.boolean(),
+    }),
+    z.object({
+      type: z.literal("fixed"),
+      value: z.number().min(0, "Discount value must be 0 or greater"),
+      active: z.boolean(),
+    }),
+  ])
+  .nullable()
+  .optional();
+
+export type DiscountConfigInput = z.infer<typeof discountConfigSchema>;
+
+/* ------------------------------------------------------------------ */
+/*  Course schemas                                                      */
+/* ------------------------------------------------------------------ */
+
 export const createCourseSchema = z.object({
   slug: z
     .string()
@@ -57,6 +83,9 @@ export const createCourseSchema = z.object({
     .array(z.string().min(1, "Outcome cannot be empty"))
     .min(1, "At least one outcome is required"),
   isActive: z.boolean().optional(),
+  discountBasic: discountConfigSchema,
+  discountProfessional: discountConfigSchema,
+  discountAdvanced: discountConfigSchema,
 });
 
 export const updateCourseSchema = createCourseSchema.partial();
