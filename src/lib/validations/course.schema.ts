@@ -42,6 +42,16 @@ export const createCourseSchema = z.object({
   priceBasic: z.number().min(0, "Basic price must be 0 or greater").optional(),
   priceProfessional: z.number().min(0, "Professional price must be 0 or greater").optional(),
   priceAdvanced: z.number().min(0, "Advanced price must be 0 or greater").optional(),
+  featuresBasic: z
+    .array(z.string().min(1, "Feature cannot be empty"))
+    .optional(),
+  featuresProfessional: z
+    .array(z.string().min(1, "Feature cannot be empty"))
+    .optional(),
+  featuresAdvanced: z
+    .array(z.string().min(1, "Feature cannot be empty"))
+    .optional(),
+  popularTier: z.string().nullable().optional(),
   outcomes: z
     .array(z.string().min(1, "Outcome cannot be empty"))
     .min(1, "At least one outcome is required"),

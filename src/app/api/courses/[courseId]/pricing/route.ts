@@ -14,6 +14,10 @@ export async function GET(
         priceBasic: true,
         priceProfessional: true,
         priceAdvanced: true,
+        featuresBasic: true,
+        featuresProfessional: true,
+        featuresAdvanced: true,
+        popularTier: true,
       },
     });
 
@@ -30,6 +34,10 @@ export async function GET(
         priceBasic: Number(course.priceBasic),
         priceProfessional: Number(course.priceProfessional),
         priceAdvanced: Number(course.priceAdvanced),
+        featuresBasic: course.featuresBasic,
+        featuresProfessional: course.featuresProfessional,
+        featuresAdvanced: course.featuresAdvanced,
+        popularTier: course.popularTier ?? null,
       },
       error: null,
     });

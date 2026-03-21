@@ -47,6 +47,10 @@ interface Course {
   readonly priceAdvanced: string;
   readonly currency: string;
   readonly outcomes: ReadonlyArray<string>;
+  readonly featuresBasic: ReadonlyArray<string>;
+  readonly featuresProfessional: ReadonlyArray<string>;
+  readonly featuresAdvanced: ReadonlyArray<string>;
+  readonly popularTier: string | null;
   readonly isActive: boolean;
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -64,12 +68,43 @@ interface FormState {
   readonly priceAdvanced: number;
   readonly currency: CurrencyCode;
   readonly outcomes: ReadonlyArray<string>;
+  readonly featuresBasic: ReadonlyArray<string>;
+  readonly featuresProfessional: ReadonlyArray<string>;
+  readonly featuresAdvanced: ReadonlyArray<string>;
+  readonly popularTier: string | null;
   readonly isActive: boolean;
 }
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
+
+const DEFAULT_FEATURES_BASIC = [
+  "Introduction modules",
+  "Core concept lessons",
+  "Beginner exercises",
+  "Simple quizzes",
+  "Basic certificate",
+];
+
+const DEFAULT_FEATURES_PROFESSIONAL = [
+  "Everything in Basic",
+  "Case studies",
+  "Hands-on exercises",
+  "Applied quizzes",
+  "Professional certificate",
+  "Community access",
+];
+
+const DEFAULT_FEATURES_ADVANCED = [
+  "Everything in Professional",
+  "Industry tools training",
+  "Real-world scenarios",
+  "Mastery assessments",
+  "Advanced certificate",
+  "1-on-1 mentoring",
+  "Job placement support",
+];
 
 const INITIAL_FORM_STATE: FormState = {
   slug: "",
@@ -82,6 +117,10 @@ const INITIAL_FORM_STATE: FormState = {
   priceAdvanced: 5500,
   currency: "PHP",
   outcomes: [""],
+  featuresBasic: DEFAULT_FEATURES_BASIC,
+  featuresProfessional: DEFAULT_FEATURES_PROFESSIONAL,
+  featuresAdvanced: DEFAULT_FEATURES_ADVANCED,
+  popularTier: null,
   isActive: true,
 };
 
@@ -127,6 +166,10 @@ export function CourseManager() {
   const [outcomes, setOutcomes] = useState<ReadonlyArray<string>>(
     INITIAL_FORM_STATE.outcomes,
   );
+  const [featuresBasic, setFeaturesBasic] = useState<ReadonlyArray<string>>(INITIAL_FORM_STATE.featuresBasic);
+  const [featuresProfessional, setFeaturesProfessional] = useState<ReadonlyArray<string>>(INITIAL_FORM_STATE.featuresProfessional);
+  const [featuresAdvanced, setFeaturesAdvanced] = useState<ReadonlyArray<string>>(INITIAL_FORM_STATE.featuresAdvanced);
+  const [popularTier, setPopularTier] = useState<string | null>(INITIAL_FORM_STATE.popularTier);
   const [isActive, setIsActive] = useState(INITIAL_FORM_STATE.isActive);
 
   /* ---------------------------------------------------------------- */
@@ -168,6 +211,10 @@ export function CourseManager() {
     setPriceAdvanced(INITIAL_FORM_STATE.priceAdvanced);
     setCurrency(INITIAL_FORM_STATE.currency);
     setOutcomes(INITIAL_FORM_STATE.outcomes);
+    setFeaturesBasic(INITIAL_FORM_STATE.featuresBasic);
+    setFeaturesProfessional(INITIAL_FORM_STATE.featuresProfessional);
+    setFeaturesAdvanced(INITIAL_FORM_STATE.featuresAdvanced);
+    setPopularTier(INITIAL_FORM_STATE.popularTier);
     setIsActive(INITIAL_FORM_STATE.isActive);
     setEditingId(null);
     setFormError(null);
@@ -189,6 +236,10 @@ export function CourseManager() {
     setPriceAdvanced(Number(course.priceAdvanced));
     setCurrency((course.currency as CurrencyCode) || "PHP");
     setOutcomes(course.outcomes.length > 0 ? course.outcomes : [""]);
+    setFeaturesBasic(course.featuresBasic.length > 0 ? course.featuresBasic : DEFAULT_FEATURES_BASIC);
+    setFeaturesProfessional(course.featuresProfessional.length > 0 ? course.featuresProfessional : DEFAULT_FEATURES_PROFESSIONAL);
+    setFeaturesAdvanced(course.featuresAdvanced.length > 0 ? course.featuresAdvanced : DEFAULT_FEATURES_ADVANCED);
+    setPopularTier(course.popularTier ?? null);
     setIsActive(course.isActive);
     setEditingId(course.id);
     setFormError(null);
@@ -249,6 +300,10 @@ export function CourseManager() {
       priceAdvanced,
       currency,
       outcomes: trimmedOutcomes,
+      featuresBasic: featuresBasic.map((f) => f.trim()).filter((f) => f.length > 0),
+      featuresProfessional: featuresProfessional.map((f) => f.trim()).filter((f) => f.length > 0),
+      featuresAdvanced: featuresAdvanced.map((f) => f.trim()).filter((f) => f.length > 0),
+      popularTier: popularTier || null,
       isActive,
     };
 
@@ -504,51 +559,147 @@ export function CourseManager() {
               </div>
             </div>
 
-            {/* Tier Pricing */}
+            {/* Tier Pricing & Features */}
             <div>
-              <Label className="mb-2 block">Course Tier Pricing</Label>
+              <div className="flex items-center justify-between mb-1">
+                <Label className="block">Course Tier Pricing & Features</Label>
+              </div>
               <p className="text-xs text-gray-500 mb-3">
-                Set different prices for each enrollment tier.
+                Set price and features for each enrollment tier. Features sync automatically to the enrollment page.
               </p>
+
+              {/* Popular Tier selector */}
+              <div className="mb-4">
+                <Label htmlFor="c-popular-tier" className="text-xs text-gray-600">Most Popular Tier</Label>
+                <select
+                  id="c-popular-tier"
+                  value={popularTier ?? ""}
+                  onChange={(e) => setPopularTier(e.target.value || null)}
+                  className="flex h-9 w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring mt-1"
+                >
+                  <option value="">None</option>
+                  <option value="BASIC">Basic</option>
+                  <option value="PROFESSIONAL">Professional</option>
+                  <option value="ADVANCED">Advanced</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="border border-gray-200 rounded-lg p-3">
-                  <Label htmlFor="c-price-basic" className="text-gray-600 text-xs">
-                    Basic Tier
-                  </Label>
-                  <Input
-                    id="c-price-basic"
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={priceBasic}
-                    onChange={(e) => setPriceBasic(parseFloat(e.target.value) || 0)}
-                  />
+                {/* Basic Tier */}
+                <div className="border border-gray-200 rounded-lg p-3 space-y-2">
+                  <p className="text-gray-700 text-xs font-semibold uppercase tracking-wide">Basic</p>
+                  <div>
+                    <Label htmlFor="c-price-basic" className="text-gray-500 text-xs">Price (₱)</Label>
+                    <Input
+                      id="c-price-basic"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={priceBasic}
+                      onChange={(e) => setPriceBasic(parseFloat(e.target.value) || 0)}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-gray-500 text-xs">Features</Label>
+                    <div className="space-y-1 mt-1">
+                      {featuresBasic.map((f, i) => (
+                        <div key={i} className="flex gap-1">
+                          <Input
+                            value={f}
+                            onChange={(e) => setFeaturesBasic(featuresBasic.map((x, j) => j === i ? e.target.value : x))}
+                            placeholder={`Feature ${i + 1}`}
+                            className="text-xs h-7"
+                          />
+                          {featuresBasic.length > 1 && (
+                            <button type="button" onClick={() => setFeaturesBasic(featuresBasic.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600 shrink-0">
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <button type="button" onClick={() => setFeaturesBasic([...featuresBasic, ""])} className="text-xs text-gray-500 hover:text-gray-700 mt-1 flex items-center gap-1">
+                      <Plus className="h-3 w-3" /> Add feature
+                    </button>
+                  </div>
                 </div>
-                <div className="border border-blue-200 rounded-lg p-3 bg-blue-50/30">
-                  <Label htmlFor="c-price-pro" className="text-blue-700 text-xs">
-                    Professional Tier
-                  </Label>
-                  <Input
-                    id="c-price-pro"
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={priceProfessional}
-                    onChange={(e) => setPriceProfessional(parseFloat(e.target.value) || 0)}
-                  />
+
+                {/* Professional Tier */}
+                <div className="border border-blue-200 rounded-lg p-3 bg-blue-50/30 space-y-2">
+                  <p className="text-blue-700 text-xs font-semibold uppercase tracking-wide">Professional</p>
+                  <div>
+                    <Label htmlFor="c-price-pro" className="text-blue-600 text-xs">Price (₱)</Label>
+                    <Input
+                      id="c-price-pro"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={priceProfessional}
+                      onChange={(e) => setPriceProfessional(parseFloat(e.target.value) || 0)}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-blue-600 text-xs">Features</Label>
+                    <div className="space-y-1 mt-1">
+                      {featuresProfessional.map((f, i) => (
+                        <div key={i} className="flex gap-1">
+                          <Input
+                            value={f}
+                            onChange={(e) => setFeaturesProfessional(featuresProfessional.map((x, j) => j === i ? e.target.value : x))}
+                            placeholder={`Feature ${i + 1}`}
+                            className="text-xs h-7"
+                          />
+                          {featuresProfessional.length > 1 && (
+                            <button type="button" onClick={() => setFeaturesProfessional(featuresProfessional.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600 shrink-0">
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <button type="button" onClick={() => setFeaturesProfessional([...featuresProfessional, ""])} className="text-xs text-blue-500 hover:text-blue-700 mt-1 flex items-center gap-1">
+                      <Plus className="h-3 w-3" /> Add feature
+                    </button>
+                  </div>
                 </div>
-                <div className="border border-purple-200 rounded-lg p-3 bg-purple-50/30">
-                  <Label htmlFor="c-price-adv" className="text-purple-700 text-xs">
-                    Advanced Tier
-                  </Label>
-                  <Input
-                    id="c-price-adv"
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={priceAdvanced}
-                    onChange={(e) => setPriceAdvanced(parseFloat(e.target.value) || 0)}
-                  />
+
+                {/* Advanced Tier */}
+                <div className="border border-purple-200 rounded-lg p-3 bg-purple-50/30 space-y-2">
+                  <p className="text-purple-700 text-xs font-semibold uppercase tracking-wide">Advanced</p>
+                  <div>
+                    <Label htmlFor="c-price-adv" className="text-purple-600 text-xs">Price (₱)</Label>
+                    <Input
+                      id="c-price-adv"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={priceAdvanced}
+                      onChange={(e) => setPriceAdvanced(parseFloat(e.target.value) || 0)}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-purple-600 text-xs">Features</Label>
+                    <div className="space-y-1 mt-1">
+                      {featuresAdvanced.map((f, i) => (
+                        <div key={i} className="flex gap-1">
+                          <Input
+                            value={f}
+                            onChange={(e) => setFeaturesAdvanced(featuresAdvanced.map((x, j) => j === i ? e.target.value : x))}
+                            placeholder={`Feature ${i + 1}`}
+                            className="text-xs h-7"
+                          />
+                          {featuresAdvanced.length > 1 && (
+                            <button type="button" onClick={() => setFeaturesAdvanced(featuresAdvanced.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600 shrink-0">
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <button type="button" onClick={() => setFeaturesAdvanced([...featuresAdvanced, ""])} className="text-xs text-purple-500 hover:text-purple-700 mt-1 flex items-center gap-1">
+                      <Plus className="h-3 w-3" /> Add feature
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
