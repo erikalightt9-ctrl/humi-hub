@@ -12,6 +12,7 @@ import {
   FileText,
   Clock,
   GraduationCap,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -159,6 +160,7 @@ export function CourseManager() {
   const [courses, setCourses] = useState<ReadonlyArray<Course>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Form state
   const [showForm, setShowForm] = useState(false);
@@ -426,17 +428,41 @@ export function CourseManager() {
   /*  Render                                                           */
   /* ---------------------------------------------------------------- */
 
+  const filteredCourses = searchQuery.trim()
+    ? courses.filter((c) => {
+        const q = searchQuery.toLowerCase();
+        return (
+          c.title.toLowerCase().includes(q) ||
+          (c.industry ?? "").toLowerCase().includes(q) ||
+          c.description.toLowerCase().includes(q)
+        );
+      })
+    : courses;
+
   return (
     <div className="space-y-6">
       {/* Header bar */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">
-          {courses.length} course{courses.length !== 1 ? "s" : ""}
-        </p>
-        <Button className="gap-1.5" onClick={openCreateForm}>
-          <Plus className="h-4 w-4" />
-          Create Course
-        </Button>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1 sm:max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          <Input
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search courses…"
+            className="pl-9"
+            aria-label="Search courses"
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-gray-500 whitespace-nowrap">
+            {filteredCourses.length} / {courses.length} course{courses.length !== 1 ? "s" : ""}
+          </p>
+          <Button className="gap-1.5" onClick={openCreateForm}>
+            <Plus className="h-4 w-4" />
+            Create Course
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -835,9 +861,25 @@ export function CourseManager() {
             Create First Course
           </Button>
         </div>
+      ) : filteredCourses.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-10 text-center">
+          <Search className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+          <p className="text-gray-700 font-medium">No courses match your search</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Try a different keyword or{" "}
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="text-blue-600 underline hover:text-blue-700"
+            >
+              clear the search
+            </button>
+            .
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {courses.map((course) => (
+          {filteredCourses.map((course) => (
             <div
               key={course.id}
               className={`bg-white rounded-xl border p-6 hover:shadow-md transition-shadow ${

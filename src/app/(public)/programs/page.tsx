@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
-import { CourseCard } from "@/components/public/CourseCard";
 import { prisma } from "@/lib/prisma";
 import { resolveTenantFromSubdomain } from "@/lib/tenant";
+import { SearchableCourseGrid } from "@/components/public/SearchableCourseGrid";
 
 export const metadata: Metadata = {
   title: "Programs — HUMI Training Center",
@@ -10,14 +10,8 @@ export const metadata: Metadata = {
     "Explore HUMI Training Center's professional training programs across multiple industries. Designed by industry experts for global employers.",
 };
 
-function buildCourseHrefs(
-  courses: readonly { readonly slug: string }[],
-): Record<string, string> {
-  const hrefs: Record<string, string> = {};
-  for (const c of courses) {
-    hrefs[c.slug] = `/programs/${c.slug.toLowerCase().replace(/_/g, "-")}`;
-  }
-  return hrefs;
+function resolveHref(slug: string): string {
+  return `/programs/${slug.toLowerCase().replace(/_/g, "-")}`;
 }
 
 interface ProgramsPageProps {
@@ -35,9 +29,22 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
       ...(industry ? { industry } : {}),
     },
     orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      description: true,
+      durationWeeks: true,
+      price: true,
+      currency: true,
+      industry: true,
+    },
   });
 
-  const courseHrefs = buildCourseHrefs(courses);
+  const initialCourses = courses.map((c) => ({
+    ...c,
+    price: c.price.toString(),
+  }));
 
   return (
     <div className="bg-white">
@@ -63,29 +70,14 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
         </div>
       </section>
 
-      {/* Programs Grid */}
+      {/* Programs Grid with Search */}
       <section className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
-          {courses.length === 0 ? (
-            <p className="text-center text-gray-500 py-12">
-              No programs found{industry ? ` for "${industry}"` : ""}.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {courses.map((course) => (
-                <CourseCard
-                  key={course.id}
-                  title={course.title}
-                  description={course.description}
-                  durationWeeks={course.durationWeeks}
-                  price={course.price.toString()}
-                  currency={course.currency}
-                  slug={course.slug}
-                  href={courseHrefs[course.slug] ?? "/programs"}
-                />
-              ))}
-            </div>
-          )}
+          <SearchableCourseGrid
+            initialCourses={initialCourses}
+            industry={industry}
+            resolveHref={resolveHref}
+          />
         </div>
       </section>
     </div>
