@@ -131,7 +131,7 @@ export default async function PaymentPage({
               <PayOnlineButton enrollmentId={enrollmentId} />
 
               <p className="text-xs text-gray-400 text-center mt-4">
-                Secure payment via GCash, PayMaya, or Credit/Debit Card
+                Secure payment via GCash / PayMaya / Card (PayMongo) or Stripe
               </p>
             </>
           )}

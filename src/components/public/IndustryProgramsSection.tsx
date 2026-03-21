@@ -28,11 +28,11 @@ interface IndustryTheme {
   readonly tag: string;
 }
 
-/** Map a course slug to an industry look & feel */
-function getThemeForSlug(slug: string): IndustryTheme {
-  const s = slug.toUpperCase();
+/** Map a course industry name or slug to an industry look & feel */
+function getThemeForSlug(industryOrSlug: string): IndustryTheme {
+  const s = industryOrSlug.toUpperCase().replace(/[\s-]/g, "_");
 
-  if (s.includes("MEDICAL") || s.includes("HEALTH"))
+  if (s.includes("MEDICAL") || s.includes("HEALTH") || s.includes("HEALTHCARE"))
     return {
       icon: Stethoscope,
       color: "bg-red-50 border-red-100 hover:border-red-200",
@@ -123,6 +123,7 @@ interface ProgramCourse {
   readonly title: string;
   readonly description: string;
   readonly slug: string;
+  readonly industry: string | null;
   readonly durationWeeks: number;
   readonly price: { toString(): string };
   readonly currency: string;
@@ -171,8 +172,9 @@ export function IndustryProgramsSection({
         {/* Program Cards */}
         <div className={`grid grid-cols-1 sm:grid-cols-2 ${gridCols} gap-6`}>
           {courses.map((course) => {
-            const theme = getThemeForSlug(course.slug);
+            const theme = getThemeForSlug(course.industry ?? course.slug);
             const Icon = theme.icon;
+            const industryTag = course.industry ?? theme.tag;
             const priceNum = parseFloat(course.price.toString());
             const symbol =
               CURRENCY_SYMBOLS[course.currency as CurrencyCode] ?? "₱";
@@ -193,7 +195,7 @@ export function IndustryProgramsSection({
                   <span
                     className={`text-xs font-semibold px-2.5 py-1 rounded-full ${theme.iconBg} ${theme.iconColor}`}
                   >
-                    {theme.tag}
+                    {industryTag}
                   </span>
                 </div>
 

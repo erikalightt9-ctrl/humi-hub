@@ -15,6 +15,11 @@ interface CreateCourseData {
   readonly priceAdvanced?: number;
   readonly currency?: string;
   readonly outcomes: ReadonlyArray<string>;
+  readonly featuresBasic?: ReadonlyArray<string>;
+  readonly featuresProfessional?: ReadonlyArray<string>;
+  readonly featuresAdvanced?: ReadonlyArray<string>;
+  readonly popularTier?: string | null;
+  readonly industry?: string;
   readonly isActive?: boolean;
 }
 
@@ -29,6 +34,11 @@ interface UpdateCourseData {
   readonly priceAdvanced?: number;
   readonly currency?: string;
   readonly outcomes?: ReadonlyArray<string>;
+  readonly featuresBasic?: ReadonlyArray<string>;
+  readonly featuresProfessional?: ReadonlyArray<string>;
+  readonly featuresAdvanced?: ReadonlyArray<string>;
+  readonly popularTier?: string | null;
+  readonly industry?: string;
   readonly isActive?: boolean;
 }
 
@@ -136,6 +146,11 @@ export async function createCourse(
       priceAdvanced: data.priceAdvanced ?? 5500,
       currency: data.currency ?? "PHP",
       outcomes: [...data.outcomes],
+      ...(data.featuresBasic && { featuresBasic: [...data.featuresBasic] }),
+      ...(data.featuresProfessional && { featuresProfessional: [...data.featuresProfessional] }),
+      ...(data.featuresAdvanced && { featuresAdvanced: [...data.featuresAdvanced] }),
+      ...(data.popularTier !== undefined && { popularTier: data.popularTier }),
+      ...(data.industry !== undefined && { industry: data.industry }),
       isActive: data.isActive ?? true,
       ...(data.tenantId && { tenantId: data.tenantId }),
     },
@@ -163,6 +178,11 @@ export async function updateCourse(
       ...(data.priceAdvanced !== undefined && { priceAdvanced: data.priceAdvanced }),
       ...(data.currency !== undefined && { currency: data.currency }),
       ...(data.outcomes !== undefined && { outcomes: [...data.outcomes] }),
+      ...(data.featuresBasic !== undefined && { featuresBasic: [...data.featuresBasic] }),
+      ...(data.featuresProfessional !== undefined && { featuresProfessional: [...data.featuresProfessional] }),
+      ...(data.featuresAdvanced !== undefined && { featuresAdvanced: [...data.featuresAdvanced] }),
+      ...(data.popularTier !== undefined && { popularTier: data.popularTier }),
+      ...(data.industry !== undefined && { industry: data.industry }),
       ...(data.isActive !== undefined && { isActive: data.isActive }),
     },
   });
