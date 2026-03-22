@@ -49,6 +49,7 @@ export async function POST(
       authorId: actor.actorId,
       content: result.data.content,
       isInternal,
+      attachments: result.data.attachments,
     });
 
     return NextResponse.json({ success: true, data: response, error: null }, { status: 201 });

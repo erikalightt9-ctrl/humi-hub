@@ -1333,6 +1333,7 @@ model SupportTicket {
   submitterType ActorType
   submitterId   String
   assignedToId  String?
+  slaDeadline   DateTime?
   resolvedAt    DateTime?
   closedAt      DateTime?
   createdAt     DateTime       @default(now())
@@ -1345,18 +1346,20 @@ model SupportTicket {
   @@index([referenceNo])
   @@index([category])
   @@index([createdAt])
+  @@index([slaDeadline])
   @@map("support_tickets")
 }
 
 model TicketResponse {
-  id         String        @id @default(cuid())
-  ticketId   String
-  authorType ActorType
-  authorId   String
-  content    String        @db.Text
-  isInternal Boolean       @default(false)
-  createdAt  DateTime      @default(now())
-  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  id          String        @id @default(cuid())
+  ticketId    String
+  authorType  ActorType
+  authorId    String
+  content     String        @db.Text
+  isInternal  Boolean       @default(false)
+  attachments Json?
+  createdAt   DateTime      @default(now())
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@index([ticketId])
   @@map("ticket_responses")

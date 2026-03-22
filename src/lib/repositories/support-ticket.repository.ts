@@ -1,6 +1,25 @@
 import type { ActorType, TicketStatus, TicketPriority, TicketCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { TICKET_REFERENCE_PREFIX } from "@/lib/constants/communications";
+import type { TicketAttachment } from "@/lib/validations/support-ticket.schema";
+
+/* ------------------------------------------------------------------ */
+/*  SLA Deadlines                                                       */
+/* ------------------------------------------------------------------ */
+
+const SLA_HOURS: Record<TicketPriority, number> = {
+  URGENT: 1,
+  HIGH: 4,
+  MEDIUM: 24,
+  LOW: 48,
+};
+
+function computeSlaDeadline(priority: TicketPriority): Date {
+  const hours = SLA_HOURS[priority];
+  const deadline = new Date();
+  deadline.setHours(deadline.getHours() + hours);
+  return deadline;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Interfaces                                                         */
@@ -13,6 +32,14 @@ interface CreateTicketData {
   readonly description: string;
   readonly submitterType: ActorType;
   readonly submitterId: string;
+}
+
+interface CreateResponseData {
+  readonly authorType: ActorType;
+  readonly authorId: string;
+  readonly content: string;
+  readonly isInternal?: boolean;
+  readonly attachments?: readonly TicketAttachment[];
 }
 
 interface TicketFilters {
@@ -44,15 +71,17 @@ function generateReferenceNumber(): string {
 /* ------------------------------------------------------------------ */
 
 export async function createTicket(data: CreateTicketData) {
+  const priority: TicketPriority = data.priority ?? "MEDIUM";
   return prisma.supportTicket.create({
     data: {
       referenceNo: generateReferenceNumber(),
       category: data.category,
-      priority: data.priority ?? "MEDIUM",
+      priority,
       subject: data.subject,
       description: data.description,
       submitterType: data.submitterType,
       submitterId: data.submitterId,
+      slaDeadline: computeSlaDeadline(priority),
     },
   });
 }
@@ -121,7 +150,11 @@ export async function updateTicketStatus(
     if (data.status === "RESOLVED") updateData.resolvedAt = new Date();
     if (data.status === "CLOSED") updateData.closedAt = new Date();
   }
-  if (data.priority !== undefined) updateData.priority = data.priority;
+  if (data.priority !== undefined) {
+    updateData.priority = data.priority;
+    // Recompute SLA when priority changes
+    updateData.slaDeadline = computeSlaDeadline(data.priority);
+  }
   if (data.assignedToId !== undefined) updateData.assignedToId = data.assignedToId;
 
   return prisma.supportTicket.update({
@@ -130,15 +163,7 @@ export async function updateTicketStatus(
   });
 }
 
-export async function createResponse(
-  ticketId: string,
-  data: {
-    readonly authorType: ActorType;
-    readonly authorId: string;
-    readonly content: string;
-    readonly isInternal?: boolean;
-  }
-) {
+export async function createResponse(ticketId: string, data: CreateResponseData) {
   return prisma.ticketResponse.create({
     data: {
       ticketId,
@@ -146,6 +171,28 @@ export async function createResponse(
       authorId: data.authorId,
       content: data.content,
       isInternal: data.isInternal ?? false,
+      attachments: data.attachments ? (data.attachments as object[]) : undefined,
     },
   });
+}
+
+/* ------------------------------------------------------------------ */
+/*  Admin KPI stats                                                    */
+/* ------------------------------------------------------------------ */
+
+export async function getTicketStats() {
+  const now = new Date();
+  const [open, inProgress, resolved, overdue] = await Promise.all([
+    prisma.supportTicket.count({ where: { status: "OPEN" } }),
+    prisma.supportTicket.count({ where: { status: "IN_PROGRESS" } }),
+    prisma.supportTicket.count({ where: { status: "RESOLVED" } }),
+    prisma.supportTicket.count({
+      where: {
+        status: { in: ["OPEN", "IN_PROGRESS"] },
+        slaDeadline: { lt: now },
+      },
+    }),
+  ]);
+
+  return { open, inProgress, resolved, overdue };
 }
