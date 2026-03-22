@@ -13,6 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { COURSE_TIER_LABELS, COURSE_TIER_COLORS } from "@/lib/constants/course-tiers";
 import type { CourseTier } from "@prisma/client";
 import Link from "next/link";
+import { CourseAttendanceButtons } from "@/components/student/CourseAttendanceButtons";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,14 @@ export default async function CourseOverviewPage({
           )}
         </div>
         <p className="text-gray-500 text-sm mt-1">{course.description}</p>
+      </div>
+
+      {/* Attendance */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-gray-900">Attendance</h2>
+        </div>
+        <CourseAttendanceButtons courseId={courseId} />
       </div>
 
       {/* Progress Bar */}

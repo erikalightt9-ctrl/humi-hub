@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Loader2, ShieldCheck } from "lucide-react";
+import { XCircle, Loader2, ShieldCheck, Check } from "lucide-react";
 
 interface PaymentActionsProps {
   paymentId: string;
@@ -35,79 +35,74 @@ export function PaymentActions({ paymentId, status }: PaymentActionsProps) {
         });
       }
     } catch {
-      // Error handled silently, page will refresh
+      // silent — page refresh will reflect updated state
     } finally {
       setActionType(null);
     }
   };
 
-  return (
-    <div className="relative">
-      <div className="flex gap-2">
+  // ── Inline confirmation (no floating/absolute element) ──────────────────
+  if (showConfirm) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-gray-500 whitespace-nowrap">
+          Confirm activation?
+        </span>
         <Button
           size="sm"
-          variant="default"
           className="bg-green-600 hover:bg-green-700 text-white gap-1"
-          onClick={() => setShowConfirm(true)}
+          onClick={() => handleVerify(true)}
           disabled={isPending}
         >
-          {actionType === "approve" ? (
+          {isPending && actionType === "approve" ? (
             <Loader2 className="h-3 w-3 animate-spin" />
           ) : (
-            <ShieldCheck className="h-3 w-3" />
+            <Check className="h-3 w-3" />
           )}
-          Verify &amp; Activate
+          Yes
         </Button>
         <Button
           size="sm"
-          variant="destructive"
-          className="gap-1"
-          onClick={() => handleVerify(false)}
+          variant="outline"
+          onClick={() => setShowConfirm(false)}
           disabled={isPending}
         >
-          {actionType === "reject" ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <XCircle className="h-3 w-3" />
-          )}
-          Reject
+          No
         </Button>
       </div>
+    );
+  }
 
-      {/* Confirmation dialog overlay */}
-      {showConfirm && (
-        <div className="absolute right-0 top-full mt-2 z-50 w-72 bg-white rounded-xl shadow-lg border border-gray-200 p-4">
-          <div className="flex items-start gap-3 mb-3">
-            <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-gray-900">Verify &amp; Activate</p>
-              <p className="text-xs text-gray-500 mt-1">
-                This will create a student account and grant 90-day access. Continue?
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2 justify-end">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowConfirm(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              className="bg-green-600 hover:bg-green-700 text-white"
-              onClick={() => handleVerify(true)}
-              disabled={isPending}
-            >
-              {actionType === "approve" ? (
-                <Loader2 className="h-3 w-3 animate-spin mr-1" />
-              ) : null}
-              Confirm
-            </Button>
-          </div>
-        </div>
-      )}
+  // ── Default: Verify & Reject buttons ────────────────────────────────────
+  return (
+    <div className="flex gap-2">
+      <Button
+        size="sm"
+        className="bg-green-600 hover:bg-green-700 text-white gap-1"
+        onClick={() => setShowConfirm(true)}
+        disabled={isPending}
+      >
+        {actionType === "approve" ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <ShieldCheck className="h-3 w-3" />
+        )}
+        Verify &amp; Activate
+      </Button>
+      <Button
+        size="sm"
+        variant="destructive"
+        className="gap-1"
+        onClick={() => handleVerify(false)}
+        disabled={isPending}
+      >
+        {actionType === "reject" ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <XCircle className="h-3 w-3" />
+        )}
+        Reject
+      </Button>
     </div>
   );
 }

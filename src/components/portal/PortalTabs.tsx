@@ -67,6 +67,10 @@ function LoginPanel({ provider }: { readonly provider: "student" | "admin" | "tr
     student: "/student/dashboard",
     trainer: "/trainer",
   };
+  const CHANGE_PASSWORD_MAP: Record<string, string> = {
+    student: "/student/change-password",
+    trainer: "/trainer/change-password",
+  };
   const redirectTo = REDIRECT_MAP[provider] ?? "/";
   const placeholder =
     provider === "admin"
@@ -78,21 +82,60 @@ function LoginPanel({ provider }: { readonly provider: "student" | "admin" | "tr
     setError("");
     setLoading(true);
 
-    const result = await signIn(provider, {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      // Step 1 (student/trainer): fast access-control pre-check — no bcrypt,
+      // surfaces specific errors (locked, no access, expired) immediately.
+      let mustChangePassword = false;
+      if (provider === "student" || provider === "trainer") {
+        const checkRes = await fetch("/api/auth/validate-credentials", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ provider, email }),
+        });
+        const checkData = (await checkRes.json()) as {
+          ok: boolean | null;
+          error?: string;
+          mustChangePassword?: boolean;
+        };
 
-    setLoading(false);
+        if (checkData.ok === false) {
+          setError(checkData.error ?? "Access denied. Please contact admin.");
+          setLoading(false);
+          return;
+        }
 
-    if (result?.error) {
-      setError("Invalid email or password. Please try again.");
-      return;
+        if (checkData.ok === true) {
+          mustChangePassword = checkData.mustChangePassword ?? false;
+        }
+        // ok === null → user not found or no password; fall through to signIn
+      }
+
+      // Step 2: authenticate and create the session
+      const result = await signIn(provider, {
+        email,
+        password,
+        redirect: false,
+      });
+
+      setLoading(false);
+
+      if (result?.error) {
+        setError("Invalid email or password. Please try again.");
+        return;
+      }
+
+      // Step 3: redirect — must-change-password takes priority over default dashboard
+      const changePath = CHANGE_PASSWORD_MAP[provider];
+      if (mustChangePassword && changePath) {
+        router.push(changePath);
+      } else {
+        router.push(redirectTo);
+      }
+      router.refresh();
+    } catch {
+      setLoading(false);
+      setError("Network error. Please try again.");
     }
-
-    router.push(redirectTo);
-    router.refresh();
   }
 
   return (

@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   XCircle,
   CalendarClock,
+  UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CourseTier } from "@prisma/client";
@@ -17,6 +18,7 @@ import {
   COURSE_TIER_COLORS,
   COURSE_TIERS_ORDERED,
 } from "@/lib/constants/course-tiers";
+import { TrainerAttendanceTable } from "@/components/trainer/TrainerAttendanceTable";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -55,12 +57,13 @@ interface QuizItem {
 }
 
 interface CourseDetailTabsProps {
+  readonly courseId: string;
   readonly lessons: ReadonlyArray<LessonItem>;
   readonly assignments: ReadonlyArray<AssignmentItem>;
   readonly quizzes: ReadonlyArray<QuizItem>;
 }
 
-type TabKey = "lessons" | "assignments" | "quizzes";
+type TabKey = "lessons" | "assignments" | "quizzes" | "attendance";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -122,6 +125,7 @@ function groupLessonsByTier(
 // ---------------------------------------------------------------------------
 
 export function CourseDetailTabs({
+  courseId,
   lessons,
   assignments,
   quizzes,
@@ -132,7 +136,7 @@ export function CourseDetailTabs({
     readonly key: TabKey;
     readonly label: string;
     readonly icon: React.ComponentType<{ className?: string }>;
-    readonly count: number;
+    readonly count: number | null;
   }> = [
     { key: "lessons", label: "Lessons", icon: FileText, count: lessons.length },
     {
@@ -146,6 +150,12 @@ export function CourseDetailTabs({
       label: "Quizzes",
       icon: HelpCircle,
       count: quizzes.length,
+    },
+    {
+      key: "attendance",
+      label: "Attendance",
+      icon: UserCheck,
+      count: null,
     },
   ];
 
@@ -166,16 +176,18 @@ export function CourseDetailTabs({
           >
             <tab.icon className="h-4 w-4" />
             {tab.label}
-            <span
-              className={cn(
-                "ml-1 px-1.5 py-0.5 rounded-full text-xs",
-                activeTab === tab.key
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-gray-100 text-gray-500",
-              )}
-            >
-              {tab.count}
-            </span>
+            {tab.count !== null && (
+              <span
+                className={cn(
+                  "ml-1 px-1.5 py-0.5 rounded-full text-xs",
+                  activeTab === tab.key
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-gray-100 text-gray-500",
+                )}
+              >
+                {tab.count}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -187,6 +199,9 @@ export function CourseDetailTabs({
           <AssignmentsTab assignments={assignments} />
         )}
         {activeTab === "quizzes" && <QuizzesTab quizzes={quizzes} />}
+        {activeTab === "attendance" && (
+          <TrainerAttendanceTable courseId={courseId} />
+        )}
       </div>
     </div>
   );

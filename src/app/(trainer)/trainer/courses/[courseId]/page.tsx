@@ -104,6 +104,7 @@ export default async function TrainerCourseDetailPage({
 
       {/* Tabs (client component for interactivity) */}
       <CourseDetailTabs
+        courseId={courseId}
         lessons={detail.lessons.map((l) => ({
           ...l,
           tier: l.tier as "BASIC" | "PROFESSIONAL" | "ADVANCED",
