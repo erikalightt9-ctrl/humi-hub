@@ -155,7 +155,7 @@ export function Navbar() {
               Login
             </Link>
             <Button asChild size="sm" className="bg-blue-700 hover:bg-blue-800">
-              <Link href="/portal?tab=enroll">Enroll Now</Link>
+              <Link href="/enroll">Enroll Now</Link>
             </Button>
           </div>
 

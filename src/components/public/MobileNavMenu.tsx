@@ -136,7 +136,7 @@ export function MobileNavMenu({
             Login
           </Link>
           <Button asChild size="sm" className="w-full bg-blue-700 hover:bg-blue-800">
-            <Link href="/portal?tab=enroll" onClick={onClose}>
+            <Link href="/enroll" onClick={onClose}>
               Enroll Now
             </Link>
           </Button>
