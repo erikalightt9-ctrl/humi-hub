@@ -132,13 +132,28 @@ export async function PATCH(
     const adminId = token!.id as string;
 
     // ── APPROVED ──────────────────────────────────────────────────
-    // Admin approves → auto-create student account → send login email
+    // Admin approves → auto-create (or reset) student account → send login email
     if (result.data.status === "APPROVED") {
       const isFree = coursePrice <= 0;
 
-      // Check idempotency — skip if student already exists
+      // Generate fresh credentials regardless of whether the student already exists
+      const tempPassword = generateTemporaryPassword();
+      const passwordHash = await bcrypt.hash(tempPassword, 12);
+      const accessExpiry = new Date();
+      accessExpiry.setDate(accessExpiry.getDate() + 90);
+
+      // Idempotency: student already exists → reset password + mustChangePassword, then resend
       const alreadyExists = await studentExists(id);
       if (alreadyExists) {
+        const existingStudent = await prisma.student.findUnique({
+          where: { enrollmentId: id },
+        });
+        if (existingStudent) {
+          await prisma.student.update({
+            where: { id: existingStudent.id },
+            data: { passwordHash, mustChangePassword: true },
+          });
+        }
         await prisma.enrollment.update({
           where: { id },
           data: {
@@ -147,15 +162,23 @@ export async function PATCH(
             statusUpdatedBy: adminId,
           },
         });
-        const updated = await findEnrollmentById(id);
-        return NextResponse.json({ success: true, data: updated, error: null });
-      }
+        // Fire-and-forget: do not block the response on email delivery
+        sendEnrollmentApproved({
+          name: existing.fullName,
+          email: existing.email,
+          courseTitle,
+          temporaryPassword: tempPassword,
+        }).catch((emailErr: unknown) => {
+          console.error("[enrollment approval] resend credentials email failed", emailErr);
+        });
 
-      // Generate credentials for the new student
-      const tempPassword = generateTemporaryPassword();
-      const passwordHash = await bcrypt.hash(tempPassword, 12);
-      const accessExpiry = new Date();
-      accessExpiry.setDate(accessExpiry.getDate() + 90);
+        const updated = await findEnrollmentById(id);
+        return NextResponse.json({
+          success: true,
+          data: { ...updated, temporaryPassword: tempPassword },
+          error: null,
+        });
+      }
 
       // Atomic transaction: update enrollment + create student
       await prisma.$transaction([
@@ -178,20 +201,27 @@ export async function PATCH(
             amountPaid: isFree ? 0 : coursePrice,
             accessGranted: true,
             accessExpiry,
+            mustChangePassword: true,
           },
         }),
       ]);
 
-      // Send login email with credentials (awaited for Vercel serverless)
-      await sendEnrollmentApproved({
+      // Fire-and-forget: do not block the response on email delivery
+      sendEnrollmentApproved({
         name: existing.fullName,
         email: existing.email,
         courseTitle,
         temporaryPassword: tempPassword,
+      }).catch((emailErr: unknown) => {
+        console.error("[enrollment approval] credentials email failed", emailErr);
       });
 
       const updated = await findEnrollmentById(id);
-      return NextResponse.json({ success: true, data: updated, error: null });
+      return NextResponse.json({
+        success: true,
+        data: { ...updated, temporaryPassword: tempPassword },
+        error: null,
+      });
     }
 
     // ── REJECTED ──────────────────────────────────────────────────

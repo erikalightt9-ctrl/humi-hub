@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signOut, signIn, useSession } from "next-auth/react";
+import { signOut, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Lock, ShieldCheck } from "lucide-react";
 
-export default function ChangePasswordPage() {
+export default function TrainerChangePasswordPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const [currentPassword, setCurrentPassword] = useState("");
@@ -20,7 +21,8 @@ export default function ChangePasswordPage() {
   const isValid =
     currentPassword.length > 0 &&
     newPassword.length >= 8 &&
-    newPassword === confirmPassword;
+    newPassword === confirmPassword &&
+    newPassword !== currentPassword;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,14 +39,14 @@ export default function ChangePasswordPage() {
     }
 
     if (currentPassword === newPassword) {
-      setError("New password must be different from current password.");
+      setError("New password must be different from the temporary password.");
       return;
     }
 
     setLoading(true);
 
     try {
-      const res = await fetch("/api/student/change-password", {
+      const res = await fetch("/api/trainer/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword, newPassword }),
@@ -57,15 +59,16 @@ export default function ChangePasswordPage() {
         return;
       }
 
-      // Force a fresh JWT so mustChangePassword is cleared in the session.
-      // signOut + signIn with the new password mints a new token immediately.
+      // Force a fresh session so the JWT no longer carries mustChangePassword=true.
+      // Re-sign-in with the new password to get a clean token.
       const email = session?.user?.email;
       if (email) {
         await signOut({ redirect: false });
-        await signIn("student", { email, password: newPassword, redirect: false });
+        await signIn("trainer", { email, password: newPassword, redirect: false });
       }
 
-      router.push("/student/dashboard");
+      router.push("/trainer");
+      router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -100,10 +103,10 @@ export default function ChangePasswordPage() {
             </div>
           )}
 
-          {/* Current Password */}
+          {/* Current (Temporary) Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Current Password
+              Temporary Password
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
