@@ -10,6 +10,8 @@ import {
   sendNewEnrollmentAdminNotification,
 } from "@/lib/services/notification.service";
 import { getTierConfig } from "@/lib/repositories/trainer-tier.repository";
+import { sendWaitlistJoinedEmail } from "@/lib/email/send-waitlist-notification";
+import { calculateEnrollmentPrice } from "@/lib/constants/pricing";
 import { getCourseTierPricing } from "@/lib/repositories/course.repository";
 import type { EnrollmentFormData } from "@/lib/validations/enrollment.schema";
 import type { Enrollment, CourseTier, TrainerTier } from "@prisma/client";
@@ -145,19 +147,33 @@ export async function processEnrollment(
     scheduleId: resolvedScheduleId,
   });
 
-  // If schedule is full, add to waitlist
-  let waitlisted = false;
-  if (scheduleFull && resolvedScheduleId) {
-    await addToWaitlist(resolvedScheduleId, enrollment.id);
-    waitlisted = true;
-  }
-
   // Fetch course title for the confirmation email
   const course = await prisma.course.findUnique({
     where: { id: enrollment.courseId },
     select: { title: true },
   });
   const courseTitle = course?.title ?? "Selected Course";
+
+  // If schedule is full, add to waitlist
+  let waitlisted = false;
+  if (scheduleFull && resolvedScheduleId) {
+    const waitlistEntry = await addToWaitlist(resolvedScheduleId, enrollment.id);
+    waitlisted = true;
+
+    // Fetch schedule name for the email
+    const schedule = await prisma.schedule.findUnique({
+      where: { id: resolvedScheduleId },
+      select: { name: true },
+    });
+
+    sendWaitlistJoinedEmail({
+      email: enrollment.email,
+      fullName: enrollment.fullName,
+      courseTitle,
+      scheduleName: schedule?.name ?? "Selected Session",
+      position: waitlistEntry.position,
+    }).catch((err) => console.error("[Waitlist] Failed to send joined email:", err));
+  }
   const base = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
   const submittedAt = enrollment.createdAt.toLocaleDateString("en-PH", {
     year: "numeric",
