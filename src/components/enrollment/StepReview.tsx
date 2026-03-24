@@ -44,6 +44,20 @@ interface StepReviewProps {
 /*  Pricing constants                                                  */
 /* ------------------------------------------------------------------ */
 
+type TrainerTierValue = "BASIC" | "PROFESSIONAL" | "PREMIUM";
+
+const TRAINER_TIER_LABELS: Readonly<Record<TrainerTierValue, string>> = {
+  BASIC: "Basic",
+  PROFESSIONAL: "Professional",
+  PREMIUM: "Premium",
+};
+
+const DEFAULT_UPGRADE_FEES: Readonly<Record<TrainerTierValue, number>> = {
+  BASIC: 0,
+  PROFESSIONAL: 2000,
+  PREMIUM: 6000,
+};
+
 const DEFAULT_COURSE_TIER_PRICES: Readonly<Record<CourseTier, number>> = {
   BASIC: 1500,
   PROFESSIONAL: 3500,
@@ -97,11 +111,66 @@ function getTierPrices(
 export function StepReview({ form, courses }: StepReviewProps) {
   const data = useWatch({ control: form.control });
   const course = courses.find((c) => c.id === data.courseId);
+  const [trainerName, setTrainerName] = useState<string | null>(null);
+  const [trainerTier, setTrainerTier] = useState<TrainerTierValue>("BASIC");
   const [scheduleName, setScheduleName] = useState<string | null>(null);
   const [scheduleInfo, setScheduleInfo] = useState<ScheduleInfo | null>(null);
   const [courseTierPricing, setCourseTierPricing] = useState<CourseTierPricing | null>(null);
+  const [trainerUpgradeFees, setTrainerUpgradeFees] = useState<Readonly<Record<TrainerTierValue, number>>>(DEFAULT_UPGRADE_FEES);
 
   const selectedCourseTier = (data.courseTier as CourseTier) ?? "BASIC";
+
+  // Fetch trainer tier upgrade fees from DB
+  useEffect(() => {
+    async function fetchTierConfigs() {
+      try {
+        const res = await fetch("/api/tier-configs");
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          const fees: Record<TrainerTierValue, number> = { ...DEFAULT_UPGRADE_FEES };
+          for (const config of json.data as ReadonlyArray<{ tier: string; upgradeFee: unknown }>) {
+            if (config.tier === "BASIC" || config.tier === "PROFESSIONAL" || config.tier === "PREMIUM") {
+              fees[config.tier] = typeof config.upgradeFee === "number"
+                ? config.upgradeFee
+                : Number(config.upgradeFee) || 0;
+            }
+          }
+          setTrainerUpgradeFees(fees);
+        }
+      } catch {
+        /* falls back to DEFAULT_UPGRADE_FEES */
+      }
+    }
+    fetchTierConfigs();
+  }, []);
+
+  // Fetch trainer name & tier when trainerId changes
+  useEffect(() => {
+    if (!data.trainerId) {
+      setTrainerName(null);
+      setTrainerTier("BASIC");
+      return;
+    }
+
+    async function fetchTrainer() {
+      try {
+        const res = await fetch("/api/public/trainers");
+        const json = await res.json();
+        if (json.success) {
+          const found = (json.data as ReadonlyArray<{ id: string; name: string; tier: TrainerTierValue }>).find(
+            (t) => t.id === data.trainerId,
+          );
+          if (found) {
+            setTrainerName(found.name);
+            setTrainerTier(found.tier);
+          }
+        }
+      } catch {
+        /* silent */
+      }
+    }
+    fetchTrainer();
+  }, [data.trainerId]);
 
   // Fetch course tier pricing — always bypass cache so the Review step
   // reflects the latest prices saved by the admin.
@@ -159,6 +228,8 @@ export function StepReview({ form, courses }: StepReviewProps) {
     getTierPrices(courseTierPricing, selectedCourseTier);
 
   const hasDiscount = !!tierDiscount && tierDiscount.active && finalTierPrice < baseTierPrice;
+  const trainerUpgradeFee = trainerUpgradeFees[trainerTier];
+  const totalPrice = finalTierPrice + trainerUpgradeFee;
 
   return (
     <div className="space-y-6">
@@ -196,12 +267,20 @@ export function StepReview({ form, courses }: StepReviewProps) {
         </dl>
       </div>
 
-      {/* Pricing */}
+      {/* Trainer & Pricing */}
       <div className="bg-gray-50 rounded-xl p-5">
         <h3 className="font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wide">
-          Pricing
+          Trainer &amp; Pricing
         </h3>
         <dl>
+          <ReviewRow
+            label="Trainer"
+            value={
+              trainerName
+                ? `${trainerName} (${TRAINER_TIER_LABELS[trainerTier]})`
+                : "Auto-assign Basic Trainer"
+            }
+          />
           <ReviewRow
             label="Course Tier Price"
             value={
@@ -220,11 +299,17 @@ export function StepReview({ form, courses }: StepReviewProps) {
               )
             }
           />
+          {trainerUpgradeFee > 0 && (
+            <ReviewRow
+              label="Trainer Upgrade"
+              value={`₱${trainerUpgradeFee.toLocaleString()}`}
+            />
+          )}
           <ReviewRow
             label="Total"
             value={
               <span className="font-bold text-green-700">
-                {"₱"}{finalTierPrice.toLocaleString()}
+                {"₱"}{totalPrice.toLocaleString()}
               </span>
             }
           />

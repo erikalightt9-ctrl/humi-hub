@@ -105,6 +105,12 @@ enum ScheduleStatus {
   COMPLETED
 }
 
+enum TrainerTier {
+  BASIC
+  PROFESSIONAL
+  PREMIUM
+}
+
 enum WaitlistStatus {
   WAITING
   PROMOTED
@@ -243,7 +249,9 @@ model Enrollment {
   trainerId             String?
   trainer               Trainer?          @relation(fields: [trainerId], references: [id])
   courseTier            CourseTier        @default(BASIC)
+  trainerTier           TrainerTier?
   baseProgramPrice      Decimal?          @db.Decimal(10, 2)
+  trainerUpgradeFee     Decimal?          @db.Decimal(10, 2)
   scheduleId            String?
   schedule              Schedule?         @relation(fields: [scheduleId], references: [id])
   ipAddress             String?
@@ -878,6 +886,7 @@ model Trainer {
   bio                  String?         @db.Text
   photoUrl             String?         @db.Text
   specializations      String[]
+  tier                 TrainerTier     @default(BASIC)
   credentials          String?         @db.Text
   certifications       String[]
   industryExperience   String?         @db.Text
@@ -904,6 +913,7 @@ model Trainer {
   tenantAssignments    TenantTrainer[]
 
   @@index([isActive])
+  @@index([tier])
   @@map("trainers")
 }
 
@@ -1711,4 +1721,22 @@ model EmployerApplication {
   @@index([studentId])
   @@index([stage])
   @@map("employer_applications")
+}
+
+/* ------------------------------------------------------------------ */
+/*  Trainer Tier Configuration                                          */
+/* ------------------------------------------------------------------ */
+
+model TrainerTierConfig {
+  tier             TrainerTier @id
+  label            String      @default("")
+  upgradeFee       Decimal     @default(0)    @db.Decimal(10, 2)
+  baseProgramPrice Decimal     @default(1500) @db.Decimal(10, 2)
+  benefits         String[]
+  maxCapacity      Int         @default(15)
+  revenueSharePct  Int         @default(70)
+  isActive         Boolean     @default(true)
+  updatedAt        DateTime    @updatedAt
+
+  @@map("trainer_tier_config")
 }

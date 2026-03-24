@@ -1171,6 +1171,51 @@ You are now prepared to launch your career as a US Bookkeeping Virtual Assistant
 
   console.log(`✅ Default tenant seeded (subdomain: "${defaultTenant.subdomain}", id: ${defaultTenant.id})`);
 
+  // ── Trainer Tier Config defaults ───────────────────────────────────
+  await prisma.trainerTierConfig.upsert({
+    where: { tier: "BASIC" },
+    create: {
+      tier: "BASIC",
+      label: "Basic Trainer",
+      upgradeFee: 0,
+      baseProgramPrice: 1500,
+      benefits: ["Upload up to 3 courses", "Basic analytics", "Standard support"],
+      maxCapacity: 15,
+      revenueSharePct: 70,
+      isActive: true,
+    },
+    update: {},
+  });
+  await prisma.trainerTierConfig.upsert({
+    where: { tier: "PROFESSIONAL" },
+    create: {
+      tier: "PROFESSIONAL",
+      label: "Professional Trainer",
+      upgradeFee: 2000,
+      baseProgramPrice: 1500,
+      benefits: ["Unlimited courses", "Advanced analytics", "Priority support", "Student messaging"],
+      maxCapacity: 20,
+      revenueSharePct: 80,
+      isActive: true,
+    },
+    update: {},
+  });
+  await prisma.trainerTierConfig.upsert({
+    where: { tier: "PREMIUM" },
+    create: {
+      tier: "PREMIUM",
+      label: "Premium Trainer",
+      upgradeFee: 6000,
+      baseProgramPrice: 1500,
+      benefits: ["Unlimited courses", "Full analytics suite", "Dedicated support", "Featured trainer badge", "Marketing support"],
+      maxCapacity: 25,
+      revenueSharePct: 90,
+      isActive: true,
+    },
+    update: {},
+  });
+  console.log("✅ Trainer tier configs seeded");
+
   console.log("\n✅ All seeding complete!");
   console.log("   Admin: gdscapital.168@gmail.com / Admin@123456!");
   console.log(`   Default tenant subdomain: humi`);
