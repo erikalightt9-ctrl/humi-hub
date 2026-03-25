@@ -14,6 +14,14 @@ const addEmployeeSchema = z.object({
   phone: z.string().max(30).optional(),
 });
 
+const editEmployeeSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  email: z.string().email().optional(),
+  department: z.string().max(100).optional().nullable(),
+  phone: z.string().max(30).optional().nullable(),
+  isActive: z.boolean().optional(),
+});
+
 /* ------------------------------------------------------------------ */
 /*  POST — Add a single employee manually                             */
 /* ------------------------------------------------------------------ */
@@ -109,7 +117,71 @@ export async function POST(
 }
 
 /* ------------------------------------------------------------------ */
-/*  DELETE — Remove an employee by employeeId query param             */
+/*  PUT — Edit an employee by employeeId query param                  */
+/* ------------------------------------------------------------------ */
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const guard = requireAdmin(token);
+  if (!guard.ok) return guard.response;
+
+  try {
+    const { id } = await params;
+    const { searchParams } = new URL(req.url);
+    const employeeId = searchParams.get("employeeId");
+    if (!employeeId) return NextResponse.json({ success: false, data: null, error: "employeeId required" }, { status: 400 });
+
+    const existing = await prisma.corporateManager.findFirst({
+      where: { id: employeeId, organizationId: id, role: "employee" },
+    });
+    if (!existing) return NextResponse.json({ success: false, data: null, error: "Employee not found" }, { status: 404 });
+
+    const body = await req.json();
+    const result = editEmployeeSchema.safeParse(body);
+    if (!result.success) return NextResponse.json({ success: false, data: null, error: result.error.issues[0]?.message ?? "Invalid input" }, { status: 422 });
+
+    // Check email uniqueness if changing email
+    if (result.data.email && result.data.email !== existing.email) {
+      const emailExists = await prisma.corporateManager.findUnique({
+        where: { organizationId_email: { organizationId: id, email: result.data.email.toLowerCase() } },
+      });
+      if (emailExists) return NextResponse.json({ success: false, data: null, error: "Email already in use" }, { status: 422 });
+    }
+
+    const updated = await prisma.corporateManager.update({
+      where: { id: employeeId },
+      data: {
+        ...(result.data.name !== undefined ? { name: result.data.name } : {}),
+        ...(result.data.email !== undefined ? { email: result.data.email.toLowerCase() } : {}),
+        ...(result.data.department !== undefined ? { department: result.data.department } : {}),
+        ...(result.data.phone !== undefined ? { phone: result.data.phone } : {}),
+        ...(result.data.isActive !== undefined ? { isActive: result.data.isActive } : {}),
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        tenantId: id,
+        actorId: token!.id as string,
+        actorRole: "ADMIN",
+        action: "EMPLOYEE_UPDATE",
+        entity: "CorporateManager",
+        entityId: employeeId,
+        meta: { before: existing, after: updated, organizationId: id },
+      },
+    });
+
+    return NextResponse.json({ success: true, data: updated, error: null });
+  } catch (err) {
+    console.error("[PUT /api/admin/corporate/:id/employees]", err);
+    return NextResponse.json({ success: false, data: null, error: "Failed to update employee" }, { status: 500 });
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  DELETE — Soft delete an employee (set isActive = false)           */
 /* ------------------------------------------------------------------ */
 export async function DELETE(
   req: NextRequest,
@@ -135,23 +207,26 @@ export async function DELETE(
       return NextResponse.json({ success: false, data: null, error: "Employee not found" }, { status: 404 });
     }
 
-    await prisma.corporateManager.delete({ where: { id: employeeId } });
+    const softDeleted = await prisma.corporateManager.update({
+      where: { id: employeeId },
+      data: { isActive: false },
+    });
 
     await prisma.auditLog.create({
       data: {
         tenantId: id,
         actorId: token!.id as string,
         actorRole: "ADMIN",
-        action: "EMPLOYEE_DELETE",
+        action: "EMPLOYEE_DEACTIVATE",
         entity: "CorporateManager",
         entityId: employeeId,
-        meta: { removedFrom: id },
+        meta: { name: softDeleted.name, email: softDeleted.email, organizationId: id },
       },
     });
 
-    return NextResponse.json({ success: true, data: { deleted: true }, error: null });
+    return NextResponse.json({ success: true, data: { deactivated: true }, error: null });
   } catch (err) {
     console.error("[DELETE /api/admin/corporate/:id/employees]", err);
-    return NextResponse.json({ success: false, data: null, error: "Failed to remove employee" }, { status: 500 });
+    return NextResponse.json({ success: false, data: null, error: "Failed to deactivate employee" }, { status: 500 });
   }
 }

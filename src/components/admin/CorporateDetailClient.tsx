@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Building2, Users, BookOpen, ChevronLeft, Mail, Briefcase,
   Shield, Upload, TrendingUp, BarChart2, CheckCircle2, AlertCircle,
-  UserPlus, Search, Trash2, X, Loader2, Phone, Tag,
+  UserPlus, Search, X, Loader2, Phone, Tag, Pencil, UserX, PowerOff,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -167,6 +167,110 @@ function SeatBar({ used, total }: { used: number; total: number }) {
       </div>
       <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Reusable field helpers                                             */
+/* ------------------------------------------------------------------ */
+
+function FieldInput({ label, field, type = "text", required = false, editForm, setEditForm }: {
+  label: string;
+  field: string;
+  type?: string;
+  required?: boolean;
+  editForm: Record<string, string | boolean>;
+  setEditForm: React.Dispatch<React.SetStateAction<Record<string, string | boolean>>>;
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-gray-700 mb-1.5">
+        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+      </label>
+      <input
+        type={type}
+        value={String(editForm[field] ?? "")}
+        onChange={(e) => setEditForm((prev) => ({ ...prev, [field]: e.target.value }))}
+        required={required}
+        className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+      />
+    </div>
+  );
+}
+
+function FieldToggle({ label, field, editForm, setEditForm }: {
+  label: string;
+  field: string;
+  editForm: Record<string, string | boolean>;
+  setEditForm: React.Dispatch<React.SetStateAction<Record<string, string | boolean>>>;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-xs font-medium text-gray-700">{label}</span>
+      <button
+        type="button"
+        onClick={() => setEditForm((prev) => ({ ...prev, [field]: !prev[field] }))}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editForm[field] ? "bg-blue-600" : "bg-gray-200"}`}
+      >
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${editForm[field] ? "translate-x-6" : "translate-x-1"}`} />
+      </button>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  EditModal                                                          */
+/* ------------------------------------------------------------------ */
+
+function EditModal({ title, onClose, onSave, saving, error, children }: {
+  title: string;
+  onClose: () => void;
+  onSave: (e: React.FormEvent) => void;
+  saving: boolean;
+  error: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-gray-100">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center">
+              <Pencil className="h-4 w-4 text-blue-600" />
+            </div>
+            <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <form onSubmit={onSave} className="p-6 space-y-4">
+          {error && (
+            <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />{error}
+            </div>
+          )}
+          {children}
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              {saving ? "Saving…" : "Save Changes"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -359,6 +463,15 @@ export function CorporateDetailClient({ id }: { id: string }) {
   const [uploadResult, setUploadResult] = useState<{ created: number; skipped: number } | null>(null);
   const [uploadError, setUploadError] = useState("");
 
+  // Edit modals
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [editingManager, setEditingManager] = useState<Manager | null>(null);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  // Edit form data
+  const [editForm, setEditForm] = useState<Record<string, string | boolean>>({});
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState("");
+
   const refreshData = useCallback(() => {
     return Promise.all([
       fetch(`/api/admin/corporate/${id}`).then((r) => r.json()),
@@ -434,19 +547,66 @@ export function CorporateDetailClient({ id }: { id: string }) {
     if (fileRef.current) fileRef.current.value = "";
   }
 
-  async function handleRemoveEmployee(employeeId: string) {
-    if (!confirm("Remove this employee from the organization?")) return;
+  async function handleDeactivateEmployee(employeeId: string, name: string) {
+    if (!confirm(`Deactivate ${name}? They will lose access but their record is preserved.`)) return;
     setDeletingId(employeeId);
     try {
-      const res = await fetch(`/api/admin/corporate/${id}/employees?employeeId=${employeeId}`, {
-        method: "DELETE",
+      const res = await fetch(`/api/admin/corporate/${id}/employees?employeeId=${employeeId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) refreshData();
+    } catch { /* ignore */ }
+    setDeletingId(null);
+  }
+
+  async function handleDeactivateManager(managerId: string, name: string) {
+    if (!confirm(`Deactivate ${name}?`)) return;
+    try {
+      const res = await fetch(`/api/admin/corporate/${id}/managers?managerId=${managerId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) refreshData();
+      else alert(data.error ?? "Failed");
+    } catch { /* ignore */ }
+  }
+
+  async function handleToggleCourse(courseId: string, currentActive: boolean) {
+    if (currentActive && !confirm("Deactivate this course for the organization?")) return;
+    try {
+      const res = await fetch(`/api/admin/corporate/${id}/courses?courseId=${courseId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) refreshData();
+    } catch { /* ignore */ }
+  }
+
+  async function handleSaveEdit(e: React.FormEvent, type: "employee" | "manager" | "course") {
+    e.preventDefault();
+    setEditSaving(true);
+    setEditError("");
+    try {
+      const targetId = type === "employee" ? editingEmployee!.id : type === "manager" ? editingManager!.id : editingCourse!.id;
+      const endpoint = type === "employee"
+        ? `/api/admin/corporate/${id}/employees?employeeId=${targetId}`
+        : type === "manager"
+        ? `/api/admin/corporate/${id}/managers?managerId=${targetId}`
+        : `/api/admin/corporate/${id}/courses?courseId=${targetId}`;
+
+      const res = await fetch(endpoint, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
       });
       const data = await res.json();
       if (data.success) {
+        setEditingEmployee(null);
+        setEditingManager(null);
+        setEditingCourse(null);
         refreshData();
+      } else {
+        setEditError(data.error ?? "Failed to save");
       }
-    } catch { /* ignore */ }
-    setDeletingId(null);
+    } catch {
+      setEditError("Network error");
+    }
+    setEditSaving(false);
   }
 
   /* ---- Loading skeleton ---- */
@@ -502,6 +662,55 @@ export function CorporateDetailClient({ id }: { id: string }) {
           onClose={() => setShowAddModal(false)}
           onAdded={refreshData}
         />
+      )}
+
+      {/* Edit Employee Modal */}
+      {editingEmployee && (
+        <EditModal
+          title="Edit Employee"
+          onClose={() => setEditingEmployee(null)}
+          onSave={(e) => handleSaveEdit(e, "employee")}
+          saving={editSaving}
+          error={editError}
+        >
+          <FieldInput label="Full Name" field="name" required editForm={editForm} setEditForm={setEditForm} />
+          <FieldInput label="Email Address" field="email" type="email" required editForm={editForm} setEditForm={setEditForm} />
+          <div className="grid grid-cols-2 gap-3">
+            <FieldInput label="Department" field="department" editForm={editForm} setEditForm={setEditForm} />
+            <FieldInput label="Phone" field="phone" editForm={editForm} setEditForm={setEditForm} />
+          </div>
+          <FieldToggle label="Active" field="isActive" editForm={editForm} setEditForm={setEditForm} />
+        </EditModal>
+      )}
+
+      {/* Edit Manager Modal */}
+      {editingManager && (
+        <EditModal
+          title="Edit Manager"
+          onClose={() => setEditingManager(null)}
+          onSave={(e) => handleSaveEdit(e, "manager")}
+          saving={editSaving}
+          error={editError}
+        >
+          <FieldInput label="Full Name" field="name" required editForm={editForm} setEditForm={setEditForm} />
+          <FieldInput label="Email Address" field="email" type="email" required editForm={editForm} setEditForm={setEditForm} />
+          <FieldInput label="Role" field="role" editForm={editForm} setEditForm={setEditForm} />
+          <FieldToggle label="Active" field="isActive" editForm={editForm} setEditForm={setEditForm} />
+        </EditModal>
+      )}
+
+      {/* Edit Course Modal */}
+      {editingCourse && (
+        <EditModal
+          title="Edit Course"
+          onClose={() => setEditingCourse(null)}
+          onSave={(e) => handleSaveEdit(e, "course")}
+          saving={editSaving}
+          error={editError}
+        >
+          <FieldInput label="Course Title" field="title" required editForm={editForm} setEditForm={setEditForm} />
+          <FieldToggle label="Active" field="isActive" editForm={editForm} setEditForm={setEditForm} />
+        </EditModal>
       )}
 
       <div className="space-y-6">
@@ -759,17 +968,27 @@ export function CorporateDetailClient({ id }: { id: string }) {
                             {new Date(s.createdAt).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}
                           </td>
                           <td className="px-5 py-3.5 text-right">
-                            <button
-                              onClick={() => handleRemoveEmployee(s.id)}
-                              disabled={deletingId === s.id}
-                              className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                              title="Remove employee"
-                            >
-                              {deletingId === s.id
-                                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                : <Trash2 className="h-3.5 w-3.5" />
-                              }
-                            </button>
+                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
+                              <button
+                                onClick={() => {
+                                  setEditingEmployee(s);
+                                  setEditForm({ name: s.name, email: s.email, department: s.department ?? "", phone: s.phone ?? "", isActive: s.isActive });
+                                  setEditError("");
+                                }}
+                                className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                title="Edit employee"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeactivateEmployee(s.id, s.name)}
+                                disabled={deletingId === s.id}
+                                className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                                title={s.isActive ? "Deactivate employee" : "Already inactive"}
+                              >
+                                {deletingId === s.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserX className="h-3.5 w-3.5" />}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -787,19 +1006,20 @@ export function CorporateDetailClient({ id }: { id: string }) {
                       <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Email</th>
                       <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Role</th>
                       <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                      <th className="px-5 py-3" />
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {org.managers.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="px-5 py-14 text-center">
+                        <td colSpan={5} className="px-5 py-14 text-center">
                           <Shield className="h-10 w-10 text-gray-200 mx-auto mb-3" />
                           <p className="text-sm text-gray-400">No managers assigned yet.</p>
                         </td>
                       </tr>
                     ) : (
                       org.managers.map((m) => (
-                        <tr key={m.id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={m.id} className="hover:bg-gray-50 transition-colors group">
                           <td className="px-5 py-3.5">
                             <div className="flex items-center gap-3">
                               <Avatar name={m.name} size="sm" />
@@ -816,6 +1036,28 @@ export function CorporateDetailClient({ id }: { id: string }) {
                               {m.isActive ? "Active" : "Inactive"}
                             </span>
                           </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
+                              <button
+                                onClick={() => {
+                                  setEditingManager(m);
+                                  setEditForm({ name: m.name, email: m.email, role: m.role, isActive: m.isActive });
+                                  setEditError("");
+                                }}
+                                className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                title="Edit manager"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeactivateManager(m.id, m.name)}
+                                className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                                title={m.isActive ? "Deactivate manager" : "Already inactive"}
+                              >
+                                <UserX className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -830,25 +1072,48 @@ export function CorporateDetailClient({ id }: { id: string }) {
                     <tr className="border-b border-gray-100 bg-gray-50/70">
                       <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Course Title</th>
                       <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                      <th className="px-5 py-3" />
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {org.courses.length === 0 ? (
                       <tr>
-                        <td colSpan={2} className="px-5 py-14 text-center">
+                        <td colSpan={3} className="px-5 py-14 text-center">
                           <BookOpen className="h-10 w-10 text-gray-200 mx-auto mb-3" />
                           <p className="text-sm text-gray-400">No courses enrolled yet.</p>
                         </td>
                       </tr>
                     ) : (
                       org.courses.map((c) => (
-                        <tr key={c.id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={c.id} className="hover:bg-gray-50 transition-colors group">
                           <td className="px-5 py-3.5 font-medium text-gray-900">{c.title}</td>
                           <td className="px-5 py-3.5">
                             <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${c.isActive ? "text-emerald-700" : "text-gray-400"}`}>
                               <span className={`w-1.5 h-1.5 rounded-full ${c.isActive ? "bg-emerald-500" : "bg-gray-300"}`} />
                               {c.isActive ? "Active" : "Inactive"}
                             </span>
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
+                              <button
+                                onClick={() => {
+                                  setEditingCourse(c);
+                                  setEditForm({ title: c.title, isActive: c.isActive });
+                                  setEditError("");
+                                }}
+                                className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                title="Edit course"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleToggleCourse(c.id, c.isActive)}
+                                className="p-1.5 text-gray-300 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition"
+                                title={c.isActive ? "Deactivate course" : "Course inactive"}
+                              >
+                                <PowerOff className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -901,7 +1166,7 @@ export function CorporateDetailClient({ id }: { id: string }) {
                   <div key={log.id} className="flex items-center gap-3 text-xs">
                     <span className={`px-2 py-0.5 rounded-full font-medium ${
                       log.action.includes("CREATE") ? "bg-emerald-100 text-emerald-700" :
-                      log.action.includes("DELETE") ? "bg-red-100 text-red-700" :
+                      log.action.includes("DELETE") || log.action.includes("DEACTIVATE") ? "bg-red-100 text-red-700" :
                       "bg-blue-100 text-blue-700"
                     }`}>
                       {log.action.replace("_", " ")}
