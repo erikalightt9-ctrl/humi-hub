@@ -93,6 +93,15 @@ CREATE TABLE IF NOT EXISTS "session_attendances" (
   CONSTRAINT "session_attendances_pkey" PRIMARY KEY ("id")
 );
 
+-- Guard: ensure all columns exist on session_attendances (handles partial prior runs)
+ALTER TABLE "session_attendances" ADD COLUMN IF NOT EXISTS "date"      DATE         NOT NULL DEFAULT CURRENT_DATE;
+ALTER TABLE "session_attendances" ADD COLUMN IF NOT EXISTS "clockIn"   TIMESTAMP(3);
+ALTER TABLE "session_attendances" ADD COLUMN IF NOT EXISTS "clockOut"  TIMESTAMP(3);
+ALTER TABLE "session_attendances" ADD COLUMN IF NOT EXISTS "status"    TEXT         NOT NULL DEFAULT 'ABSENT';
+ALTER TABLE "session_attendances" ADD COLUMN IF NOT EXISTS "notes"     TEXT;
+ALTER TABLE "session_attendances" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "session_attendances" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
 CREATE UNIQUE INDEX IF NOT EXISTS "session_attendances_scheduleId_studentId_date_key" ON "session_attendances"("scheduleId", "studentId", "date");
 CREATE INDEX IF NOT EXISTS "session_attendances_scheduleId_date_idx" ON "session_attendances"("scheduleId", "date");
 
