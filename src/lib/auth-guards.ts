@@ -76,3 +76,12 @@ export function requireTrainer(token: JWT | null): GuardResult {
   }
   return { ok: true, tenantId: (token.tenantId as string) ?? "" };
 }
+
+/** Guard for tenant admin routes — only isTenantAdmin users (not super admin). */
+export function requireTenantAdmin(token: JWT | null): GuardResult {
+  if (!token?.id) return { ok: false, response: unauthorized() };
+  if (token.isTenantAdmin && token.tenantId) {
+    return { ok: true, tenantId: token.tenantId as string };
+  }
+  return { ok: false, response: unauthorized() };
+}

@@ -212,13 +212,20 @@ export const authOptions: NextAuthOptions = {
           });
         }
 
+        // Resolve trainer's primary tenant via TenantTrainer
+        const tenantTrainer = await prisma.tenantTrainer.findFirst({
+          where: { trainerId: trainer.id, isActive: true },
+          select: { tenantId: true },
+          orderBy: { assignedAt: "asc" },
+        });
+
         return {
           id: trainer.id,
           email: trainer.email,
           name: trainer.name,
           role: "trainer" as const,
           mustChangePassword: trainer.mustChangePassword,
-          tenantId: null,
+          tenantId: tenantTrainer?.tenantId ?? null,
           isSuperAdmin: false,
         };
       },
