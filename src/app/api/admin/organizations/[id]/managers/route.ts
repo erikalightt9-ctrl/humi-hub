@@ -46,7 +46,7 @@ export async function POST(
 
     // Check for duplicate email
     const existingManager = await prisma.corporateManager.findUnique({
-      where: { email: parsed.data.email.toLowerCase() },
+      where: { organizationId_email: { organizationId: orgId, email: parsed.data.email.toLowerCase() } },
     });
 
     if (existingManager) {

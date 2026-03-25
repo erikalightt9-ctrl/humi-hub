@@ -1294,20 +1294,23 @@ model TenantTrainer {
 }
 
 model CorporateManager {
-  id                 String       @id @default(cuid())
-  organizationId     String
-  organization       Organization @relation(fields: [organizationId], references: [id])
-  email              String       @unique
-  passwordHash       String
-  name               String
-  role               String       @default("manager")
-  isActive           Boolean      @default(true)
-  isTenantAdmin         Boolean      @default(false)
-  mustChangePassword    Boolean      @default(false)
-  resetToken            String?      @unique
-  resetTokenExpiresAt   DateTime?
-  createdAt             DateTime     @default(now())
+  id                  String       @id @default(cuid())
+  organizationId      String
+  organization        Organization @relation(fields: [organizationId], references: [id])
+  email               String
+  passwordHash        String
+  name                String
+  role                String       @default("manager")
+  department          String?
+  phone               String?
+  isActive            Boolean      @default(true)
+  isTenantAdmin       Boolean      @default(false)
+  mustChangePassword  Boolean      @default(false)
+  resetToken          String?      @unique
+  resetTokenExpiresAt DateTime?
+  createdAt           DateTime     @default(now())
 
+  @@unique([organizationId, email])
   @@index([organizationId])
   @@map("corporate_managers")
 }

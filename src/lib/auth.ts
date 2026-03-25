@@ -244,7 +244,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email and password are required");
         }
 
-        const manager = await prisma.corporateManager.findUnique({
+        const manager = await prisma.corporateManager.findFirst({
           where: { email: credentials.email.toLowerCase() },
           include: { organization: true },
         });
