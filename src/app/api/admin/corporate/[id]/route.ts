@@ -26,6 +26,8 @@ export async function GET(
             name: true,
             email: true,
             role: true,
+            department: true,
+            phone: true,
             isActive: true,
             createdAt: true,
           },
@@ -59,6 +61,9 @@ export async function GET(
       return NextResponse.json({ success: false, data: null, error: "Organization not found" }, { status: 404 });
     }
 
+    const employees = org.managers.filter((m) => m.role === "employee");
+    const managers = org.managers.filter((m) => m.role !== "employee");
+
     return NextResponse.json({
       success: true,
       data: {
@@ -71,7 +76,16 @@ export async function GET(
         plan: org.plan,
         planExpiresAt: org.planExpiresAt?.toISOString() ?? null,
         createdAt: org.createdAt.toISOString(),
-        managers: org.managers.map((m) => ({
+        employees: employees.map((e) => ({
+          id: e.id,
+          name: e.name,
+          email: e.email,
+          department: e.department ?? null,
+          phone: e.phone ?? null,
+          isActive: e.isActive,
+          createdAt: e.createdAt.toISOString(),
+        })),
+        managers: managers.map((m) => ({
           id: m.id,
           name: m.name,
           email: m.email,
@@ -92,8 +106,8 @@ export async function GET(
           isActive: c.isActive,
         })),
         counts: {
-          students: org._count.students,
-          managers: org._count.managers,
+          employees: employees.length,
+          managers: managers.length,
           courses: org._count.courses,
         },
       },

@@ -82,6 +82,25 @@ export async function POST(
       },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        tenantId: id,
+        actorId: token!.id as string,
+        actorRole: "ADMIN",
+        action: "EMPLOYEE_CREATE",
+        entity: "CorporateManager",
+        entityId: employee.id,
+        meta: {
+          name: employee.name,
+          email: employee.email,
+          department: employee.department ?? null,
+          phone: employee.phone ?? null,
+          organizationId: id,
+          createdAt: employee.createdAt.toISOString(),
+        },
+      },
+    });
+
     return NextResponse.json({ success: true, data: employee, error: null }, { status: 201 });
   } catch (err) {
     console.error("[POST /api/admin/corporate/:id/employees]", err);
@@ -117,6 +136,18 @@ export async function DELETE(
     }
 
     await prisma.corporateManager.delete({ where: { id: employeeId } });
+
+    await prisma.auditLog.create({
+      data: {
+        tenantId: id,
+        actorId: token!.id as string,
+        actorRole: "ADMIN",
+        action: "EMPLOYEE_DELETE",
+        entity: "CorporateManager",
+        entityId: employeeId,
+        meta: { removedFrom: id },
+      },
+    });
 
     return NextResponse.json({ success: true, data: { deleted: true }, error: null });
   } catch (err) {

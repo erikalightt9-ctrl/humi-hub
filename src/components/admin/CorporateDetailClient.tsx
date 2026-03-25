@@ -44,6 +44,17 @@ interface CourseStat {
   avgProgress: number;
 }
 
+interface AuditLogEntry {
+  id: string;
+  actorId: string;
+  actorRole: string;
+  action: string;
+  entity: string;
+  entityId: string | null;
+  meta: Record<string, unknown> | null;
+  createdAt: string;
+}
+
 interface DashboardStats {
   totalEmployees: number;
   totalManagers: number;
@@ -63,9 +74,10 @@ interface OrgDetail {
   planExpiresAt: string | null;
   createdAt: string;
   managers: Manager[];
+  employees: Employee[];
   students: Employee[];
   courses: Course[];
-  counts: { students: number; managers: number; courses: number };
+  counts: { employees: number; managers: number; courses: number };
 }
 
 /* ------------------------------------------------------------------ */
@@ -340,6 +352,8 @@ export function CorporateDetailClient({ id }: { id: string }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+
   // Upload state
   const [uploadStatus, setUploadStatus] = useState<"idle" | "parsing" | "uploading" | "done" | "error">("idle");
   const [uploadResult, setUploadResult] = useState<{ created: number; skipped: number } | null>(null);
@@ -358,6 +372,15 @@ export function CorporateDetailClient({ id }: { id: string }) {
   useEffect(() => {
     refreshData().finally(() => setLoading(false));
   }, [refreshData]);
+
+  useEffect(() => {
+    if (activeTab === "reports") {
+      fetch(`/api/admin/corporate/${id}/audit-logs`)
+        .then((r) => r.json())
+        .then((d) => { if (d.success) setAuditLogs(d.data); })
+        .catch(() => {});
+    }
+  }, [activeTab, id]);
 
   function parseCSV(text: string): { name: string; email: string }[] {
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
@@ -451,10 +474,10 @@ export function CorporateDetailClient({ id }: { id: string }) {
     );
   }
 
-  const seatsLeft = Math.max(0, org.maxSeats - org.counts.students);
+  const seatsLeft = Math.max(0, org.maxSeats - org.counts.employees);
 
   const tabs: { key: Tab; label: string; count?: number; icon: React.ComponentType<{ className?: string }> }[] = [
-    { key: "employees", label: "Employees", count: org.counts.students, icon: Users },
+    { key: "employees", label: "Employees", count: org.counts.employees, icon: Users },
     { key: "managers", label: "Managers", count: org.counts.managers, icon: Shield },
     { key: "courses", label: "Courses", count: org.counts.courses, icon: BookOpen },
     { key: "reports", label: "Reports", icon: BarChart2 },
@@ -462,13 +485,13 @@ export function CorporateDetailClient({ id }: { id: string }) {
 
   // Filtered employees by search
   const filteredEmployees = search.trim()
-    ? org.students.filter(
+    ? org.employees.filter(
         (s) =>
           s.name.toLowerCase().includes(search.toLowerCase()) ||
           s.email.toLowerCase().includes(search.toLowerCase()) ||
           (s.department ?? "").toLowerCase().includes(search.toLowerCase())
       )
-    : org.students;
+    : org.employees;
 
   return (
     <>
@@ -515,7 +538,7 @@ export function CorporateDetailClient({ id }: { id: string }) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
             label="Total Employees"
-            value={stats?.totalEmployees ?? org.counts.students}
+            value={stats?.totalEmployees ?? org.counts.employees}
             sub={`${seatsLeft} seat${seatsLeft !== 1 ? "s" : ""} left`}
             icon={Users}
             color="bg-blue-100"
@@ -565,7 +588,7 @@ export function CorporateDetailClient({ id }: { id: string }) {
             </div>
             <div>
               <p className="text-xs text-gray-400 mb-1">Seat Usage</p>
-              <SeatBar used={org.counts.students} total={org.maxSeats} />
+              <SeatBar used={org.counts.employees} total={org.maxSeats} />
             </div>
             <div>
               <p className="text-xs text-gray-400 mb-1">Member Since</p>
@@ -687,7 +710,7 @@ export function CorporateDetailClient({ id }: { id: string }) {
                     {filteredEmployees.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-5 py-14 text-center">
-                          {org.students.length === 0 ? (
+                          {org.employees.length === 0 ? (
                             <div>
                               <Users className="h-10 w-10 text-gray-200 mx-auto mb-3" />
                               <p className="text-sm font-medium text-gray-500 mb-1">No employees yet</p>
@@ -869,13 +892,39 @@ export function CorporateDetailClient({ id }: { id: string }) {
             </table>
           </div>
 
+          {/* Audit log viewer — Reports tab only */}
+          {activeTab === "reports" && auditLogs.length > 0 && (
+            <div className="px-5 py-4 border-t border-gray-100">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Recent Activity</h3>
+              <div className="space-y-2">
+                {auditLogs.map((log) => (
+                  <div key={log.id} className="flex items-center gap-3 text-xs">
+                    <span className={`px-2 py-0.5 rounded-full font-medium ${
+                      log.action.includes("CREATE") ? "bg-emerald-100 text-emerald-700" :
+                      log.action.includes("DELETE") ? "bg-red-100 text-red-700" :
+                      "bg-blue-100 text-blue-700"
+                    }`}>
+                      {log.action.replace("_", " ")}
+                    </span>
+                    <span className="text-gray-600">
+                      {(log.meta as { name?: string })?.name ?? log.entityId ?? log.entity}
+                    </span>
+                    <span className="text-gray-400 ml-auto">
+                      {new Date(log.createdAt).toLocaleString("en-PH", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Footer hint */}
-          {activeTab === "employees" && org.students.length > 0 && (
+          {activeTab === "employees" && org.employees.length > 0 && (
             <div className="px-5 py-3 border-t border-gray-50 bg-gray-50/50 flex items-center justify-between">
               <p className="text-xs text-gray-400">
                 CSV format: <code className="bg-gray-100 px-1 py-0.5 rounded text-gray-500 font-mono">name,email</code> — one per row, max 500.
               </p>
-              <p className="text-xs text-gray-400">{filteredEmployees.length} of {org.students.length} shown</p>
+              <p className="text-xs text-gray-400">{filteredEmployees.length} of {org.employees.length} shown</p>
             </div>
           )}
         </div>

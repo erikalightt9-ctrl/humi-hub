@@ -1843,3 +1843,21 @@ model RevenueAuditLog {
   @@index([actorId])
   @@map("revenue_audit_logs")
 }
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  tenantId   String?
+  actorId    String
+  actorRole  String
+  action     String
+  entity     String
+  entityId   String?
+  meta       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([actorId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
