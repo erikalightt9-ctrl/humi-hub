@@ -1,29 +1,16 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { prisma } from "@/lib/prisma";
 import { PortalTabs } from "@/components/portal/PortalTabs";
-import { resolveTenantFromSubdomain } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Login & Enroll — HUMI Training Center",
+  title: "Login — HUMI Training Center",
   description:
-    "Sign in as a student or admin, or enroll in a VA training course. All access in one place.",
+    "Sign in as a student, trainer, or admin. New students can enroll using the button in the header.",
 };
 
 export default async function PortalPage() {
-  const tenant = await resolveTenantFromSubdomain();
-
-  const courses = await prisma.course.findMany({
-    where: {
-      isActive: true,
-      ...(tenant ? { tenantId: tenant.tenantId } : {}),
-    },
-    select: { id: true, title: true, slug: true },
-    orderBy: { createdAt: "asc" },
-  });
-
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <Suspense
@@ -33,7 +20,7 @@ export default async function PortalPage() {
           </div>
         }
       >
-        <PortalTabs courses={courses} />
+        <PortalTabs />
       </Suspense>
     </div>
   );
