@@ -5,6 +5,8 @@ import {
   matchStudentToJobs,
   canRunMatching,
 } from "@/lib/services/ai-job-matching.service";
+import { requireFeature } from "@/lib/require-feature";
+import { FEATURES } from "@/lib/feature-flags";
 
 /* ------------------------------------------------------------------ */
 /*  GET — Return student's existing matches                            */
@@ -64,6 +66,8 @@ export async function POST(request: NextRequest) {
     }
 
     const studentId = token.id as string;
+    const featureCheck = await requireFeature((token.tenantId as string | undefined) ?? null, FEATURES.JOB_BOARD);
+    if (!featureCheck.ok) return featureCheck.response;
 
     const allowed = await canRunMatching(studentId);
     if (!allowed) {

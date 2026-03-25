@@ -14,6 +14,8 @@ import {
   endSimulationSchema,
 } from "@/lib/validations/ai-simulator.schema";
 import { requireSubscription } from "@/lib/guards/subscription.guard";
+import { requireFeature } from "@/lib/require-feature";
+import { FEATURES } from "@/lib/feature-flags";
 import type { CourseSlug } from "@/types";
 
 /* ------------------------------------------------------------------ */
@@ -104,6 +106,8 @@ export async function POST(request: NextRequest) {
     const studentId = token.id as string;
     const denied = await requireSubscription(studentId);
     if (denied) return denied;
+    const featureCheck = await requireFeature((token.tenantId as string | undefined) ?? null, FEATURES.AI_SIMULATIONS);
+    if (!featureCheck.ok) return featureCheck.response;
     const body = await request.json();
     const action = body.action as string;
 

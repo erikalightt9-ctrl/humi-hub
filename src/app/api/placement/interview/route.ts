@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 import { getOpenAI, isOpenAIAvailable } from "@/lib/openai";
+import { requireFeature } from "@/lib/require-feature";
+import { FEATURES } from "@/lib/feature-flags";
 
 /* ------------------------------------------------------------------ */
 /*  Fallback questions when OpenAI is unavailable                      */
@@ -91,6 +93,8 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
+    const featureCheck = await requireFeature((token.tenantId as string | undefined) ?? null, FEATURES.AI_INTERVIEWS);
+    if (!featureCheck.ok) return featureCheck.response;
 
     const body = await req.json() as { role?: unknown; courseSlug?: unknown };
     const role = typeof body.role === "string" ? body.role.trim() : "";
