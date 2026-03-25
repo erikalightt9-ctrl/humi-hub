@@ -92,7 +92,10 @@ export async function GET(
     const page = searchParams.get("page") ? Number(searchParams.get("page")) : 1;
     const limit = searchParams.get("limit") ? Number(searchParams.get("limit")) : 50;
 
-    const messages = await messagingRepo.getMessages(id, page, limit);
+    const messages = await messagingRepo.getMessages(id, page, limit, {
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+    });
 
     return NextResponse.json({ success: true, data: messages, error: null });
   } catch (err) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Mail, Send, Loader2, Plus, MessageSquare, Users, Search, Paperclip, X } from "lucide-react";
+import { Mail, Send, Loader2, Plus, MessageSquare, Users, Search, Paperclip, X, Trash2 } from "lucide-react";
 import { ACTOR_TYPE_LABELS, CONVERSATION_TYPE_LABELS } from "@/lib/constants/communications";
 import { NewConversationModal } from "./NewConversationModal";
 
@@ -43,6 +43,29 @@ interface Message {
   readonly reads?: readonly MessageRead[];
 }
 
+interface SentMessage {
+  readonly id: string;
+  readonly content: string;
+  readonly createdAt: string;
+  readonly attachmentUrl: string | null;
+  readonly attachmentName: string | null;
+  readonly reads: readonly { actorType: string; actorId: string }[];
+  readonly conversation: {
+    readonly id: string;
+    readonly type: string;
+    readonly title: string | null;
+    readonly participants: readonly { actorType: string; actorId: string }[];
+  };
+}
+
+interface SavedContact {
+  readonly id: string;
+  readonly contactType: string;
+  readonly contactId: string;
+  readonly contactName: string | null;
+  readonly lastMessageAt: string;
+}
+
 interface Props {
   readonly currentActorType: string;
   readonly currentActorId: string;
@@ -59,6 +82,10 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
   const [search, setSearch] = useState("");
   const [pendingFile, setPendingFile] = useState<{ url: string; name: string } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"inbox" | "sent" | "contacts">("inbox");
+  const [sentMessages, setSentMessages] = useState<SentMessage[]>([]);
+  const [savedContacts, setSavedContacts] = useState<SavedContact[]>([]);
+  const [loadingTab, setLoadingTab] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fallbackPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -79,6 +106,24 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
     const interval = setInterval(fetchConversations, 15_000);
     return () => clearInterval(interval);
   }, [fetchConversations]);
+
+  useEffect(() => {
+    if (activeTab === "sent") {
+      setLoadingTab(true);
+      fetch("/api/messages/sent")
+        .then((r) => r.json())
+        .then((d) => { if (d.success) setSentMessages(d.data.data ?? []); })
+        .catch(() => {})
+        .finally(() => setLoadingTab(false));
+    } else if (activeTab === "contacts") {
+      setLoadingTab(true);
+      fetch("/api/messages/my-contacts")
+        .then((r) => r.json())
+        .then((d) => { if (d.success) setSavedContacts(d.data ?? []); })
+        .catch(() => {})
+        .finally(() => setLoadingTab(false));
+    }
+  }, [activeTab]);
 
   const fetchMessages = useCallback(async (convId: string) => {
     try {
@@ -175,6 +220,19 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
     setSending(false);
   }
 
+  async function handleDeleteMessage(msgId: string) {
+    if (!selectedId) return;
+    try {
+      const res = await fetch(`/api/messages/conversations/${selectedId}/messages/${msgId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessages((prev) => prev.filter((m) => m.id !== msgId));
+      }
+    } catch { /* ignore */ }
+  }
+
   function getConversationDisplayName(conv: Conversation): string {
     if (conv.title) return conv.title;
     const other = conv.participants.find(
@@ -218,74 +276,165 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
         <div className="flex h-full">
           {/* Conversation list */}
           <div className="w-80 border-r border-gray-200 flex flex-col shrink-0">
-            <div className="p-3 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Users className="h-4 w-4" />
-                <span>{conversations.length} conversations</span>
-              </div>
-              <button
-                onClick={() => setShowCompose(true)}
-                className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition"
-                title="New conversation"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Compose
-              </button>
-            </div>
-            {conversations.length > 0 && (
-              <div className="px-3 py-2 border-b border-gray-100">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search conversations..."
-                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-50"
-                  />
-                </div>
-              </div>
-            )}
-            <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
-              {loading ? (
-                <div className="p-6 text-center text-gray-400 text-sm">Loading...</div>
-              ) : conversations.length === 0 ? (
-                <div className="p-6 text-center">
-                  <Mail className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400 mb-3">No conversations yet</p>
+            <div className="border-b border-gray-200">
+              <div className="flex">
+                {(["inbox", "sent", "contacts"] as const).map((tab) => (
                   <button
-                    onClick={() => setShowCompose(true)}
-                    className="text-xs text-blue-600 hover:text-blue-800 font-medium underline"
-                  >
-                    Start your first conversation
-                  </button>
-                </div>
-              ) : filteredConversations.length === 0 ? (
-                <div className="p-6 text-center text-sm text-gray-400">
-                  No conversations match &ldquo;{search}&rdquo;
-                </div>
-              ) : (
-                filteredConversations.map((conv) => (
-                  <button
-                    key={conv.id}
-                    onClick={() => setSelectedId(conv.id)}
-                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition ${
-                      selectedId === conv.id ? "bg-blue-50" : ""
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`flex-1 py-2.5 text-xs font-medium capitalize transition ${
+                      activeTab === tab
+                        ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
+                        : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
-                    <p className="text-sm font-medium text-gray-800 truncate">
-                      {getConversationDisplayName(conv)}
-                    </p>
-                    {conv.messages[0] && (
-                      <p className="text-xs text-gray-400 truncate mt-0.5">
-                        {conv.messages[0].content}
-                      </p>
-                    )}
-                    <p className="text-[10px] text-gray-300 mt-1">
-                      {new Date(conv.updatedAt).toLocaleDateString()}
-                    </p>
+                    {tab === "inbox" ? "Inbox" : tab === "sent" ? "Sent" : "Contacts"}
                   </button>
-                ))
+                ))}
+              </div>
+              {activeTab === "inbox" && (
+                <div className="px-3 py-2 flex items-center justify-between border-t border-gray-100">
+                  <span className="text-xs text-gray-400">{conversations.length} conversations</span>
+                  <button
+                    onClick={() => setShowCompose(true)}
+                    className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Compose
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
+              {activeTab === "inbox" && (
+                <>
+                  {conversations.length > 0 && (
+                    <div className="px-3 py-2 border-b border-gray-100">
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                        <input
+                          type="text"
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                          placeholder="Search conversations..."
+                          className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-50"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {loading ? (
+                    <div className="p-6 text-center text-gray-400 text-sm">Loading...</div>
+                  ) : conversations.length === 0 ? (
+                    <div className="p-6 text-center">
+                      <Mail className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-sm text-gray-400 mb-3">No conversations yet</p>
+                      <button
+                        onClick={() => setShowCompose(true)}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-medium underline"
+                      >
+                        Start your first conversation
+                      </button>
+                    </div>
+                  ) : filteredConversations.length === 0 ? (
+                    <div className="p-6 text-center text-sm text-gray-400">
+                      No conversations match &ldquo;{search}&rdquo;
+                    </div>
+                  ) : (
+                    filteredConversations.map((conv) => (
+                      <button
+                        key={conv.id}
+                        onClick={() => setSelectedId(conv.id)}
+                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition ${
+                          selectedId === conv.id ? "bg-blue-50" : ""
+                        }`}
+                      >
+                        <p className="text-sm font-medium text-gray-800 truncate">
+                          {getConversationDisplayName(conv)}
+                        </p>
+                        {conv.messages[0] && (
+                          <p className="text-xs text-gray-400 truncate mt-0.5">
+                            {conv.messages[0].content}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-gray-300 mt-1">
+                          {new Date(conv.updatedAt).toLocaleDateString()}
+                        </p>
+                      </button>
+                    ))
+                  )}
+                </>
+              )}
+
+              {activeTab === "sent" && (
+                <>
+                  {loadingTab ? (
+                    <div className="p-6 text-center text-gray-400 text-sm">Loading...</div>
+                  ) : sentMessages.length === 0 ? (
+                    <div className="p-6 text-center text-gray-400 text-sm">No sent messages yet</div>
+                  ) : (
+                    sentMessages.map((msg) => (
+                      <button
+                        key={msg.id}
+                        onClick={() => setSelectedId(msg.conversation.id)}
+                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-50 transition ${
+                          selectedId === msg.conversation.id ? "bg-blue-50" : ""
+                        }`}
+                      >
+                        <p className="text-xs text-blue-600 font-medium truncate">
+                          To: {msg.conversation.title ?? msg.conversation.participants
+                            .filter((p) => !(p.actorType === currentActorType && p.actorId === currentActorId))
+                            .map((p) => ACTOR_TYPE_LABELS[p.actorType] ?? p.actorType)
+                            .join(", ")}
+                        </p>
+                        <p className="text-xs text-gray-600 truncate mt-0.5">{msg.content}</p>
+                        <div className="flex items-center gap-1 mt-1">
+                          <span className="text-[10px] text-gray-400">
+                            {new Date(msg.createdAt).toLocaleDateString()}
+                          </span>
+                          {msg.reads && msg.reads.length > 0 && (
+                            <span className="text-[10px] text-blue-400 font-bold">✓✓</span>
+                          )}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </>
+              )}
+
+              {activeTab === "contacts" && (
+                <>
+                  {loadingTab ? (
+                    <div className="p-6 text-center text-gray-400 text-sm">Loading...</div>
+                  ) : savedContacts.length === 0 ? (
+                    <div className="p-6 text-center">
+                      <Users className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-xs text-gray-400">Contacts appear after your first message</p>
+                    </div>
+                  ) : (
+                    savedContacts.map((contact) => (
+                      <div key={contact.id} className="px-4 py-3 flex items-center gap-3 border-b border-gray-50 hover:bg-gray-50 group">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold shrink-0">
+                          {(contact.contactName ?? contact.contactType)[0].toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">
+                            {contact.contactName ?? "Unknown"}
+                          </p>
+                          <p className="text-xs text-gray-400 truncate">
+                            {ACTOR_TYPE_LABELS[contact.contactType] ?? contact.contactType}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setShowCompose(true)}
+                          className="opacity-0 group-hover:opacity-100 text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded-lg bg-blue-50 transition"
+                        >
+                          Message
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -321,10 +470,16 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
                 )}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                   {messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${isSelf(msg) ? "justify-end" : "justify-start"}`}
-                    >
+                    <div key={msg.id} className={`flex group ${isSelf(msg) ? "justify-end" : "justify-start"}`}>
+                      {isSelf(msg) && (
+                        <button
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          className="opacity-0 group-hover:opacity-100 self-center mr-1 p-1 text-gray-300 hover:text-red-400 rounded transition"
+                          title="Delete message"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                       <div
                         className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm ${
                           isSelf(msg)
@@ -356,6 +511,15 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
                           )}
                         </div>
                       </div>
+                      {!isSelf(msg) && (
+                        <button
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          className="opacity-0 group-hover:opacity-100 self-center ml-1 p-1 text-gray-300 hover:text-red-400 rounded transition"
+                          title="Delete message"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   ))}
                   <div ref={messagesEndRef} />

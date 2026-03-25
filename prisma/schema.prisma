@@ -1467,6 +1467,7 @@ model DirectMessage {
   createdAt      DateTime      @default(now())
   conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   reads          MessageRead[]
+  deletions      MessageDeletion[]
 
   @@index([conversationId, createdAt])
   @@index([senderType, senderId])
@@ -1485,6 +1486,37 @@ model MessageRead {
   @@index([messageId])
   @@index([actorType, actorId])
   @@map("message_reads")
+}
+
+model MessageDeletion {
+  id         String        @id @default(cuid())
+  messageId  String
+  actorType  ActorType
+  actorId    String
+  deletedAt  DateTime      @default(now())
+  message    DirectMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, actorType, actorId])
+  @@index([messageId])
+  @@index([actorType, actorId])
+  @@map("message_deletions")
+}
+
+model MessageContact {
+  id            String    @id @default(cuid())
+  ownerType     ActorType
+  ownerId       String
+  contactType   ActorType
+  contactId     String
+  contactName   String?
+  tenantId      String?
+  lastMessageAt DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+
+  @@unique([ownerType, ownerId, contactType, contactId])
+  @@index([ownerType, ownerId])
+  @@index([tenantId])
+  @@map("message_contacts")
 }
 
 model Notification {

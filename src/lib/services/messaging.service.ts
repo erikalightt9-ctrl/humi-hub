@@ -76,7 +76,6 @@ export async function sendMessage(
     attachmentName,
   });
 
-  // Notify other participants
   const conversation = await messagingRepo.getConversationById(conversationId);
   if (conversation) {
     const sender = await resolveActor(senderType, senderId);
@@ -86,9 +85,27 @@ export async function sendMessage(
       (p) => !(p.actorType === senderType && p.actorId === senderId)
     );
 
+    // Auto-upsert contacts (both directions)
+    await Promise.allSettled([
+      ...otherParticipants.map(async (p) => {
+        const contactActor = await resolveActor(p.actorType, p.actorId);
+        return messagingRepo.upsertContact(
+          { actorType: senderType, actorId: senderId },
+          { actorType: p.actorType, actorId: p.actorId, name: contactActor?.name ?? undefined },
+          conversation.tenantId
+        );
+      }),
+      ...otherParticipants.map((p) =>
+        messagingRepo.upsertContact(
+          { actorType: p.actorType, actorId: p.actorId },
+          { actorType: senderType, actorId: senderId, name: senderName },
+          conversation.tenantId
+        )
+      ),
+    ]);
+
+    // Notify other participants
     if (otherParticipants.length > 0) {
-      // Notify each participant with their role-specific messages URL so the
-      // link resolves correctly (e.g. /student/messages vs /admin/messages).
       await Promise.allSettled(
         otherParticipants.map((p) =>
           notify({
