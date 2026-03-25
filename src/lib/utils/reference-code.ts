@@ -22,9 +22,10 @@ export async function generateReferenceCode(): Promise<string> {
     select: { referenceCode: true },
   });
 
-  const nextSeq = latest
-    ? parseInt(latest.referenceCode.slice(prefix.length), 10) + 1
-    : 1;
+  const nextSeq =
+    latest?.referenceCode != null
+      ? parseInt(latest.referenceCode.slice(prefix.length), 10) + 1
+      : 1;
 
   return retryReferenceCode(prefix, nextSeq);
 }
