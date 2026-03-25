@@ -142,7 +142,12 @@ export async function getConversations(
   limit = 20
 ) {
   const skip = (page - 1) * limit;
-  const tenantFilter = tenantId ? { tenantId } : {};
+  // Include both tenant-scoped AND platform-level (null tenantId) conversations.
+  // Admin→Student cross-role conversations are created without a tenantId, so
+  // a strict equality filter would hide them from the student's inbox.
+  const tenantFilter = tenantId
+    ? { OR: [{ tenantId }, { tenantId: null }] }
+    : {};
 
   const [conversations, total] = await Promise.all([
     prisma.conversation.findMany({

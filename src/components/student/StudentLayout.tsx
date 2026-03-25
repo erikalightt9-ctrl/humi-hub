@@ -114,13 +114,6 @@ function buildNavGroups(courseId: string): ReadonlyArray<NavGroup> {
         { href: "/student/mentorship", label: "Mentorship", icon: Heart },
       ],
     },
-    {
-      label: "Support",
-      icon: Ticket,
-      items: [
-        { href: "/student/messages", label: "Messages", icon: Mail },
-      ],
-    },
   ];
 }
 
@@ -135,6 +128,7 @@ interface StandaloneNavItem {
 }
 
 const studentPrimaryNavItems: ReadonlyArray<StandaloneNavItem> = [
+  { href: "/student/messages", label: "Messages",        icon: Mail },
   { href: "/student/help",    label: "Knowledge Base",   icon: HelpCircle },
   { href: "/student/calendar", label: "Calendar",        icon: CalendarDays },
   { href: "/student/support",  label: "Support Tickets", icon: Ticket },

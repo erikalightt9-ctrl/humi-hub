@@ -14,10 +14,8 @@ import {
   LogOut,
   Building2,
   Loader2,
-  MessageSquare,
   Megaphone,
   Ticket,
-  Bell,
   Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -43,7 +41,6 @@ const NAV_ITEMS: ReadonlyArray<NavItem> = [
   { href: "/corporate/messages", label: "Messages", icon: Mail },
   { href: "/corporate/announcements", label: "Announcements", icon: Megaphone },
   { href: "/corporate/support", label: "Support", icon: Ticket },
-  { href: "/corporate/notifications", label: "Notifications", icon: Bell },
   { href: "/corporate/settings", label: "Settings", icon: Settings },
 ];
 

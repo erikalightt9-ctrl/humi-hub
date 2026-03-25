@@ -61,6 +61,7 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fallbackPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -71,7 +72,13 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchConversations(); }, [fetchConversations]);
+  useEffect(() => {
+    fetchConversations();
+    // Poll every 15 s so incoming conversations (e.g. admin → student) appear
+    // without a full page reload even when no SSE stream is open.
+    const interval = setInterval(fetchConversations, 15_000);
+    return () => clearInterval(interval);
+  }, [fetchConversations]);
 
   const fetchMessages = useCallback(async (convId: string) => {
     try {
@@ -101,17 +108,26 @@ export function MessagingView({ currentActorType, currentActorId }: Props) {
         });
         // Mark new messages read
         fetch(`/api/messages/conversations/${selectedId}/read`, { method: "POST" }).catch(() => {});
+        // Refresh conversation list so last-message preview stays current
+        fetchConversations();
       } catch { /* malformed event */ }
     };
 
     es.onerror = () => {
       // SSE connection lost — fall back to 10s polling
       es.close();
-      const interval = setInterval(() => fetchMessages(selectedId), 10000);
-      return () => clearInterval(interval);
+      if (!fallbackPollRef.current) {
+        fallbackPollRef.current = setInterval(() => fetchMessages(selectedId), 10_000);
+      }
     };
 
-    return () => es.close();
+    return () => {
+      es.close();
+      if (fallbackPollRef.current) {
+        clearInterval(fallbackPollRef.current);
+        fallbackPollRef.current = null;
+      }
+    };
   }, [selectedId, fetchMessages]);
 
   useEffect(() => {

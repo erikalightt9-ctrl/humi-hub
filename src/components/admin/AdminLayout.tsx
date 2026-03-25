@@ -113,7 +113,6 @@ const adminNavGroups: ReadonlyArray<NavGroup> = [
     icon: MessageSquare,
     items: [
       { href: "/admin/communications", label: "Contact Messages", icon: MessageSquare },
-      { href: "/admin/messages", label: "Messaging", icon: Mail },
       { href: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote },
     ],
   },
@@ -140,6 +139,7 @@ interface StandaloneNavItem {
 }
 
 const adminPrimaryNavItems: ReadonlyArray<StandaloneNavItem> = [
+  { href: "/admin/messages",       label: "Messages",       icon: Mail },
   { href: "/admin/knowledge-base", label: "Knowledge Base", icon: HelpCircle },
   { href: "/admin/calendar",       label: "Calendar",       icon: CalendarDays },
   { href: "/admin/tickets",        label: "Support Tickets", icon: Ticket },

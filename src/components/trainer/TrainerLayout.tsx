@@ -13,9 +13,7 @@ import {
   Star,
   UserCircle,
   LogOut,
-  MessageSquare,
   Ticket,
-  Bell,
   Mail,
   HelpCircle,
 } from "lucide-react";
@@ -59,14 +57,6 @@ const trainerNavGroups: ReadonlyArray<NavGroup> = [
       { href: "/trainer/ratings", label: "My Ratings", icon: Star },
     ],
   },
-  {
-    label: "Communication",
-    icon: MessageSquare,
-    items: [
-      { href: "/trainer/messages", label: "Messages", icon: Mail },
-      { href: "/trainer/notifications", label: "Notifications", icon: Bell },
-    ],
-  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -80,6 +70,7 @@ interface StandaloneNavItem {
 }
 
 const trainerPrimaryNavItems: ReadonlyArray<StandaloneNavItem> = [
+  { href: "/trainer/messages", label: "Messages",         icon: Mail },
   { href: "/help",             label: "Knowledge Base",   icon: HelpCircle },
   { href: "/trainer/schedule", label: "Calendar",         icon: CalendarClock },
   { href: "/trainer/support",  label: "Support Tickets",  icon: Ticket },
