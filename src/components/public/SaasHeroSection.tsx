@@ -144,16 +144,17 @@ export function SaasHeroSection() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.08] mb-6 tracking-tight">
-              All-in-One Training{" "}
+              All-in-One{" "}
               <span className="bg-gradient-to-r from-amber-300 to-orange-300 bg-clip-text text-transparent">
-                Management Platform
+                AI-Powered
               </span>{" "}
-              for Training Centers
+              Training Management System
             </h1>
 
             <p className="text-blue-100/90 text-lg sm:text-xl leading-relaxed mb-8 max-w-xl">
-              Manage students, trainers, courses, messaging, and analytics — all
-              in one powerful system. Replace spreadsheets with automation.
+              Manage enrollments, students, trainers, payments, and analytics —
+              all from one powerful platform. Replace your spreadsheets and
+              manual processes with smart automation.
             </p>
 
             {/* CTAs */}
@@ -163,8 +164,8 @@ export function SaasHeroSection() {
                 size="lg"
                 className="bg-white text-slate-900 hover:bg-blue-50 font-bold text-base px-8 py-6 shadow-lg shadow-blue-950/40"
               >
-                <Link href="/portal?tab=enroll">
-                  Start Free Trial <ArrowRight className="ml-2 h-4 w-4" />
+                <Link href="/contact">
+                  Start Your Training Platform Today <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button
