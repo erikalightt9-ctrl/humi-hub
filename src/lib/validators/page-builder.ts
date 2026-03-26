@@ -140,6 +140,8 @@ export const updateThemeSchema = z.object({
   logoUrl: z.string().max(500).nullable().optional(),
   faviconUrl: z.string().max(500).nullable().optional(),
   customCss: z.string().max(50000).nullable().optional(),
+  headingSize: z.enum(["sm", "md", "lg", "xl"]).optional(),
+  bodySize: z.enum(["sm", "md", "lg"]).optional(),
 });
 
 export type CreatePageInput = z.infer<typeof createPageSchema>;

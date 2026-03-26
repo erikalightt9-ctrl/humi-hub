@@ -1,13 +1,18 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Loader2, Upload, CheckCircle, AlertCircle, Palette } from "lucide-react";
+import { Loader2, Upload, CheckCircle, AlertCircle, Palette, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ColorPicker } from "./ColorPicker";
 import { FontSelector } from "./FontSelector";
 import { ThemePreview } from "./ThemePreview";
+import {
+  TypographySizeSelector,
+  HEADING_SIZE_OPTIONS,
+  BODY_SIZE_OPTIONS,
+} from "./TypographySizeSelector";
 import type { TenantTheme } from "@prisma/client";
 
 /* ------------------------------------------------------------------ */
@@ -29,6 +34,8 @@ interface FormState {
   readonly logoUrl: string;
   readonly businessName: string;
   readonly tagline: string;
+  readonly headingSize: string;
+  readonly bodySize: string;
 }
 
 const DEFAULT_FORM: FormState = {
@@ -40,6 +47,8 @@ const DEFAULT_FORM: FormState = {
   logoUrl: "",
   businessName: "My Business",
   tagline: "Your trusted learning partner",
+  headingSize: "md",
+  bodySize: "md",
 };
 
 /* ------------------------------------------------------------------ */
@@ -57,6 +66,8 @@ function initFormState(theme: TenantThemeData | null): FormState {
     logoUrl: theme.logoUrl ?? "",
     businessName: DEFAULT_FORM.businessName,
     tagline: DEFAULT_FORM.tagline,
+    headingSize: (theme as TenantTheme & { headingSize?: string }).headingSize ?? "md",
+    bodySize: (theme as TenantTheme & { bodySize?: string }).bodySize ?? "md",
   };
 }
 
@@ -87,6 +98,13 @@ export function ThemeEditor({ initialTheme }: ThemeEditorProps) {
   /* ── Immutable field update helper ── */
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]): void {
     setForm((prev) => ({ ...prev, [key]: value }));
+    setSuccessMsg(null);
+    setErrorMsg(null);
+  }
+
+  /* ── Reset to defaults ── */
+  function handleReset(): void {
+    setForm(DEFAULT_FORM);
     setSuccessMsg(null);
     setErrorMsg(null);
   }
@@ -137,6 +155,8 @@ export function ThemeEditor({ initialTheme }: ThemeEditorProps) {
         fontHeading: form.fontHeading,
         fontBody: form.fontBody,
         logoUrl: form.logoUrl || null,
+        headingSize: form.headingSize,
+        bodySize: form.bodySize,
       };
 
       const res = await fetch("/api/corporate/theme", {
@@ -211,6 +231,18 @@ export function ThemeEditor({ initialTheme }: ThemeEditorProps) {
                 label="Body Font"
                 value={form.fontBody}
                 onChange={(v) => updateField("fontBody", v)}
+              />
+              <TypographySizeSelector
+                label="Heading Size"
+                value={form.headingSize}
+                options={HEADING_SIZE_OPTIONS}
+                onChange={(v) => updateField("headingSize", v)}
+              />
+              <TypographySizeSelector
+                label="Body Size"
+                value={form.bodySize}
+                options={BODY_SIZE_OPTIONS}
+                onChange={(v) => updateField("bodySize", v)}
               />
             </div>
           </div>
@@ -324,8 +356,17 @@ export function ThemeEditor({ initialTheme }: ThemeEditorProps) {
         </div>
       )}
 
-      {/* ── Save button ── */}
-      <div className="flex justify-end">
+      {/* ── Action buttons ── */}
+      <div className="flex items-center justify-between">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleReset}
+          className="gap-2"
+        >
+          <RotateCcw className="h-4 w-4" />
+          Reset to Defaults
+        </Button>
         <Button type="submit" disabled={saving} className="gap-2 px-6">
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}
           {saving ? "Saving…" : "Save Theme"}

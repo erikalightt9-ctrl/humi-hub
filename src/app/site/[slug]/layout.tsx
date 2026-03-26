@@ -43,6 +43,21 @@ type ThemeRecord = {
   logoUrl?: string;
   faviconUrl?: string;
   customCss?: string | null;
+  headingSize?: string;
+  bodySize?: string;
+};
+
+const HEADING_SIZE_MAP: Record<string, string> = {
+  sm: "1.5rem",
+  md: "2rem",
+  lg: "2.5rem",
+  xl: "3rem",
+};
+
+const BODY_SIZE_MAP: Record<string, string> = {
+  sm: "0.875rem",
+  md: "1rem",
+  lg: "1.125rem",
 };
 
 function buildThemeCssVars(theme: ThemeRecord | null): React.CSSProperties {
@@ -53,6 +68,8 @@ function buildThemeCssVars(theme: ThemeRecord | null): React.CSSProperties {
     "--color-accent": t.accentColor ?? "#F59E0B",
     "--color-background": t.backgroundColor ?? "#FFFFFF",
     "--color-text": t.textColor ?? "#111827",
+    "--heading-size": HEADING_SIZE_MAP[t.headingSize ?? "md"] ?? "2rem",
+    "--body-size": BODY_SIZE_MAP[t.bodySize ?? "md"] ?? "1rem",
     fontFamily: t.fontBody ?? "Inter, sans-serif",
     backgroundColor: t.backgroundColor ?? "#FFFFFF",
     color: t.textColor ?? "#111827",

@@ -26,6 +26,8 @@ export async function upsertTheme(organizationId: string, data: UpdateThemeInput
       ...(data.logoUrl !== undefined && { logoUrl: data.logoUrl }),
       ...(data.faviconUrl !== undefined && { faviconUrl: data.faviconUrl }),
       ...(data.customCss !== undefined && { customCss: data.customCss }),
+      ...(data.headingSize !== undefined && { headingSize: data.headingSize }),
+      ...(data.bodySize !== undefined && { bodySize: data.bodySize }),
     },
     create: {
       organizationId,
@@ -39,6 +41,8 @@ export async function upsertTheme(organizationId: string, data: UpdateThemeInput
       logoUrl: data.logoUrl ?? null,
       faviconUrl: data.faviconUrl ?? null,
       customCss: data.customCss ?? null,
+      headingSize: data.headingSize ?? "md",
+      bodySize: data.bodySize ?? "md",
     },
   });
 }
