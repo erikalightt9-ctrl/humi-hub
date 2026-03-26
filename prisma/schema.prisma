@@ -1916,6 +1916,8 @@ model TenantTheme {
   logoUrl         String?
   faviconUrl      String?
   customCss       String?      @db.Text
+  headingSize     String       @default("md")
+  bodySize        String       @default("md")
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
