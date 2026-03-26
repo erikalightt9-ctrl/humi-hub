@@ -137,6 +137,22 @@ enum TenantPlan {
   ENTERPRISE
 }
 
+enum PageType {
+  LANDING
+  CONTACT
+  CUSTOM
+}
+
+enum SectionType {
+  HERO
+  FEATURES
+  TESTIMONIALS
+  CONTACT
+  CTA
+  TEXT
+  IMAGE
+}
+
 model Course {
   id            String       @id @default(cuid())
   slug          String       @unique
@@ -1239,6 +1255,9 @@ model Organization {
   subscriptions  TenantSubscription[]
   featureFlags   TenantFeatureFlag[]
 
+  pages         TenantPage[]
+  theme         TenantTheme?
+
   @@map("organizations")
 }
 
@@ -1860,4 +1879,47 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+model TenantPage {
+  id             String      @id @default(cuid())
+  organizationId String
+  title          String
+  slug           String
+  type           PageType    @default(CUSTOM)
+  isPublished    Boolean     @default(false)
+  sections       Json        @default("[]")
+  metaTitle      String?
+  metaDescription String?
+  order          Int         @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@index([organizationId, isPublished])
+  @@map("tenant_pages")
+}
+
+model TenantTheme {
+  id              String       @id @default(cuid())
+  organizationId  String       @unique
+  primaryColor    String       @default("#3B82F6")
+  secondaryColor  String       @default("#1E40AF")
+  accentColor     String       @default("#F59E0B")
+  backgroundColor String       @default("#FFFFFF")
+  textColor       String       @default("#111827")
+  fontHeading     String       @default("Inter")
+  fontBody        String       @default("Inter")
+  logoUrl         String?
+  faviconUrl      String?
+  customCss       String?      @db.Text
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_themes")
 }
