@@ -16,6 +16,9 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
@@ -42,7 +45,7 @@
     "react-dom": "19.2.3",
     "react-email": "^5.2.8",
     "react-hook-form": "^7.71.2",
-    "sanitize-html": "^2.17.1",
+    "sanitize-html": "^2.17.2",
     "sharp": "^0.34.5",
     "stripe": "^20.4.1",
     "tailwind-merge": "^3.5.0",
@@ -57,7 +60,7 @@
     "@types/nodemailer": "^7.0.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/sanitize-html": "^2.16.0",
+    "@types/sanitize-html": "^2.16.1",
     "dotenv": "^17.3.1",
     "jest": "^30.2.0",
     "jest-environment-node": "^30.2.0",
