@@ -92,11 +92,11 @@ export function CalendarWidget({ items, month, onMonthChange, onEventClick, onAd
           month: "flex flex-col gap-3 w-full",
           month_caption: "flex justify-center pt-1 relative items-center w-full",
           caption_label: "text-sm font-medium",
-          nav: "flex items-center gap-1",
+          nav: "absolute inset-x-1 top-0 flex items-center justify-between pointer-events-none",
           button_previous:
-            "h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100 hover:bg-gray-100 rounded-md flex items-center justify-center cursor-pointer border border-gray-200 absolute left-1",
+            "h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100 hover:bg-gray-100 rounded-md flex items-center justify-center cursor-pointer border border-gray-200 pointer-events-auto",
           button_next:
-            "h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100 hover:bg-gray-100 rounded-md flex items-center justify-center cursor-pointer border border-gray-200 absolute right-1",
+            "h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100 hover:bg-gray-100 rounded-md flex items-center justify-center cursor-pointer border border-gray-200 pointer-events-auto",
           month_grid: "w-full border-collapse",
           weekdays: "flex w-full",
           weekday: "text-muted-foreground flex-1 text-center font-normal text-[0.75rem]",
