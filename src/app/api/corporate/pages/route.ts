@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { createPage, listPages } from "@/lib/services/tenant-page.service";
 import { createPageSchema } from "@/lib/validators/page-builder";
+import { prisma } from "@/lib/prisma";
+import { getPlanPageLimit } from "@/lib/constants/plan-limits";
 
 /* ------------------------------------------------------------------ */
 /*  GET — list all pages for the org                                  */
@@ -34,8 +36,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, data: null, error: auth.error }, { status: auth.status });
     }
 
-    const pages = await listPages(auth.organizationId!);
-    return NextResponse.json({ success: true, data: pages, error: null });
+    const [pages, org] = await Promise.all([
+      listPages(auth.organizationId!),
+      prisma.organization.findUnique({
+        where: { id: auth.organizationId! },
+        select: { plan: true },
+      }),
+    ]);
+
+    const plan = org?.plan ?? "TRIAL";
+    const pageLimit = getPlanPageLimit(plan);
+    const pageCount = pages.length;
+
+    return NextResponse.json({
+      success: true,
+      data: pages,
+      plan,
+      pageLimit: pageLimit === Infinity ? null : pageLimit,
+      pageCount,
+      error: null,
+    });
   } catch (err) {
     console.error("[GET /api/corporate/pages]", err);
     return NextResponse.json({ success: false, data: null, error: "Internal server error" }, { status: 500 });
@@ -47,6 +67,29 @@ export async function POST(request: NextRequest) {
     const auth = await requireCorporateAuth(request);
     if (auth.error) {
       return NextResponse.json({ success: false, data: null, error: auth.error }, { status: auth.status });
+    }
+
+    // Check plan-based page limit before creating
+    const [pageCount, org] = await Promise.all([
+      prisma.tenantPage.count({ where: { organizationId: auth.organizationId! } }),
+      prisma.organization.findUnique({
+        where: { id: auth.organizationId! },
+        select: { plan: true },
+      }),
+    ]);
+
+    const plan = org?.plan ?? "TRIAL";
+    const limit = getPlanPageLimit(plan);
+
+    if (pageCount >= limit) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: `You've reached the ${limit === Infinity ? "" : limit + " "}page limit on the ${plan} plan. Please upgrade to create more pages.`,
+        },
+        { status: 403 },
+      );
     }
 
     const body = await request.json();

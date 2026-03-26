@@ -69,6 +69,20 @@ function buildGoogleFontUrl(theme: ThemeRecord | null): string {
   return `https://fonts.googleapis.com/css2?${families}&display=swap`;
 }
 
+/**
+ * Build a URL that works under both routing modes:
+ * - Direct path routing: /site/[slug]/[page]
+ * - Subdomain routing: tenant.platform.com/[page]
+ *
+ * The Next.js middleware rewrites inbound subdomain requests to /site/[slug][path],
+ * so internal links using the /site/[slug] prefix resolve correctly in both modes.
+ * The browser's visible URL is unaffected by the rewrite.
+ */
+function buildSiteUrl(orgSlug: string, path: string): string {
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `/site/${orgSlug}${cleanPath}`;
+}
+
 export default async function SiteLayout({ children, params }: SiteLayoutProps) {
   const { slug } = await params;
   const data = await getPublicSiteData(slug);
@@ -99,7 +113,7 @@ export default async function SiteLayout({ children, params }: SiteLayoutProps) 
         style={{ backgroundColor: "var(--color-background, #FFFFFF)" }}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <a href={`/site/${organization.slug}`} className="flex items-center gap-3">
+          <a href={buildSiteUrl(organization.slug, "/")} className="flex items-center gap-3">
             {logoUrl && (
               <img
                 src={logoUrl}
@@ -121,7 +135,7 @@ export default async function SiteLayout({ children, params }: SiteLayoutProps) 
                 {navPages.map((page) => (
                   <li key={page.id}>
                     <a
-                      href={`/site/${organization.slug}/${page.slug}`}
+                      href={buildSiteUrl(organization.slug, `/${page.slug}`)}
                       className="text-sm font-medium transition-colors hover:opacity-80"
                       style={{ color: "var(--color-text, #111827)" }}
                     >
@@ -131,7 +145,7 @@ export default async function SiteLayout({ children, params }: SiteLayoutProps) 
                 ))}
                 <li>
                   <a
-                    href={`/site/${organization.slug}/contact`}
+                    href={buildSiteUrl(organization.slug, "/contact")}
                     className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
                     style={{ backgroundColor: "var(--color-primary, #3B82F6)" }}
                   >

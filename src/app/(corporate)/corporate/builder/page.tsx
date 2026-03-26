@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageCard } from "@/components/page-builder/PageCard";
 import type { PageCardData } from "@/components/page-builder/PageCard";
+import { UpgradeBanner } from "@/components/corporate/UpgradeBanner";
+import { getPlanLabel } from "@/lib/constants/plan-limits";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -24,6 +26,9 @@ interface ApiResponse<T> {
   readonly success: boolean;
   readonly data: T | null;
   readonly error: string | null;
+  readonly plan?: string;
+  readonly pageLimit?: number | null;
+  readonly pageCount?: number;
 }
 
 const DEFAULT_FORM: NewPageForm = { title: "", slug: "", pageType: "CUSTOM" };
@@ -204,6 +209,9 @@ export default function BuilderListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showNewDialog, setShowNewDialog] = useState(false);
+  const [showUpgradeBanner, setShowUpgradeBanner] = useState(false);
+  const [plan, setPlan] = useState<string>("TRIAL");
+  const [pageLimit, setPageLimit] = useState<number | null>(3);
 
   const fetchPages = useCallback(async () => {
     setLoading(true);
@@ -216,6 +224,8 @@ export default function BuilderListPage() {
         return;
       }
       setPages(json.data);
+      if (json.plan) setPlan(json.plan);
+      if (json.pageLimit !== undefined) setPageLimit(json.pageLimit ?? null);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -226,6 +236,14 @@ export default function BuilderListPage() {
   useEffect(() => {
     void fetchPages();
   }, [fetchPages]);
+
+  const atLimit = pageLimit !== null && pages.length >= pageLimit;
+
+  useEffect(() => {
+    if (atLimit) {
+      setShowUpgradeBanner(true);
+    }
+  }, [atLimit]);
 
   function handleCreated(page: PageCardData): void {
     setPages((prev) => [...prev, page]);
@@ -242,8 +260,30 @@ export default function BuilderListPage() {
     });
   }
 
+  function handleNewPageClick(): void {
+    if (atLimit) {
+      setShowUpgradeBanner(true);
+      return;
+    }
+    setShowNewDialog(true);
+  }
+
+  const pageLimitLabel =
+    pageLimit === null
+      ? "Unlimited pages"
+      : `${pages.length} of ${pageLimit} pages used`;
+
   return (
     <div className="space-y-6">
+      {/* Upgrade banner */}
+      {showUpgradeBanner && atLimit && pageLimit !== null && (
+        <UpgradeBanner
+          plan={plan}
+          limit={pageLimit}
+          onDismiss={() => setShowUpgradeBanner(false)}
+        />
+      )}
+
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
@@ -251,11 +291,25 @@ export default function BuilderListPage() {
           <p className="text-sm text-gray-400 mt-0.5">
             Create and manage your white-label pages
           </p>
+          {!loading && (
+            <p className="text-xs text-gray-400 mt-1">
+              <span className={atLimit ? "text-amber-600 font-medium" : ""}>
+                {pageLimitLabel}
+              </span>
+              {pageLimit !== null && (
+                <span className="ml-1 text-gray-400">
+                  &middot; {getPlanLabel(plan)} plan
+                </span>
+              )}
+            </p>
+          )}
         </div>
         <Button
           type="button"
-          onClick={() => setShowNewDialog(true)}
+          onClick={handleNewPageClick}
           className="gap-2"
+          disabled={atLimit}
+          title={atLimit ? `Page limit reached (${pageLimit} max on ${getPlanLabel(plan)} plan)` : undefined}
         >
           <Plus className="h-4 w-4" />
           New Page
