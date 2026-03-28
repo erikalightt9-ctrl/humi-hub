@@ -5,21 +5,17 @@ import {
   Users,
   BookOpen,
   Award,
-  TrendingUp,
-  ClipboardList,
   GraduationCap,
   CheckSquare,
-  CalendarDays,
-  BarChart3,
+  Plus,
+  ArrowRight,
+  Lock,
   Sparkles,
-  FolderOpen,
-  Globe,
-  Settings,
-  MessageSquare,
-  Bell,
-  Headphones,
+  BarChart3,
+  FileText,
+  TrendingUp,
+  ClipboardList,
 } from "lucide-react";
-import { FeatureCard } from "@/components/corporate/FeatureCard";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -47,7 +43,7 @@ interface DashboardStats {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Stat Card                                                          */
+/*  Stat card                                                          */
 /* ------------------------------------------------------------------ */
 
 function StatCard({
@@ -55,96 +51,220 @@ function StatCard({
   value,
   icon: Icon,
   color,
+  href,
 }: {
   readonly label: string;
   readonly value: number | string;
   readonly icon: React.ComponentType<{ className?: string }>;
   readonly color: string;
+  readonly href?: string;
+}) {
+  const inner = (
+    <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4 hover:shadow-sm transition-shadow">
+      <div className={`p-3 rounded-xl shrink-0 ${color}`}>
+        <Icon className="h-5 w-5" />
+      </div>
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none">{value}</div>
+        <div className="text-xs text-gray-500 mt-1">{label}</div>
+      </div>
+      {href && <ArrowRight className="h-4 w-4 text-gray-300 ml-auto" />}
+    </div>
+  );
+
+  return href ? <Link href={href}>{inner}</Link> : <div>{inner}</div>;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Core module card                                                   */
+/* ------------------------------------------------------------------ */
+
+function ModuleCard({
+  href,
+  icon: Icon,
+  label,
+  description,
+  color,
+  badge,
+}: {
+  readonly href: string;
+  readonly icon: React.ComponentType<{ className?: string }>;
+  readonly label: string;
+  readonly description: string;
+  readonly color: string;
+  readonly badge?: number;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <div className="flex items-center justify-between mb-3">
-        <div className={`p-2 rounded-lg ${color}`}>
+    <Link
+      href={href}
+      className="group bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-3 hover:shadow-md hover:border-blue-200 transition-all"
+    >
+      <div className="flex items-start justify-between">
+        <div className={`p-2.5 rounded-xl ${color}`}>
           <Icon className="h-5 w-5" />
         </div>
+        {badge !== undefined && badge > 0 && (
+          <span className="text-xs font-semibold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
+            {badge}
+          </span>
+        )}
       </div>
-      <div className="text-2xl font-bold text-gray-900">{value}</div>
-      <div className="text-sm text-gray-500">{label}</div>
+      <div>
+        <p className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors text-sm">
+          {label}
+        </p>
+        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{description}</p>
+      </div>
+      <div className="flex items-center gap-1 text-xs text-blue-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity mt-auto">
+        Open <ArrowRight className="h-3 w-3" />
+      </div>
+    </Link>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Coming Soon card                                                   */
+/* ------------------------------------------------------------------ */
+
+function ComingSoonCard({
+  icon: Icon,
+  label,
+  description,
+  color,
+}: {
+  readonly icon: React.ComponentType<{ className?: string }>;
+  readonly label: string;
+  readonly description: string;
+  readonly color: string;
+}) {
+  return (
+    <div
+      title="Coming soon — currently in development"
+      className="bg-gray-50 rounded-xl border border-dashed border-gray-200 p-5 flex flex-col gap-3 opacity-60 cursor-not-allowed"
+    >
+      <div className="flex items-start justify-between">
+        <div className={`p-2.5 rounded-xl ${color} opacity-60`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-slate-100 text-slate-400 border border-slate-200 px-2 py-0.5 rounded-full">
+          <Lock className="h-2.5 w-2.5" />
+          Soon
+        </span>
+      </div>
+      <div>
+        <p className="font-semibold text-gray-400 text-sm">{label}</p>
+        <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{description}</p>
+      </div>
+      <div className="flex items-center gap-1 text-xs text-slate-400 font-medium mt-auto">
+        <Lock className="h-3 w-3" />
+        Coming Soon
+      </div>
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Status badge                                                       */
+/*  Enrollment status badge                                            */
 /* ------------------------------------------------------------------ */
 
 function StatusBadge({ status }: { readonly status: string }) {
   const styles: Record<string, string> = {
-    APPROVED: "bg-green-100 text-green-700",
-    ACTIVE: "bg-blue-100 text-blue-700",
-    PENDING: "bg-yellow-100 text-yellow-700",
-    REJECTED: "bg-red-100 text-red-700",
+    APPROVED:         "bg-green-100 text-green-700",
+    ACTIVE:           "bg-blue-100 text-blue-700",
+    ENROLLED:         "bg-blue-100 text-blue-700",
+    PENDING:          "bg-yellow-100 text-yellow-700",
+    PAYMENT_VERIFIED: "bg-teal-100 text-teal-700",
+    REJECTED:         "bg-red-100 text-red-700",
+  };
+
+  const label: Record<string, string> = {
+    APPROVED:         "Approved",
+    ACTIVE:           "Active",
+    ENROLLED:         "Enrolled",
+    PENDING:          "Pending",
+    PAYMENT_VERIFIED: "Verified",
+    REJECTED:         "Rejected",
   };
 
   return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${styles[status] ?? "bg-gray-100 text-gray-600"}`}
-    >
-      {status}
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${styles[status] ?? "bg-gray-100 text-gray-600"}`}>
+      {label[status] ?? status}
     </span>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Component                                                          */
+/*  Dashboard                                                          */
 /* ------------------------------------------------------------------ */
 
-// ModuleCard is replaced by the state-aware FeatureCard component.
-// FeatureCard is imported from @/components/corporate/FeatureCard.
-
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
-
-export function CorporateDashboard({
-  stats,
-}: {
-  readonly stats: DashboardStats;
-}) {
+export function CorporateDashboard({ stats }: { readonly stats: DashboardStats }) {
   const seatPct = Math.min(100, Math.round((stats.totalEmployees / stats.maxSeats) * 100));
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-start justify-between">
+    <div className="space-y-8 max-w-6xl">
+
+      {/* ── Welcome + quick actions ──────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{stats.organizationName}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {stats.organizationName}
+          </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Tenant Dashboard{stats.industry ? ` · ${stats.industry}` : ""}
+            {stats.industry ? `${stats.industry} · ` : ""}Corporate Training Dashboard
           </p>
         </div>
-        {stats.logoUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={stats.logoUrl} alt="Logo" className="h-10 object-contain" />
-        )}
+
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href="/corporate/courses"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <BookOpen className="h-4 w-4" />
+            Browse Courses
+          </Link>
+          <Link
+            href="/corporate/employees"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Student
+          </Link>
+        </div>
       </div>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Team Members"       value={stats.totalEmployees}  icon={Users}   color="bg-blue-100 text-blue-600" />
-        <StatCard label="Active Enrollments" value={stats.activeEnrollments} icon={BookOpen} color="bg-green-100 text-green-600" />
-        <StatCard label="Certificates"       value={stats.certificatesEarned} icon={Award}   color="bg-purple-100 text-purple-600" />
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="p-2 rounded-lg bg-amber-100 text-amber-600">
-              <TrendingUp className="h-5 w-5" />
-            </div>
-            <span className="text-xs font-medium text-gray-400">{seatPct}% used</span>
+      {/* ── Stats ────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard
+          label="Total Students"
+          value={stats.totalEmployees}
+          icon={Users}
+          color="bg-blue-100 text-blue-600"
+          href="/corporate/employees"
+        />
+        <StatCard
+          label="Active Enrollments"
+          value={stats.activeEnrollments}
+          icon={ClipboardList}
+          color="bg-green-100 text-green-600"
+        />
+        <StatCard
+          label="Certificates Earned"
+          value={stats.certificatesEarned}
+          icon={Award}
+          color="bg-purple-100 text-purple-600"
+        />
+      </div>
+
+      {/* ── Seats progress ───────────────────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 flex items-center gap-6">
+        <TrendingUp className="h-5 w-5 text-amber-500 shrink-0" />
+        <div className="flex-1">
+          <div className="flex items-center justify-between text-sm mb-1.5">
+            <span className="font-medium text-gray-700">Seat Usage</span>
+            <span className="text-gray-400 text-xs">
+              {stats.totalEmployees} / {stats.maxSeats} seats · {seatPct}%
+            </span>
           </div>
-          <div className="text-2xl font-bold text-gray-900">
-            {stats.totalEmployees} / {stats.maxSeats}
-          </div>
-          <div className="text-sm text-gray-500 mb-2">Seats Used</div>
           <div className="w-full bg-gray-100 rounded-full h-1.5">
             <div
               className={`h-1.5 rounded-full transition-all ${seatPct >= 90 ? "bg-red-500" : "bg-amber-500"}`}
@@ -154,66 +274,98 @@ export function CorporateDashboard({
         </div>
       </div>
 
-      {/* Module hub grid */}
+      {/* ── Core modules ─────────────────────────────────────────────── */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
           Modules
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {/* ── Core (live) ──────────────────────────────────────────── */}
-          <FeatureCard href="/corporate/employees"    icon={Users}         label="Team"          description="Manage employees and seat assignments"          color="bg-blue-100 text-blue-600"    badge={stats.totalEmployees} />
-          <FeatureCard href="/corporate/courses"      icon={BookOpen}      label="Courses"       description="Browse and assign courses to your team"         color="bg-emerald-100 text-emerald-600" />
-          <FeatureCard href="/corporate/enrollments"  icon={ClipboardList} label="Enrollments"   description="Track course enrollments and progress"          color="bg-green-100 text-green-600"   badge={stats.activeEnrollments} />
-          <FeatureCard href="/corporate/tasks"        icon={CheckSquare}   label="Tasks"         description="Assign and track team tasks with deadlines"     color="bg-orange-100 text-orange-600" />
-          <FeatureCard href="/corporate/settings"     icon={Settings}      label="Settings"      description="Organization details, billing, and branding"    color="bg-gray-100 text-gray-600" />
-          {/* ── Secondary (beta) ─────────────────────────────────────── */}
-          <FeatureCard href="/corporate/trainers"     icon={GraduationCap} label="Trainers"      description="View and manage assigned trainers"              color="bg-indigo-100 text-indigo-600" />
-          <FeatureCard href="/corporate/calendar"     icon={CalendarDays}  label="Calendar"      description="Sessions, deadlines, and team events"           color="bg-cyan-100 text-cyan-600" />
-          <FeatureCard href="/corporate/reports"      icon={BarChart3}     label="Reports"       description="Analytics, completion rates, and exports"       color="bg-purple-100 text-purple-600" />
-          {/* ── Advanced (planned / coming soon) ─────────────────────── */}
-          <FeatureCard href="/corporate/ai-tools"     icon={Sparkles}      label="AI Tools"      description="Summarize, grammar check, and quiz generation"  color="bg-pink-100 text-pink-600" />
-          <FeatureCard href="/corporate/files"        icon={FolderOpen}    label="Files"         description="Manage documents and training materials"        color="bg-yellow-100 text-yellow-600" />
-          <FeatureCard href="/corporate/website"      icon={Globe}         label="Website"       description="Customize your public portal and branding"      color="bg-teal-100 text-teal-600" />
-          <FeatureCard href="/corporate/messages"     icon={MessageSquare} label="Messages"      description="Internal messaging between team members"        color="bg-violet-100 text-violet-600" />
-          <FeatureCard href="/corporate/announcements" icon={Bell}         label="Announcements" description="Broadcast updates to your entire organization"  color="bg-rose-100 text-rose-600" />
-          <FeatureCard href="/corporate/support"      icon={Headphones}    label="Support"       description="Submit and track support requests"              color="bg-sky-100 text-sky-600" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <ModuleCard
+            href="/corporate/courses"
+            icon={BookOpen}
+            label="Courses"
+            description="Browse and assign courses to your team"
+            color="bg-emerald-100 text-emerald-600"
+          />
+          <ModuleCard
+            href="/corporate/employees"
+            icon={Users}
+            label="Students"
+            description="Manage your enrolled team members"
+            color="bg-blue-100 text-blue-600"
+            badge={stats.totalEmployees}
+          />
+          <ModuleCard
+            href="/corporate/trainers"
+            icon={GraduationCap}
+            label="Trainers"
+            description="View your assigned certified trainers"
+            color="bg-indigo-100 text-indigo-600"
+          />
+          <ModuleCard
+            href="/corporate/tasks"
+            icon={CheckSquare}
+            label="Tasks"
+            description="Assign and track team tasks"
+            color="bg-orange-100 text-orange-600"
+          />
         </div>
       </div>
 
-      {/* Recent enrollments */}
-      <div className="bg-white rounded-xl border border-gray-200">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-          <div className="flex items-center gap-2">
-            <ClipboardList className="h-5 w-5 text-gray-500" />
-            <h2 className="font-semibold text-gray-900">Recent Enrollments</h2>
-          </div>
-          <Link href="/corporate/enrollments" className="text-xs text-blue-600 hover:underline">
-            View all →
-          </Link>
+      {/* ── Coming Soon ──────────────────────────────────────────────── */}
+      <div>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+          Coming Soon
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <ComingSoonCard
+            icon={Sparkles}
+            label="AI Summary"
+            description="Auto-summarize course content with AI"
+            color="bg-pink-100 text-pink-600"
+          />
+          <ComingSoonCard
+            icon={BarChart3}
+            label="Analytics"
+            description="Completion rates, trends, and exports"
+            color="bg-purple-100 text-purple-600"
+          />
+          <ComingSoonCard
+            icon={FileText}
+            label="Grammar Checker"
+            description="AI-powered writing assistance for your team"
+            color="bg-teal-100 text-teal-600"
+          />
         </div>
+      </div>
 
-        {stats.recentEnrollments.length === 0 ? (
-          <div className="p-8 text-center text-sm text-gray-500">
-            No enrollments yet. Start by enrolling employees in courses.
+      {/* ── Recent activity ──────────────────────────────────────────── */}
+      {stats.recentEnrollments.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-gray-400" />
+              <h2 className="text-sm font-semibold text-gray-900">Recent Enrollments</h2>
+            </div>
           </div>
-        ) : (
           <div className="divide-y divide-gray-100">
-            {stats.recentEnrollments.map((enrollment) => (
+            {stats.recentEnrollments.slice(0, 5).map((enrollment) => (
               <div key={enrollment.id} className="flex items-center justify-between px-5 py-3">
                 <div>
                   <div className="text-sm font-medium text-gray-900">
                     {enrollment.student?.name ?? "Unknown"}
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {enrollment.course.title} · {enrollment.courseTier}
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    {enrollment.course.title}
+                    {enrollment.courseTier ? ` · ${enrollment.courseTier}` : ""}
                   </div>
                 </div>
                 <StatusBadge status={enrollment.status} />
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

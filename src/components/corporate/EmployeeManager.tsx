@@ -53,7 +53,7 @@ function StatusBadge({ status }: { readonly status: string }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Enroll Employee Modal                                              */
+/*  Enroll Student Modal                                              */
 /* ------------------------------------------------------------------ */
 
 function EnrollModal({
@@ -119,7 +119,7 @@ function EnrollModal({
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-gray-900">Enroll Employee</h3>
+        <h3 className="font-semibold text-gray-900">Add Student</h3>
         <Button variant="ghost" size="sm" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
@@ -207,7 +207,7 @@ function EnrollModal({
                 Enrolling...
               </>
             ) : (
-              "Enroll Employee"
+              "Enroll Student"
             )}
           </Button>
         </div>
@@ -233,14 +233,14 @@ export function EmployeeManager({
       {/* Header bar */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500">
-          {employees.length} employee{employees.length !== 1 ? "s" : ""}
+          {employees.length} student{employees.length !== 1 ? "s" : ""}
         </p>
         <Button
           className="gap-1.5"
           onClick={() => setShowEnrollForm(true)}
         >
           <Plus className="h-4 w-4" />
-          Enroll Employee
+          Enroll Student
         </Button>
       </div>
 
@@ -259,10 +259,10 @@ export function EmployeeManager({
             <Users className="h-8 w-8 text-blue-600" />
           </div>
           <h2 className="text-lg font-semibold text-gray-900 mb-2">
-            No Employees Yet
+            No Students Yet
           </h2>
           <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
-            Start upskilling your team by enrolling employees in training
+            Start upskilling your team by enrolling students in training
             courses.
           </p>
           <Button
@@ -270,7 +270,7 @@ export function EmployeeManager({
             className="gap-2"
           >
             <Plus className="h-4 w-4" />
-            Enroll First Employee
+            Enroll First Student
           </Button>
         </div>
       ) : (
@@ -279,7 +279,7 @@ export function EmployeeManager({
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase">
-                  Employee
+                  Student
                 </th>
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase">
                   Course
