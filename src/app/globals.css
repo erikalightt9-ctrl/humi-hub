@@ -5,6 +5,15 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* ── HUMI Design System Tokens ─────────────────────────────────── */
+  --color-ds-bg:      #0B1E3A;   /* page background */
+  --color-ds-surface: #0F2A4A;   /* sidebar + header + inputs */
+  --color-ds-card:    #132F52;   /* cards, tables, panels */
+  --color-ds-border:  #1a3a5c;   /* all borders */
+  --color-ds-text:    #E5E7EB;   /* primary text */
+  --color-ds-muted:   #9CA3AF;   /* secondary / muted text */
+  --color-ds-primary: #2563EB;   /* active state + primary CTA */
+  /* ─────────────────────────────────────────────────────────────── */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);

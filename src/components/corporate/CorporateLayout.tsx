@@ -8,18 +8,14 @@ import { CorporateSidebar } from "./CorporateSidebar";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { ChatWidgetEnhanced } from "@/components/shared/ChatWidgetEnhanced";
 
-/* ------------------------------------------------------------------ */
-/*  Layout Component                                                   */
-/* ------------------------------------------------------------------ */
-
 export function CorporateLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
 
   if (status === "loading") {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-100">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      <div className="flex h-screen items-center justify-center bg-ds-bg">
+        <Loader2 className="h-8 w-8 animate-spin text-ds-primary" />
       </div>
     );
   }
@@ -33,17 +29,18 @@ export function CorporateLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
-      {/* Sidebar */}
+    <div className="flex h-screen bg-ds-bg overflow-hidden">
       <CorporateSidebar />
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex items-center justify-end px-8 py-3 border-b border-gray-200 bg-white shrink-0">
+        {/* Top bar */}
+        <header className="flex items-center justify-end px-6 h-14 border-b border-ds-border bg-ds-surface shrink-0">
           <NotificationBell />
-        </div>
-        <main className="flex-1 overflow-y-auto p-8">{children}</main>
+        </header>
+
+        <main className="flex-1 overflow-y-auto p-6 md:p-8">{children}</main>
       </div>
+
       <ChatWidgetEnhanced role="corporate" currentPage={pathname} />
     </div>
   );

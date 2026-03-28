@@ -39,19 +39,21 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
     exact ? pathname === href : pathname.startsWith(href);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-ds-bg flex">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 text-white flex flex-col
+        className={`fixed inset-y-0 left-0 z-40 w-56 bg-ds-surface text-ds-text flex flex-col
           transition-transform duration-200
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
       >
         {/* Brand */}
-        <div className="flex items-center gap-2 px-5 py-5 border-b border-slate-700">
-          <Shield className="h-6 w-6 text-indigo-400" />
+        <div className="flex items-center gap-2.5 px-5 py-5 border-b border-ds-border">
+          <div className="h-8 w-8 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0">
+            <Shield className="h-4 w-4 text-white" />
+          </div>
           <div>
-            <p className="text-sm font-bold text-white">Super Admin</p>
-            <p className="text-xs text-slate-400">Platform Control</p>
+            <p className="text-sm font-bold text-ds-text leading-none">HUMI</p>
+            <p className="text-[10px] text-ds-muted mt-0.5">Super Admin</p>
           </div>
         </div>
 
@@ -61,10 +63,10 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 isActive(href, exact)
                   ? "bg-indigo-600 text-white"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  : "text-ds-muted hover:bg-ds-card hover:text-ds-text"
               }`}
               onClick={() => setMobileOpen(false)}
             >
@@ -75,11 +77,11 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
         </nav>
 
         {/* Footer */}
-        <div className="px-3 py-4 border-t border-slate-700">
+        <div className="px-3 py-4 border-t border-ds-border">
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start gap-2 text-slate-300 hover:text-white hover:bg-slate-800"
+            className="w-full justify-start gap-2 text-ds-muted hover:text-ds-text hover:bg-ds-card"
             onClick={() => signOut({ callbackUrl: "/portal" })}
           >
             <LogOut className="h-4 w-4" />
@@ -91,24 +93,24 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-30 bg-black/60 lg:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       {/* Main area */}
-      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
+      <div className="flex-1 lg:ml-56 flex flex-col min-h-screen">
         {/* Top bar */}
-        <header className="sticky top-0 z-20 bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3">
+        <header className="sticky top-0 z-20 bg-ds-surface border-b border-ds-border px-4 py-3 flex items-center gap-3">
           <button
-            className="lg:hidden p-1.5 rounded-md text-slate-600 hover:bg-slate-100"
+            className="lg:hidden p-1.5 rounded-xl text-ds-muted hover:bg-ds-card"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
           <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-indigo-600" />
-            <span className="text-sm font-semibold text-slate-700">Platform Administration</span>
+            <Shield className="h-4 w-4 text-indigo-400" />
+            <span className="text-sm font-semibold text-ds-text">Platform Administration</span>
           </div>
         </header>
 

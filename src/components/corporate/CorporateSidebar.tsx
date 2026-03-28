@@ -15,7 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
-/*  Navigation — 6 core items only                                     */
+/*  Navigation — 6 core items, flat                                    */
 /* ------------------------------------------------------------------ */
 
 interface NavItem {
@@ -51,28 +51,28 @@ export function CorporateSidebar() {
   }
 
   return (
-    <aside className="w-56 bg-slate-900 text-white flex flex-col shrink-0 h-screen">
+    <aside className="w-56 bg-ds-surface text-ds-text flex flex-col shrink-0 h-screen">
       {/* Brand */}
-      <div className="px-5 py-5 border-b border-slate-800">
+      <div className="px-5 py-5 border-b border-ds-border">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
+          <div className="h-8 w-8 rounded-xl bg-ds-primary flex items-center justify-center shrink-0">
             <GraduationCap className="h-4 w-4 text-white" />
           </div>
           <div>
-            <p className="text-sm font-bold text-white leading-none">HUMI</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Corporate Portal</p>
+            <p className="text-sm font-bold text-ds-text leading-none">HUMI</p>
+            <p className="text-[10px] text-ds-muted mt-0.5">Corporate Portal</p>
           </div>
         </div>
       </div>
 
       {/* User */}
       {user && (
-        <div className="px-4 py-3 border-b border-slate-800">
-          <p className="text-xs font-medium text-slate-200 truncate">
+        <div className="px-4 py-3 border-b border-ds-border">
+          <p className="text-xs font-medium text-ds-text truncate">
             {user.name ?? user.email ?? "Manager"}
           </p>
           {user.email && (
-            <p className="text-[10px] text-slate-500 truncate mt-0.5">{user.email}</p>
+            <p className="text-[10px] text-ds-muted truncate mt-0.5">{user.email}</p>
           )}
         </div>
       )}
@@ -86,10 +86,10 @@ export function CorporateSidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
                 active
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white",
+                  ? "bg-ds-primary text-white"
+                  : "text-ds-muted hover:bg-ds-card hover:text-ds-text",
               )}
             >
               <item.icon className="h-4 w-4 shrink-0" />
@@ -100,10 +100,10 @@ export function CorporateSidebar() {
       </nav>
 
       {/* Sign out */}
-      <div className="px-3 py-4 border-t border-slate-800">
+      <div className="px-3 py-4 border-t border-ds-border">
         <button
           onClick={() => signOut({ callbackUrl: "/corporate/login" })}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-ds-muted hover:bg-ds-card hover:text-ds-text transition-colors"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           Sign Out
