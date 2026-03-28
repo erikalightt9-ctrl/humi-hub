@@ -1,159 +1,152 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { GraduationCap, Mail, Phone, Search, Loader2, MessageSquare } from "lucide-react";
+import Link from "next/link";
+import {
+  GraduationCap,
+  List,
+  Star,
+  UserPlus,
+  ArrowRight,
+  Lock,
+} from "lucide-react";
 
 /* ------------------------------------------------------------------ */
-/*  Types                                                              */
+/*  Hub card                                                           */
 /* ------------------------------------------------------------------ */
 
-interface Trainer {
-  readonly id: string;
-  readonly name: string;
-  readonly email: string;
-  readonly phone: string | null;
-  readonly bio: string | null;
-  readonly specialization: string | null;
-  readonly isActive: boolean;
+function HubCard({
+  href,
+  icon: Icon,
+  label,
+  description,
+  accent,
+}: {
+  readonly href: string;
+  readonly icon: React.ComponentType<{ className?: string }>;
+  readonly label: string;
+  readonly description: string;
+  readonly accent: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group bg-ds-card rounded-xl border border-ds-border p-5 flex flex-col gap-3 hover:border-ds-primary/50 hover:shadow-lg hover:shadow-black/20 transition-all"
+    >
+      <div className={`p-2.5 rounded-xl w-fit ${accent}`}>
+        <Icon className="h-5 w-5" />
+      </div>
+      <div>
+        <p className="font-semibold text-ds-text group-hover:text-blue-300 transition-colors text-sm">
+          {label}
+        </p>
+        <p className="text-xs text-ds-muted mt-0.5 leading-relaxed">{description}</p>
+      </div>
+      <div className="flex items-center gap-1 text-xs text-blue-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity mt-auto">
+        Open <ArrowRight className="h-3 w-3" />
+      </div>
+    </Link>
+  );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Page                                                               */
+/*  Coming Soon card                                                   */
 /* ------------------------------------------------------------------ */
 
-export default function CorporateTrainersPage() {
-  const [trainers, setTrainers] = useState<ReadonlyArray<Trainer>>([]);
-  const [loading, setLoading]   = useState(true);
-  const [search, setSearch]     = useState("");
-
-  useEffect(() => {
-    fetch("/api/corporate/trainers")
-      .then((r) => r.json())
-      .then((json) => { if (json.success) setTrainers(json.data ?? []); })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  const filtered = trainers.filter((t) => {
-    const q = search.toLowerCase();
-    return (
-      t.name.toLowerCase().includes(q) ||
-      (t.specialization ?? "").toLowerCase().includes(q) ||
-      t.email.toLowerCase().includes(q)
-    );
-  });
-
+function SoonCard({
+  icon: Icon,
+  label,
+  description,
+  accent,
+}: {
+  readonly icon: React.ComponentType<{ className?: string }>;
+  readonly label: string;
+  readonly description: string;
+  readonly accent: string;
+}) {
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div
+      title="Coming soon"
+      className="bg-ds-card/40 rounded-xl border border-dashed border-ds-border p-5 flex flex-col gap-3 opacity-50 cursor-not-allowed"
+    >
+      <div className={`p-2.5 rounded-xl w-fit ${accent} opacity-60`}>
+        <Icon className="h-5 w-5" />
+      </div>
+      <div>
+        <p className="font-semibold text-ds-muted text-sm">{label}</p>
+        <p className="text-xs text-ds-muted/70 mt-0.5 leading-relaxed">{description}</p>
+      </div>
+      <div className="flex items-center gap-1 text-xs text-ds-muted font-medium mt-auto">
+        <Lock className="h-3 w-3" />
+        Coming Soon
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Trainers Hub                                                       */
+/* ------------------------------------------------------------------ */
+
+export default function TrainersHubPage() {
+  return (
+    <div className="space-y-8 max-w-4xl">
 
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-ds-text">Trainers</h1>
-        <p className="text-sm text-ds-muted mt-0.5">Certified trainers assigned to your organization</p>
-      </div>
-
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ds-muted" />
-        <input
-          type="text"
-          placeholder="Search by name or specialization…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 text-sm bg-ds-surface border border-ds-border text-ds-text placeholder:text-ds-muted rounded-xl focus:outline-none focus:ring-2 focus:ring-ds-primary/50"
-        />
-      </div>
-
-      {/* Table */}
-      <div className="bg-ds-card rounded-xl border border-ds-border overflow-hidden">
-        <div className="px-5 py-3 border-b border-ds-border text-xs text-ds-muted">
-          {filtered.length} trainer{filtered.length !== 1 ? "s" : ""}
-          {filtered.length < trainers.length && ` · filtered from ${trainers.length}`}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-ds-text">Trainers</h1>
+          <p className="text-sm text-ds-muted mt-0.5">
+            View and manage trainers assigned to your organization
+          </p>
         </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center h-48">
-            <Loader2 className="h-6 w-6 animate-spin text-ds-primary" />
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead className="bg-ds-surface border-b border-ds-border">
-              <tr>
-                <th className="text-left px-5 py-3 text-xs font-medium text-ds-muted uppercase tracking-wide">Trainer</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-ds-muted uppercase tracking-wide hidden sm:table-cell">Specialization</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-ds-muted uppercase tracking-wide hidden md:table-cell">Contact</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-ds-muted uppercase tracking-wide">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ds-border">
-              {filtered.length === 0 ? (
-                <tr><td colSpan={4}>
-                  <div className="py-16 text-center">
-                    <GraduationCap className="h-10 w-10 text-ds-muted/30 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-ds-muted">
-                      {search ? "No trainers match your search" : "No trainers assigned yet"}
-                    </p>
-                    <p className="text-xs text-ds-muted/60 mt-1">
-                      {search ? "Try a different name or specialization" : "Contact your account manager to request trainer assignments"}
-                    </p>
-                  </div>
-                </td></tr>
-              ) : filtered.map((trainer) => (
-                <tr key={trainer.id} className="hover:bg-ds-surface/50 transition-colors">
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-indigo-900/50 text-indigo-400 flex items-center justify-center font-semibold text-sm shrink-0">
-                        {trainer.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-ds-text truncate">{trainer.name}</p>
-                        {trainer.bio && (
-                          <p className="text-xs text-ds-muted truncate max-w-[220px]">{trainer.bio}</p>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-5 py-3.5 hidden sm:table-cell">
-                    <span className="text-sm text-ds-muted">
-                      {trainer.specialization ?? "—"}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 hidden md:table-cell">
-                    <div className="space-y-1">
-                      <a href={`mailto:${trainer.email}`} className="flex items-center gap-1.5 text-xs text-ds-muted hover:text-ds-text transition-colors">
-                        <Mail className="h-3 w-3 shrink-0" />
-                        <span className="truncate max-w-[180px]">{trainer.email}</span>
-                      </a>
-                      {trainer.phone && (
-                        <a href={`tel:${trainer.phone}`} className="flex items-center gap-1.5 text-xs text-ds-muted hover:text-ds-text transition-colors">
-                          <Phone className="h-3 w-3 shrink-0" />
-                          {trainer.phone}
-                        </a>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    {trainer.isActive ? (
-                      <span className="inline-flex items-center text-xs font-medium bg-emerald-900/40 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded-full">
-                        Active
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center text-xs font-medium bg-ds-surface text-ds-muted border border-ds-border px-2 py-0.5 rounded-full">
-                        Inactive
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <Link
+          href="/corporate/trainers/list"
+          className="flex items-center gap-2 px-4 py-2 bg-ds-primary text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors"
+        >
+          <List className="h-4 w-4" />
+          View All Trainers
+        </Link>
       </div>
 
-      <p className="text-xs text-ds-muted flex items-center gap-1.5">
-        <MessageSquare className="h-3.5 w-3.5" />
-        Trainers are assigned by your platform administrator. Contact support to request changes.
-      </p>
+      {/* Hub cards */}
+      <div>
+        <p className="text-xs font-semibold text-ds-muted uppercase tracking-wider mb-3">
+          Actions
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <HubCard
+            href="/corporate/trainers/list"
+            icon={GraduationCap}
+            label="All Trainers"
+            description="View trainers assigned to your organization"
+            accent="bg-indigo-900/50 text-indigo-400"
+          />
+          <SoonCard
+            icon={UserPlus}
+            label="Request Trainer"
+            description="Submit a request for a new trainer assignment"
+            accent="bg-blue-900/50 text-blue-400"
+          />
+          <SoonCard
+            icon={Star}
+            label="Ratings & Reviews"
+            description="See trainer performance and student feedback"
+            accent="bg-amber-900/50 text-amber-400"
+          />
+        </div>
+      </div>
+
+      {/* Quick tip */}
+      <div className="bg-ds-surface rounded-xl border border-ds-border px-5 py-4 flex items-start gap-3">
+        <GraduationCap className="h-4 w-4 text-ds-primary mt-0.5 shrink-0" />
+        <div>
+          <p className="text-sm font-medium text-ds-text">About trainers</p>
+          <p className="text-xs text-ds-muted mt-0.5 leading-relaxed">
+            Trainers are assigned to your organization by the platform administrator.
+            Contact <span className="text-blue-400">support</span> to request changes or new trainer assignments.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

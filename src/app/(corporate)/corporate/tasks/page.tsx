@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import {
   CheckSquare, Square, Plus, Loader2, CalendarDays,
-  AlertCircle, CheckCircle2, Clock, X,
+  AlertCircle, CheckCircle2, Clock, X, ArrowRight, Lock,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -252,6 +253,67 @@ export default function CorporateTasksPage() {
           <Plus className="h-4 w-4" />
           New Task
         </button>
+      </div>
+
+      {/* Quick action cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <button
+          onClick={() => setShowAdd(true)}
+          className="group bg-ds-card rounded-xl border border-ds-border p-4 flex flex-col gap-2 hover:border-ds-primary/50 hover:shadow-lg hover:shadow-black/20 transition-all text-left"
+        >
+          <div className="p-2 rounded-xl w-fit bg-blue-900/50 text-blue-400">
+            <Plus className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-ds-text group-hover:text-blue-300 transition-colors">New Task</p>
+            <p className="text-xs text-ds-muted mt-0.5">Create a to-do item</p>
+          </div>
+          <div className="flex items-center gap-1 text-xs text-blue-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity mt-auto">
+            Create <ArrowRight className="h-3 w-3" />
+          </div>
+        </button>
+
+        <Link
+          href="/corporate/employees"
+          className="group bg-ds-card rounded-xl border border-ds-border p-4 flex flex-col gap-2 hover:border-ds-primary/50 hover:shadow-lg hover:shadow-black/20 transition-all"
+        >
+          <div className="p-2 rounded-xl w-fit bg-emerald-900/50 text-emerald-400">
+            <CheckSquare className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-ds-text group-hover:text-blue-300 transition-colors">Assign to Student</p>
+            <p className="text-xs text-ds-muted mt-0.5">Link tasks to team members</p>
+          </div>
+          <div className="flex items-center gap-1 text-xs text-blue-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity mt-auto">
+            Open <ArrowRight className="h-3 w-3" />
+          </div>
+        </Link>
+
+        <div title="Coming soon" className="bg-ds-card/40 rounded-xl border border-dashed border-ds-border p-4 flex flex-col gap-2 opacity-50 cursor-not-allowed">
+          <div className="p-2 rounded-xl w-fit bg-amber-900/50 text-amber-400 opacity-60">
+            <CalendarDays className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-ds-muted">Deadlines View</p>
+            <p className="text-xs text-ds-muted/70 mt-0.5">Calendar view of due dates</p>
+          </div>
+          <div className="flex items-center gap-1 text-xs text-ds-muted font-medium mt-auto">
+            <Lock className="h-3 w-3" /> Coming Soon
+          </div>
+        </div>
+
+        <div title="Coming soon" className="bg-ds-card/40 rounded-xl border border-dashed border-ds-border p-4 flex flex-col gap-2 opacity-50 cursor-not-allowed">
+          <div className="p-2 rounded-xl w-fit bg-purple-900/50 text-purple-400 opacity-60">
+            <CheckCircle2 className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-ds-muted">Reports</p>
+            <p className="text-xs text-ds-muted/70 mt-0.5">Task completion analytics</p>
+          </div>
+          <div className="flex items-center gap-1 text-xs text-ds-muted font-medium mt-auto">
+            <Lock className="h-3 w-3" /> Coming Soon
+          </div>
+        </div>
       </div>
 
       {/* Summary bar */}
