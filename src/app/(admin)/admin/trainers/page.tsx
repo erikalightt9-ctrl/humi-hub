@@ -18,32 +18,34 @@ export default async function TrainersPage() {
     redirect("/portal?tab=admin");
   }
 
-  let tierConfigs: Awaited<ReturnType<typeof getAllTierConfigs>> = [];
+  let rawConfigs: Awaited<ReturnType<typeof getAllTierConfigs>> = [];
   try {
-    tierConfigs = await getAllTierConfigs();
+    rawConfigs = await getAllTierConfigs();
   } catch (err) {
     console.error("[TrainersPage] Failed to load tier configs:", err);
   }
 
+  // Serialize Decimal fields → plain numbers so they can cross the RSC boundary
+  // into the "use client" TrainerManager component.
+  const tierConfigs = rawConfigs.map((c) => ({
+    ...c,
+    upgradeFee:       Number(c.upgradeFee),
+    baseProgramPrice: Number(c.baseProgramPrice),
+  }));
+
   return (
     <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="bg-blue-100 rounded-lg p-2">
-            <UserCog className="h-5 w-5 text-blue-700" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Trainer Management
-            </h1>
-            <p className="text-sm text-gray-500">
-              Manage trainers and instructor assignments
-            </p>
-          </div>
+      <div className="flex items-center gap-3">
+        <div className="bg-blue-900/40 rounded-xl p-2.5">
+          <UserCog className="h-5 w-5 text-blue-400" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-ds-text">Trainer Management</h1>
+          <p className="text-sm text-ds-muted">Manage trainers and instructor assignments</p>
         </div>
       </div>
 
-      <TrainerManager tierConfigs={tierConfigs} />
+      <TrainerManager tierConfigs={tierConfigs as never} />
     </div>
   );
 }
