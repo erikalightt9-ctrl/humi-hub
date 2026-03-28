@@ -82,6 +82,7 @@ export const authOptions: NextAuthOptions = {
             accessGranted: true,
             accessExpiry: true,
             mustChangePassword: true,
+            failedAttempts: true,
             organizationId: true,
             createdAt: true,
           },
