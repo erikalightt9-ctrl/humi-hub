@@ -59,7 +59,8 @@ export function CorporateLayout({ children }: { children: React.ReactNode }) {
     | { name?: string | null; email?: string | null; role?: string; organizationId?: string }
     | undefined;
 
-  if (!user || user.role !== "corporate") {
+  // Accept both "corporate" (regular manager) and "tenant_admin" (org-level admin)
+  if (!user || (user.role !== "corporate" && user.role !== "tenant_admin")) {
     redirect("/corporate/login");
   }
 

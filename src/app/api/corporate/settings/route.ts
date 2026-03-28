@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       secret: process.env.NEXTAUTH_SECRET,
     });
 
-    if (!token?.id || token.role !== "corporate" || !token.organizationId) {
+    if (!token?.id || (token.role !== "corporate" && token.role !== "tenant_admin") || !token.organizationId) {
       return NextResponse.json(
         { success: false, data: null, error: "Unauthorized" },
         { status: 401 },
@@ -26,7 +26,18 @@ export async function GET(request: NextRequest) {
     const [org, employeeCount] = await Promise.all([
       prisma.organization.findUnique({
         where: { id: orgId },
-        select: { name: true, industry: true, maxSeats: true, logoUrl: true },
+        select: {
+          name: true,
+          industry: true,
+          maxSeats: true,
+          logoUrl: true,
+          primaryColor: true,
+          secondaryColor: true,
+          tagline: true,
+          bannerImageUrl: true,
+          mission: true,
+          vision: true,
+        },
       }),
       prisma.student.count({ where: { organizationId: orgId } }),
     ]);
@@ -45,6 +56,12 @@ export async function GET(request: NextRequest) {
         industry: org.industry,
         maxSeats: org.maxSeats,
         logoUrl: org.logoUrl,
+        primaryColor: org.primaryColor,
+        secondaryColor: org.secondaryColor,
+        tagline: org.tagline,
+        bannerImageUrl: org.bannerImageUrl,
+        mission: org.mission,
+        vision: org.vision,
         totalEmployees: employeeCount,
       },
       error: null,
@@ -69,7 +86,7 @@ export async function PUT(request: NextRequest) {
       secret: process.env.NEXTAUTH_SECRET,
     });
 
-    if (!token?.id || token.role !== "corporate" || !token.organizationId) {
+    if (!token?.id || (token.role !== "corporate" && token.role !== "tenant_admin") || !token.organizationId) {
       return NextResponse.json(
         { success: false, data: null, error: "Unauthorized" },
         { status: 401 },
@@ -88,14 +105,37 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const {
+      name, industry,
+      logoUrl, primaryColor, secondaryColor, tagline, bannerImageUrl, mission, vision,
+    } = parsed.data;
+
     const updateData: Record<string, unknown> = {};
-    if (parsed.data.name !== undefined) updateData.name = parsed.data.name;
-    if (parsed.data.industry !== undefined) updateData.industry = parsed.data.industry;
+    if (name !== undefined)             updateData.name             = name;
+    if (industry !== undefined)         updateData.industry         = industry;
+    if (logoUrl !== undefined)          updateData.logoUrl          = logoUrl;
+    if (primaryColor !== undefined)     updateData.primaryColor     = primaryColor;
+    if (secondaryColor !== undefined)   updateData.secondaryColor   = secondaryColor;
+    if (tagline !== undefined)          updateData.tagline          = tagline;
+    if (bannerImageUrl !== undefined)   updateData.bannerImageUrl   = bannerImageUrl;
+    if (mission !== undefined)          updateData.mission          = mission;
+    if (vision !== undefined)           updateData.vision           = vision;
 
     const updated = await prisma.organization.update({
       where: { id: orgId },
       data: updateData,
-      select: { name: true, industry: true, maxSeats: true, logoUrl: true },
+      select: {
+        name: true,
+        industry: true,
+        maxSeats: true,
+        logoUrl: true,
+        primaryColor: true,
+        secondaryColor: true,
+        tagline: true,
+        bannerImageUrl: true,
+        mission: true,
+        vision: true,
+      },
     });
 
     const employeeCount = await prisma.student.count({

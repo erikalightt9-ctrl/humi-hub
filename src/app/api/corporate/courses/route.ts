@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       secret: process.env.NEXTAUTH_SECRET,
     });
 
-    if (!token?.id || token.role !== "corporate") {
+    if (!token?.id || (token.role !== "corporate" && token.role !== "tenant_admin")) {
       return NextResponse.json(
         { success: false, data: null, error: "Unauthorized" },
         { status: 401 },

@@ -1,6 +1,7 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 /** Extract the subdomain from the hostname.
  *  e.g. "acme.yoursite.com" with rootDomain "yoursite.com" → "acme"
@@ -19,14 +20,38 @@ function extractSubdomain(hostname: string, rootDomain: string): string | null {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ── Tenant subdomain detection ──────────────────────────────────────────
+  // ── Tenant resolution (subdomain OR custom domain) ───────────────────────
   const hostname = request.headers.get("host") ?? "";
   const rootDomain = process.env.ROOT_DOMAIN ?? "localhost:3000";
   const subdomain = extractSubdomain(hostname, rootDomain);
 
   const response = NextResponse.next();
+
   if (subdomain) {
+    // Standard subdomain routing: set header for downstream consumption
     response.headers.set("x-tenant-subdomain", subdomain);
+  } else {
+    // Custom domain routing: check if this hostname maps to a tenant
+    const cleanHost = hostname.split(":")[0];
+    const isRootOrWww =
+      cleanHost === rootDomain.split(":")[0] ||
+      cleanHost === `www.${rootDomain.split(":")[0]}`;
+
+    if (!isRootOrWww && cleanHost !== "localhost") {
+      try {
+        const org = await prisma.organization.findFirst({
+          where: { customDomain: cleanHost, isActive: true },
+          select: { subdomain: true, id: true },
+        });
+        if (org?.subdomain) {
+          response.headers.set("x-tenant-subdomain", org.subdomain);
+          response.headers.set("x-tenant-id", org.id);
+        }
+      } catch (err) {
+        // Non-fatal: proceed without tenant context
+        console.error("[proxy] custom domain lookup failed:", err);
+      }
+    }
   }
 
   // ── Superadmin protection ────────────────────────────────────────────────

@@ -130,3 +130,84 @@ export async function getPlatformAnalytics() {
 
   return { tenantCount, activeTenants, trialTenants, totalStudents, totalCourses };
 }
+
+/* ------------------------------------------------------------------ */
+/*  Revenue Analytics                                                  */
+/* ------------------------------------------------------------------ */
+
+export async function getRevenueAnalytics() {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+  const [
+    allPaidSubs,
+    planDistribution,
+    recentPayments,
+  ] = await Promise.all([
+    // All-time paid subscriptions
+    prisma.tenantSubscription.aggregate({
+      where: { status: { in: ["ACTIVE", "EXPIRED", "CANCELLED"] }, paidAt: { not: null } },
+      _sum: { amountCents: true },
+      _count: { id: true },
+    }),
+    // Count of active tenants by plan
+    prisma.organization.groupBy({
+      by: ["plan"],
+      where: { isActive: true },
+      _count: { id: true },
+    }),
+    // Last 12 months of payments
+    prisma.tenantSubscription.findMany({
+      where: {
+        paidAt: { gte: new Date(now.getFullYear() - 1, now.getMonth(), 1) },
+        status: { in: ["ACTIVE", "EXPIRED"] },
+      },
+      select: {
+        amountCents: true,
+        currency: true,
+        paidAt: true,
+        plan: true,
+        tenantId: true,
+      },
+      orderBy: { paidAt: "desc" },
+      take: 50,
+    }),
+  ]);
+
+  // MRR = sum of ACTIVE subscriptions' monthly value
+  const activeSubs = await prisma.tenantSubscription.findMany({
+    where: { status: "ACTIVE" },
+    select: { amountCents: true, periodStart: true, periodEnd: true },
+  });
+
+  const mrrCents = activeSubs.reduce((sum, sub) => {
+    const days = Math.max(
+      1,
+      (new Date(sub.periodEnd).getTime() - new Date(sub.periodStart).getTime()) /
+        (1000 * 60 * 60 * 24)
+    );
+    // Normalise to 30-day month
+    return sum + Math.round((sub.amountCents / days) * 30);
+  }, 0);
+
+  const totalRevenueCents = allPaidSubs._sum.amountCents ?? 0;
+  const totalPayments = allPaidSubs._count.id;
+
+  return {
+    mrrCents,
+    arrCents: mrrCents * 12,
+    totalRevenueCents,
+    totalPayments,
+    planDistribution: planDistribution.map((p) => ({
+      plan: p.plan,
+      count: p._count.id,
+    })),
+    recentPayments: recentPayments.map((p) => ({
+      amountCents: p.amountCents,
+      currency: p.currency,
+      paidAt: p.paidAt,
+      plan: p.plan,
+    })),
+  };
+}

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       secret: process.env.NEXTAUTH_SECRET,
     });
 
-    if (!token?.id || token.role !== "corporate" || !token.organizationId) {
+    if (!token?.id || (token.role !== "corporate" && token.role !== "tenant_admin") || !token.organizationId) {
       return NextResponse.json(
         { success: false, data: null, error: "Unauthorized" },
         { status: 401 },

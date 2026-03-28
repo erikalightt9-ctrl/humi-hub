@@ -49,6 +49,23 @@ export const enrollEmployeeSchema = z.object({
 /* ------------------------------------------------------------------ */
 
 export const updateSettingsSchema = z.object({
+  // Org details
   name: z.string().min(2).max(200).optional(),
   industry: z.string().max(100).nullable().optional(),
+  // Branding
+  logoUrl: z.string().url("Invalid logo URL").nullable().optional(),
+  primaryColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color")
+    .nullable()
+    .optional(),
+  secondaryColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color")
+    .nullable()
+    .optional(),
+  tagline: z.string().max(200).nullable().optional(),
+  bannerImageUrl: z.string().url("Invalid banner URL").nullable().optional(),
+  mission: z.string().max(1000).nullable().optional(),
+  vision: z.string().max(1000).nullable().optional(),
 });

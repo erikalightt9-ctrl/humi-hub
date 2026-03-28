@@ -7,6 +7,7 @@ import {
   getAllTenantsWithStats,
   createTenant,
 } from "@/lib/repositories/superadmin.repository";
+import { sendTenantWelcomeEmail } from "@/lib/email/send-tenant-welcome";
 
 const createTenantSchema = z.object({
   name: z.string().min(1).max(100),
@@ -61,6 +62,19 @@ export async function POST(request: NextRequest) {
     const adminPasswordHash = await bcrypt.hash(adminPassword, 12);
 
     const { org, manager } = await createTenant({ ...rest, adminPasswordHash });
+
+    // Fire welcome email — non-blocking so a mail failure doesn't block the response
+    sendTenantWelcomeEmail({
+      orgName: org.name,
+      subdomain: org.subdomain ?? rest.subdomain,
+      plan: org.plan,
+      adminName: rest.adminName,
+      adminEmail: rest.adminEmail,
+      temporaryPassword: adminPassword,
+    }).catch((err) => {
+      console.error("[POST /api/superadmin/tenants] welcome email failed:", err);
+    });
+
     return NextResponse.json(
       { success: true, data: { org, managerId: manager.id }, error: null },
       { status: 201 },
