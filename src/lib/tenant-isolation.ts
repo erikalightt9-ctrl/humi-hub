@@ -71,6 +71,23 @@ export function scopeViaCourse<T extends Record<string, unknown>>(
   return { ...extra, course: { tenantId: scope } };
 }
 
+/**
+ * Scope resources that are nested under a Student (e.g. CareerReadinessScore,
+ * SimulationSession, InterviewSession). Filters via student.organizationId.
+ *
+ * @example
+ * prisma.careerReadinessScore.findMany({
+ *   where: scopeViaStudent(tenantId, { evaluatedAt: { gte: since } }),
+ * });
+ */
+export function scopeViaStudent<T extends Record<string, unknown>>(
+  scope: TenantScope,
+  extra: T = {} as T,
+): T | (T & { student: { organizationId: string } }) {
+  if (scope === null) return extra;
+  return { ...extra, student: { organizationId: scope } };
+}
+
 // ─── Ownership Guard ──────────────────────────────────────────────────────────
 
 /**

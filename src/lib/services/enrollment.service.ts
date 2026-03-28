@@ -9,9 +9,11 @@ import {
   sendEnrollmentConfirmationWithPayment,
   sendNewEnrollmentAdminNotification,
 } from "@/lib/services/notification.service";
+import { getTierConfig } from "@/lib/repositories/trainer-tier.repository";
+import { sendWaitlistJoinedEmail } from "@/lib/email/send-waitlist-notification";
 import { getCourseTierPricing } from "@/lib/repositories/course.repository";
 import type { EnrollmentFormData } from "@/lib/validations/enrollment.schema";
-import type { Enrollment, CourseTier } from "@prisma/client";
+import type { Enrollment, CourseTier, TrainerTier } from "@prisma/client";
 
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_ENROLLMENT_MAX ?? "5", 10);
 const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_ENROLLMENT_WINDOW_MS ?? "900000", 10);
@@ -31,7 +33,9 @@ export async function checkRateLimit(ip: string): Promise<boolean> {
     },
   });
 
-  return count < RATE_LIMIT_MAX;
+  // Use <= because this is called AFTER recordRateLimitAttempt (record-first pattern).
+  // The current attempt is already in the DB, so count includes it.
+  return count <= RATE_LIMIT_MAX;
 }
 
 export async function recordRateLimitAttempt(ip: string): Promise<void> {
@@ -50,7 +54,10 @@ export async function processEnrollment(
   data: EnrollmentFormData,
   ipAddress: string
 ): Promise<EnrollmentResult> {
-  // Rate limit check
+  // Record first, then check — eliminates TOCTOU race between check and record.
+  // Concurrent requests from the same IP each insert their own row before counting,
+  // so the count reflects all concurrent attempts, not just sequential ones.
+  await recordRateLimitAttempt(ipAddress);
   const allowed = await checkRateLimit(ipAddress);
   if (!allowed) {
     return {
@@ -59,9 +66,6 @@ export async function processEnrollment(
       message: "Too many enrollment attempts. Please try again later.",
     };
   }
-
-  // Record attempt
-  await recordRateLimitAttempt(ipAddress);
 
   // Email usage limit check (max 5 enrollments per email)
   const emailCount = await countEnrollmentsByEmail(data.email);
@@ -86,25 +90,31 @@ export async function processEnrollment(
   };
 
   // Resolve trainer
+  let trainerTier: TrainerTier = "BASIC";
   let resolvedTrainerId: string | null = null;
 
   if (sanitized.trainerId) {
     const trainer = await prisma.trainer.findUnique({
       where: { id: sanitized.trainerId },
-      select: { id: true, isActive: true },
+      select: { id: true, tier: true, isActive: true },
     });
     if (trainer?.isActive) {
       resolvedTrainerId = trainer.id;
+      trainerTier = trainer.tier;
     }
   }
+
+  const tierConfig = await getTierConfig(trainerTier);
+  const trainerUpgradeFee = tierConfig ? Number(tierConfig.upgradeFee) : 0;
+
 
   // Resolve course tier pricing
   const courseTier: CourseTier = sanitized.courseTier ?? "BASIC";
   const tierPricing = await getCourseTierPricing(sanitized.courseId);
   const courseTierPriceMap: Record<CourseTier, number> = {
-    BASIC: tierPricing?.basic ?? 1500,
-    PROFESSIONAL: tierPricing?.professional ?? 3500,
-    ADVANCED: tierPricing?.advanced ?? 5500,
+    BASIC: tierPricing?.basic ?? 0,
+    PROFESSIONAL: tierPricing?.professional ?? 0,
+    ADVANCED: tierPricing?.advanced ?? 0,
   };
   const baseProgramPrice = courseTierPriceMap[courseTier];
 
@@ -133,15 +143,10 @@ export async function processEnrollment(
     courseTier,
     trainerId: resolvedTrainerId,
     baseProgramPrice,
+    trainerTier,
+    trainerUpgradeFee,
     scheduleId: resolvedScheduleId,
   });
-
-  // If schedule is full, add to waitlist
-  let waitlisted = false;
-  if (scheduleFull && resolvedScheduleId) {
-    await addToWaitlist(resolvedScheduleId, enrollment.id);
-    waitlisted = true;
-  }
 
   // Fetch course title for the confirmation email
   const course = await prisma.course.findUnique({
@@ -149,6 +154,27 @@ export async function processEnrollment(
     select: { title: true },
   });
   const courseTitle = course?.title ?? "Selected Course";
+
+  // If schedule is full, add to waitlist
+  let waitlisted = false;
+  if (scheduleFull && resolvedScheduleId) {
+    const waitlistEntry = await addToWaitlist(resolvedScheduleId, enrollment.id);
+    waitlisted = true;
+
+    // Fetch schedule name for the email
+    const schedule = await prisma.schedule.findUnique({
+      where: { id: resolvedScheduleId },
+      select: { name: true },
+    });
+
+    sendWaitlistJoinedEmail({
+      email: enrollment.email,
+      fullName: enrollment.fullName,
+      courseTitle,
+      scheduleName: schedule?.name ?? "Selected Session",
+      position: waitlistEntry.position,
+    }).catch((err) => console.error("[Waitlist] Failed to send joined email:", err));
+  }
   const base = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
   const submittedAt = enrollment.createdAt.toLocaleDateString("en-PH", {
     year: "numeric",
@@ -169,7 +195,7 @@ export async function processEnrollment(
       paymentUrl: `${base}/pay/${enrollment.id}`,
       statusTrackingUrl: `${base}/enrollment-status/${enrollment.id}`,
     }),
-    notifyAdminsOfNewEnrollment(enrollment),
+    notifyAdminsOfNewEnrollment(enrollment, courseTitle),
   ]);
 
   for (const result of emailResults) {
@@ -181,7 +207,7 @@ export async function processEnrollment(
   return { success: true, enrollment, waitlisted };
 }
 
-async function notifyAdminsOfNewEnrollment(enrollment: Enrollment): Promise<void> {
+async function notifyAdminsOfNewEnrollment(enrollment: Enrollment, courseTitle: string): Promise<void> {
   // Fetch admin emails from the database
   const admins = await prisma.admin.findMany({ select: { email: true } });
   const adminEmails = admins.map((a) => a.email);
@@ -193,12 +219,6 @@ async function notifyAdminsOfNewEnrollment(enrollment: Enrollment): Promise<void
   }
 
   if (adminEmails.length === 0) return;
-
-  // Fetch course title
-  const course = await prisma.course.findUnique({
-    where: { id: enrollment.courseId },
-    select: { title: true },
-  });
 
   const submittedAt = enrollment.createdAt.toLocaleDateString("en-PH", {
     year: "numeric",
@@ -212,7 +232,7 @@ async function notifyAdminsOfNewEnrollment(enrollment: Enrollment): Promise<void
     adminEmails,
     enrolleeName: enrollment.fullName,
     enrolleeEmail: enrollment.email,
-    courseTitle: course?.title ?? "Selected Course",
+    courseTitle,
     enrollmentId: enrollment.id,
     submittedAt,
   });

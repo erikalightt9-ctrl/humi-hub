@@ -90,7 +90,9 @@ describe("processEnrollment", () => {
   });
 
   it("returns RATE_LIMITED when attempts >= max", async () => {
-    (mockRateLimitCount as jest.Mock).mockResolvedValue(5);
+    // count must be > RATE_LIMIT_MAX (5) because attempt is recorded BEFORE checking.
+    // So count=6 means 6 total in window including the current one → blocked.
+    (mockRateLimitCount as jest.Mock).mockResolvedValue(6);
     const result = await processEnrollment(VALID_DATA, "192.168.1.1");
     expect(result.success).toBe(false);
     if (!result.success) {

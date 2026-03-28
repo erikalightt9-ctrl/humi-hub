@@ -142,7 +142,12 @@ export async function getConversations(
   limit = 20
 ) {
   const skip = (page - 1) * limit;
-  const tenantFilter = tenantId ? { tenantId } : {};
+  // Include both tenant-scoped AND platform-level (null tenantId) conversations.
+  // Admin→Student cross-role conversations are created without a tenantId, so
+  // a strict equality filter would hide them from the student's inbox.
+  const tenantFilter = tenantId
+    ? { OR: [{ tenantId }, { tenantId: null }] }
+    : {};
 
   const [conversations, total] = await Promise.all([
     prisma.conversation.findMany({
@@ -241,13 +246,29 @@ export async function sendMessage(
 export async function getMessages(
   conversationId: string,
   page = 1,
-  limit = 50
+  limit = 50,
+  actor?: { actorType: ActorType; actorId: string }
 ) {
   const skip = (page - 1) * limit;
 
+  // Get IDs of messages deleted by this actor so we can exclude them
+  const deletedIds = actor
+    ? (
+        await prisma.messageDeletion.findMany({
+          where: { actorType: actor.actorType, actorId: actor.actorId },
+          select: { messageId: true },
+        })
+      ).map((d) => d.messageId)
+    : [];
+
+  const whereClause = {
+    conversationId,
+    ...(deletedIds.length > 0 ? { id: { notIn: deletedIds } } : {}),
+  };
+
   const [messages, total] = await Promise.all([
     prisma.directMessage.findMany({
-      where: { conversationId },
+      where: whereClause,
       include: {
         reads: { select: { actorType: true, actorId: true } },
       },
@@ -255,7 +276,7 @@ export async function getMessages(
       skip,
       take: limit,
     }),
-    prisma.directMessage.count({ where: { conversationId } }),
+    prisma.directMessage.count({ where: whereClause }),
   ]);
 
   return {
@@ -300,4 +321,131 @@ export async function markConversationRead(
     where: { conversationId, actorType, actorId },
     data: { lastReadAt: new Date() },
   });
+}
+
+/* ------------------------------------------------------------------ */
+/*  Soft Delete                                                        */
+/* ------------------------------------------------------------------ */
+
+export async function softDeleteMessage(
+  messageId: string,
+  actorType: ActorType,
+  actorId: string
+) {
+  return prisma.messageDeletion.upsert({
+    where: { messageId_actorType_actorId: { messageId, actorType, actorId } },
+    create: { messageId, actorType, actorId },
+    update: { deletedAt: new Date() },
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/*  Contacts                                                           */
+/* ------------------------------------------------------------------ */
+
+export async function upsertContact(
+  owner: { actorType: ActorType; actorId: string },
+  contact: { actorType: ActorType; actorId: string; name?: string },
+  tenantId: string | null = null
+) {
+  return prisma.messageContact.upsert({
+    where: {
+      ownerType_ownerId_contactType_contactId: {
+        ownerType: owner.actorType,
+        ownerId: owner.actorId,
+        contactType: contact.actorType,
+        contactId: contact.actorId,
+      },
+    },
+    create: {
+      ownerType: owner.actorType,
+      ownerId: owner.actorId,
+      contactType: contact.actorType,
+      contactId: contact.actorId,
+      contactName: contact.name ?? null,
+      tenantId,
+      lastMessageAt: new Date(),
+    },
+    update: {
+      lastMessageAt: new Date(),
+      ...(contact.name ? { contactName: contact.name } : {}),
+    },
+  });
+}
+
+export async function getSavedContacts(
+  actorType: ActorType,
+  actorId: string,
+  tenantId: string | null = null
+) {
+  return prisma.messageContact.findMany({
+    where: {
+      ownerType: actorType,
+      ownerId: actorId,
+      ...(tenantId ? { OR: [{ tenantId }, { tenantId: null }] } : {}),
+    },
+    orderBy: { lastMessageAt: "desc" },
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sent Messages (flat list across all conversations)                */
+/* ------------------------------------------------------------------ */
+
+export async function getSentMessages(
+  actorType: ActorType,
+  actorId: string,
+  tenantId: string | null = null,
+  page = 1,
+  limit = 50
+) {
+  const skip = (page - 1) * limit;
+
+  // Get IDs of messages deleted by this sender (soft-deleted from Sent view)
+  const deletedIds = (
+    await prisma.messageDeletion.findMany({
+      where: { actorType, actorId },
+      select: { messageId: true },
+    })
+  ).map((d) => d.messageId);
+
+  const tenantFilter = tenantId
+    ? { conversation: { OR: [{ tenantId }, { tenantId: null }] } }
+    : {};
+
+  const whereClause = {
+    senderType: actorType,
+    senderId: actorId,
+    ...(deletedIds.length > 0 ? { id: { notIn: deletedIds } } : {}),
+    ...tenantFilter,
+  };
+
+  const [messages, total] = await Promise.all([
+    prisma.directMessage.findMany({
+      where: whereClause,
+      include: {
+        reads: { select: { actorType: true, actorId: true } },
+        conversation: {
+          select: {
+            id: true,
+            type: true,
+            title: true,
+            participants: { select: { actorType: true, actorId: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.directMessage.count({ where: whereClause }),
+  ]);
+
+  return {
+    data: messages,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
 }

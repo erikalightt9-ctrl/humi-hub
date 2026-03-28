@@ -5,6 +5,7 @@ import { CalendarWidget } from "@/components/calendar/CalendarWidget";
 import { UpcomingEvents } from "@/components/calendar/UpcomingEvents";
 import { EventDialog } from "@/components/admin/EventDialog";
 import type { CalendarItem } from "@/components/calendar/CalendarWidget";
+import type { CalendarEvent } from "@/components/calendar/types";
 
 interface Course {
   id: string;
@@ -16,6 +17,24 @@ interface AdminCalendarSectionProps {
   courses: ReadonlyArray<Course>;
 }
 
+/** Adapts old CalendarItem shape to the new CalendarEvent shape */
+function toCalendarEvent(item: CalendarItem): CalendarEvent {
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    date: item.date.slice(0, 10),
+    endDate: item.endDate?.slice(0, 10) ?? null,
+    startTime: null,
+    endTime: null,
+    type: item.type as CalendarEvent["type"],
+    courseId: null,
+    assignedUserId: null,
+    creatorRole: null,
+    source: item.source as "event" | "assignment" | undefined,
+  };
+}
+
 export function AdminCalendarSection({
   initialItems,
   courses,
@@ -23,9 +42,8 @@ export function AdminCalendarSection({
   const [items, setItems] = React.useState<ReadonlyArray<CalendarItem>>(initialItems);
   const [month, setMonth] = React.useState(new Date());
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [editingEvent, setEditingEvent] = React.useState<CalendarItem | null>(null);
+  const [editingEvent, setEditingEvent] = React.useState<CalendarEvent | null>(null);
 
-  // Fetch events when month changes
   const fetchEvents = React.useCallback(async (date: Date) => {
     try {
       const year = date.getFullYear();

@@ -6,6 +6,8 @@ import {
   getJobPostings,
 } from "@/lib/repositories/job-matching.repository";
 import { createJobPostingSchema } from "@/lib/validations/ai-job-matching.schema";
+import { requireFeature } from "@/lib/require-feature";
+import { FEATURES } from "@/lib/feature-flags";
 import type { CourseSlug } from "@/types";
 
 /* ------------------------------------------------------------------ */
@@ -53,6 +55,8 @@ export async function POST(request: NextRequest) {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
     const guard = requireAdmin(token);
     if (!guard.ok) return guard.response;
+    const featureCheck = await requireFeature(guard.tenantId, FEATURES.JOB_BOARD);
+    if (!featureCheck.ok) return featureCheck.response;
 
     const body = await request.json();
     const parsed = createJobPostingSchema.safeParse(body);

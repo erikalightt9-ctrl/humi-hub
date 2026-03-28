@@ -49,40 +49,45 @@ export function buildFaqContext(): string {
 }
 
 export async function buildCourseContext(): Promise<string> {
-  const courses = await prisma.course.findMany({
-    where: { isActive: true },
-    select: {
-      title: true,
-      slug: true,
-      description: true,
-      durationWeeks: true,
-      price: true,
-      outcomes: true,
-    },
-    orderBy: { createdAt: "asc" },
-  });
+  try {
+    const courses = await prisma.course.findMany({
+      where: { isActive: true },
+      select: {
+        title: true,
+        slug: true,
+        description: true,
+        durationWeeks: true,
+        price: true,
+        outcomes: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
 
-  if (courses.length === 0) return "No courses are currently available.";
+    if (courses.length === 0) return "No courses are currently available.";
 
-  return courses
-    .map((course) => {
-      const price = Number(course.price);
-      const priceStr = price > 0 ? `PHP ${price.toLocaleString()}` : "Free";
-      const outcomes = course.outcomes.length > 0
-        ? `Key outcomes: ${course.outcomes.join(", ")}`
-        : "";
+    return courses
+      .map((course) => {
+        const price = Number(course.price);
+        const priceStr = price > 0 ? `PHP ${price.toLocaleString()}` : "Free";
+        const outcomes = course.outcomes.length > 0
+          ? `Key outcomes: ${course.outcomes.join(", ")}`
+          : "";
 
-      return [
-        `Course: ${course.title}`,
-        `Duration: ${course.durationWeeks} weeks`,
-        `Price: ${priceStr}`,
-        course.description,
-        outcomes,
-      ]
-        .filter(Boolean)
-        .join("\n");
-    })
-    .join("\n\n---\n\n");
+        return [
+          `Course: ${course.title}`,
+          `Duration: ${course.durationWeeks} weeks`,
+          `Price: ${priceStr}`,
+          course.description,
+          outcomes,
+        ]
+          .filter(Boolean)
+          .join("\n");
+      })
+      .join("\n\n---\n\n");
+  } catch (error) {
+    console.error("Failed to fetch course context:", error);
+    return "Course information is temporarily unavailable.";
+  }
 }
 
 export async function buildSystemPrompt(): Promise<string> {
@@ -119,14 +124,19 @@ IMPORTANT LINKS:
 /* ------------------------------------------------------------------ */
 
 async function buildKnowledgeBaseContext(): Promise<string> {
-  const articles = await findAllPublished();
-  if (articles.length === 0) return "";
+  try {
+    const articles = await findAllPublished();
+    if (articles.length === 0) return "";
 
-  const summary = articles
-    .map((a) => `[${a.category}] ${a.title}: ${a.content.slice(0, 300)}`)
-    .join("\n\n");
+    const summary = articles
+      .map((a) => `[${a.category}] ${a.title}: ${a.content.slice(0, 300)}`)
+      .join("\n\n");
 
-  return `\n\nKNOWLEDGE BASE ARTICLES:\n${summary}`;
+    return `\n\nKNOWLEDGE BASE ARTICLES:\n${summary}`;
+  } catch (error) {
+    console.error("Failed to fetch knowledge base context:", error);
+    return "";
+  }
 }
 
 /* ------------------------------------------------------------------ */

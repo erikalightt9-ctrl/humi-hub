@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { TrainerManager } from "@/components/admin/TrainerManager";
+import { getAllTierConfigs } from "@/lib/repositories/trainer-tier.repository";
 import { UserCog } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -15,6 +16,13 @@ export default async function TrainersPage() {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role?: string })?.role !== "admin") {
     redirect("/portal?tab=admin");
+  }
+
+  let tierConfigs: Awaited<ReturnType<typeof getAllTierConfigs>> = [];
+  try {
+    tierConfigs = await getAllTierConfigs();
+  } catch (err) {
+    console.error("[TrainersPage] Failed to load tier configs:", err);
   }
 
   return (
@@ -35,7 +43,7 @@ export default async function TrainersPage() {
         </div>
       </div>
 
-      <TrainerManager />
+      <TrainerManager tierConfigs={tierConfigs} />
     </div>
   );
 }

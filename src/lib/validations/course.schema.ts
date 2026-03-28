@@ -10,6 +10,32 @@ export const CURRENCY_SYMBOLS: Readonly<Record<CurrencyCode, string>> = {
   GBP: "£",
 };
 
+/* ------------------------------------------------------------------ */
+/*  Discount config schema                                              */
+/* ------------------------------------------------------------------ */
+
+const discountConfigSchema = z
+  .union([
+    z.object({
+      type: z.literal("percent"),
+      value: z.number().min(0).max(100, "Percent discount must be 0–100"),
+      active: z.boolean(),
+    }),
+    z.object({
+      type: z.literal("fixed"),
+      value: z.number().min(0, "Discount value must be 0 or greater"),
+      active: z.boolean(),
+    }),
+  ])
+  .nullable()
+  .optional();
+
+export type DiscountConfigInput = z.infer<typeof discountConfigSchema>;
+
+/* ------------------------------------------------------------------ */
+/*  Course schemas                                                      */
+/* ------------------------------------------------------------------ */
+
 export const createCourseSchema = z.object({
   slug: z
     .string()
@@ -42,10 +68,24 @@ export const createCourseSchema = z.object({
   priceBasic: z.number().min(0, "Basic price must be 0 or greater").optional(),
   priceProfessional: z.number().min(0, "Professional price must be 0 or greater").optional(),
   priceAdvanced: z.number().min(0, "Advanced price must be 0 or greater").optional(),
+  featuresBasic: z
+    .array(z.string().min(1, "Feature cannot be empty"))
+    .optional(),
+  featuresProfessional: z
+    .array(z.string().min(1, "Feature cannot be empty"))
+    .optional(),
+  featuresAdvanced: z
+    .array(z.string().min(1, "Feature cannot be empty"))
+    .optional(),
+  popularTier: z.string().nullable().optional(),
+  industry: z.string().max(100).optional(),
   outcomes: z
     .array(z.string().min(1, "Outcome cannot be empty"))
     .min(1, "At least one outcome is required"),
   isActive: z.boolean().optional(),
+  discountBasic: discountConfigSchema,
+  discountProfessional: discountConfigSchema,
+  discountAdvanced: discountConfigSchema,
 });
 
 export const updateCourseSchema = createCourseSchema.partial();

@@ -3,10 +3,9 @@
   "configurations": [
     {
       "name": "platform-dev",
-      "runtimeExecutable": "/Users/erikahernando/Desktop/va-training-center/node_modules/.bin/next",
-      "runtimeArgs": ["dev", "--port", "3000"],
-      "port": 3000,
-      "cwd": "/Users/erikahernando/Desktop/va-training-center/.claude/worktrees/cranky-blackburn"
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
     },
     {
       "name": "smart-assistant",

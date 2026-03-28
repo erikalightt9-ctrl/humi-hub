@@ -54,9 +54,22 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Fetch token once for all protected routes
+  const needsAuth =
+    pathname.startsWith("/superadmin") ||
+    (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) ||
+    pathname.startsWith("/api/admin") ||
+    (pathname.startsWith("/student") && !pathname.startsWith("/student/login")) ||
+    pathname.startsWith("/api/student") ||
+    (pathname.startsWith("/trainer") && !pathname.startsWith("/trainer/login")) ||
+    pathname.startsWith("/api/trainer");
+
+  const token = needsAuth
+    ? await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    : null;
+
   // ── Superadmin protection ────────────────────────────────────────────────
   if (pathname.startsWith("/superadmin")) {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
     if (!token?.isSuperAdmin) {
       const loginUrl = new URL("/portal", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
@@ -69,7 +82,6 @@ export async function proxy(request: NextRequest) {
   const isAdminApi = pathname.startsWith("/api/admin");
 
   if (isAdminRoute || isAdminApi) {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
     if (!token || token.role !== "admin") {
       if (isAdminApi) {
         return NextResponse.json(
@@ -88,8 +100,6 @@ export async function proxy(request: NextRequest) {
   const isStudentApi = pathname.startsWith("/api/student");
 
   if (isStudentRoute || isStudentApi) {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-
     if (!token || token.role !== "student") {
       if (isStudentApi) {
         return NextResponse.json(
@@ -124,6 +134,24 @@ export async function proxy(request: NextRequest) {
 
     if (token.mustChangePassword === true && !isChangePasswordPage && !isChangePasswordApi) {
       return NextResponse.redirect(new URL("/student/change-password", request.url));
+    }
+  }
+
+  // ── Trainer route protection ─────────────────────────────────────────────
+  const isTrainerRoute = pathname.startsWith("/trainer") && !pathname.startsWith("/trainer/login");
+  const isTrainerApi = pathname.startsWith("/api/trainer");
+
+  if (isTrainerRoute || isTrainerApi) {
+    if (!token || token.role !== "trainer") {
+      if (isTrainerApi) {
+        return NextResponse.json(
+          { success: false, data: null, error: "Unauthorized" },
+          { status: 401 },
+        );
+      }
+      const loginUrl = new URL("/trainer/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
     }
   }
 

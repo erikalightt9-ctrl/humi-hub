@@ -10,24 +10,22 @@ interface FooterLink {
   readonly label: string;
 }
 
-const programsLinks: readonly FooterLink[] = [
-  { href: "/programs", label: "All Programs" },
-  { href: "/learning-paths", label: "Learning Paths" },
-  { href: "/certifications", label: "Certifications" },
-] as const;
-
-const studentsLinks: readonly FooterLink[] = [
-  { href: "/career-placement", label: "Career Placement" },
-  { href: "/student-success", label: "Student Success" },
-  { href: "/community", label: "Community" },
-  { href: "/resources", label: "Resources" },
+const productLinks: readonly FooterLink[] = [
+  { href: "/#features", label: "Features" },
+  { href: "/#pricing", label: "Pricing" },
+  { href: "/contact", label: "Book a Demo" },
+  { href: "/portal", label: "Login" },
 ] as const;
 
 const companyLinks: readonly FooterLink[] = [
   { href: "/about", label: "About Us" },
-  { href: "/enterprise", label: "Corporate Training" },
   { href: "/contact", label: "Contact" },
-  { href: "/verify", label: "Verify Certificate" },
+  { href: "/enterprise", label: "Enterprise" },
+] as const;
+
+const legalLinks: readonly FooterLink[] = [
+  { href: "/terms", label: "Terms of Service" },
+  { href: "/privacy", label: "Privacy Policy" },
 ] as const;
 
 /* ------------------------------------------------------------------ */
@@ -46,7 +44,7 @@ function LinkColumn({
       <h3 className="font-semibold text-white mb-3">{title}</h3>
       <ul className="space-y-2 text-sm text-blue-200">
         {links.map((link) => (
-          <li key={link.href}>
+          <li key={link.href + link.label}>
             <Link href={link.href} className="hover:text-white transition-colors">
               {link.label}
             </Link>
@@ -74,20 +72,20 @@ export function Footer() {
               <span>HUMI Training Center</span>
             </div>
             <p className="text-blue-200 text-sm leading-relaxed">
-              The Philippines&apos; premier professional training platform.
-              Industry-specific programs that build world-class careers
-              through expert-led, AI-enhanced training.
+              All-in-one training management platform for modern training
+              centers and academies. Manage students, trainers, courses,
+              and analytics in one system.
             </p>
           </div>
 
-          {/* Column 2: Programs */}
-          <LinkColumn title="Programs" links={programsLinks} />
+          {/* Column 2: Product */}
+          <LinkColumn title="Product" links={productLinks} />
 
-          {/* Column 3: Students & Community */}
-          <LinkColumn title="Students & Community" links={studentsLinks} />
-
-          {/* Column 4: Company */}
+          {/* Column 3: Company */}
           <LinkColumn title="Company" links={companyLinks} />
+
+          {/* Column 4: Legal */}
+          <LinkColumn title="Legal" links={legalLinks} />
         </div>
 
         {/* Contact info bar */}

@@ -50,7 +50,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const coursePrice = Number(enrollment.course.price);
+    // Use tier-locked price captured at enrollment time; fall back to base course price
+    const coursePrice =
+      enrollment.baseProgramPrice !== null
+        ? Number(enrollment.baseProgramPrice)
+        : Number(enrollment.course.price);
     const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
     const successUrl = `${baseUrl}/pay/${body.enrollmentId}/success`;
     const cancelUrl = `${baseUrl}/pay/${body.enrollmentId}/failed`;

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { requireFeature } from "@/lib/require-feature";
+import { FEATURES } from "@/lib/feature-flags";
 
 /* ------------------------------------------------------------------ */
 /*  Validation                                                         */
@@ -75,6 +77,8 @@ export async function POST(request: NextRequest) {
     }
 
     const studentId = token.id as string;
+    const featureCheck = await requireFeature((token.tenantId as string | undefined) ?? null, FEATURES.FORUM);
+    if (!featureCheck.ok) return featureCheck.response;
     const body = await request.json();
     const result = createThreadSchema.safeParse(body);
 

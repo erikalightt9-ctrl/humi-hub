@@ -19,11 +19,12 @@ beforeEach(() => jest.clearAllMocks());
 
 describe("getAnalyticsStats", () => {
   it("returns correct stats with enrolled courses", async () => {
-    let callCount = 0;
-    (mockEnrollmentCount as jest.Mock).mockImplementation(() => {
-      const counts = [10, 4, 5, 1, 3];
-      return Promise.resolve(counts[callCount++] ?? 0);
-    });
+    (mockEnrollmentCount as jest.Mock)
+      .mockResolvedValueOnce(10) // totalEnrollments
+      .mockResolvedValueOnce(4)  // pendingCount
+      .mockResolvedValueOnce(5)  // approvedCount
+      .mockResolvedValueOnce(1)  // rejectedCount
+      .mockResolvedValueOnce(3); // recentEnrollments
 
     (mockCourseFindMany as jest.Mock).mockResolvedValue([
       { slug: "MEDICAL_VA", title: "Medical VA", _count: { enrollments: 5 } },

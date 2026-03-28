@@ -15,7 +15,7 @@ interface ReportConfig {
 const REPORTS: ReadonlyArray<ReportConfig> = [
   {
     title: "Enrollment Report",
-    description: "All enrollment data including status, course, and submission dates.",
+    description: "All enrollment data including status, course, trainer tier, and submission dates.",
     icon: <Users className="h-5 w-5 text-blue-600" />,
     endpoint: "/api/admin/export",
     supportsDateRange: false,

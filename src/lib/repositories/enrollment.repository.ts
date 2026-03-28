@@ -9,6 +9,7 @@ import type {
   EmploymentStatus as PrismaEmploymentStatus,
   ToolFamiliarity as PrismaToolFamiliarity,
   CourseTier,
+  TrainerTier,
   Prisma,
 } from "@prisma/client";
 
@@ -33,6 +34,8 @@ interface CreateEnrollmentInput {
   readonly ipAddress?: string;
   readonly trainerId?: string | null;
   readonly baseProgramPrice?: number | null;
+  readonly trainerTier?: TrainerTier | null;
+  readonly trainerUpgradeFee?: number | null;
   readonly scheduleId?: string | null;
 }
 
@@ -57,6 +60,8 @@ export async function createEnrollment(
       ipAddress: data.ipAddress,
       trainerId: data.trainerId ?? null,
       baseProgramPrice: data.baseProgramPrice ?? null,
+      trainerTier: data.trainerTier ?? null,
+      trainerUpgradeFee: data.trainerUpgradeFee ?? null,
       scheduleId: data.scheduleId ?? null,
     },
   });

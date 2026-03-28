@@ -8,10 +8,6 @@ import {
   Zap,
   Award,
   Briefcase,
-  Stethoscope,
-  Home,
-  Calculator,
-  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -74,57 +70,6 @@ const TIMELINE_STEPS: readonly TimelineStep[] = [
     description:
       "Get matched with employers through our network of 150+ global hiring partners and launch your VA career.",
     icon: Briefcase,
-  },
-] as const;
-
-interface Specialization {
-  readonly name: string;
-  readonly slug: string;
-  readonly icon: React.ComponentType<{ readonly className?: string }>;
-  readonly outcomes: readonly string[];
-  readonly duration: string;
-  readonly price: string;
-}
-
-const SPECIALIZATIONS: readonly Specialization[] = [
-  {
-    name: "Medical Virtual Assistant",
-    slug: "medical-va",
-    icon: Stethoscope,
-    outcomes: [
-      "Medical office administration",
-      "Patient scheduling and follow-up",
-      "Insurance verification and billing",
-      "HIPAA-compliant documentation",
-    ],
-    duration: "8 weeks",
-    price: "$149",
-  },
-  {
-    name: "Real Estate Virtual Assistant",
-    slug: "real-estate-va",
-    icon: Home,
-    outcomes: [
-      "MLS listing management",
-      "CRM and lead nurturing automation",
-      "Transaction coordination",
-      "Real estate marketing and social media",
-    ],
-    duration: "8 weeks",
-    price: "$149",
-  },
-  {
-    name: "US Bookkeeping Virtual Assistant",
-    slug: "us-bookkeeping-va",
-    icon: Calculator,
-    outcomes: [
-      "QuickBooks Online management",
-      "Accounts payable and receivable",
-      "Bank reconciliation and reporting",
-      "Payroll processing support",
-    ],
-    duration: "8 weeks",
-    price: "$149",
   },
 ] as const;
 
@@ -202,72 +147,6 @@ export default function LearningPathsPage() {
                 );
               })}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Path Selector */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
-              Choose Your Specialization
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Select the path that matches your interests and career goals. Each
-              program leads to a certified specialization and career placement
-              support.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {SPECIALIZATIONS.map((spec) => (
-              <div
-                key={spec.slug}
-                className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col"
-              >
-                {/* Card Header */}
-                <div className="bg-blue-50 p-6 border-b border-blue-100">
-                  <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                    <spec.icon className="h-6 w-6 text-blue-700" />
-                  </div>
-                  <h3 className="font-bold text-gray-900 text-lg">
-                    {spec.name}
-                  </h3>
-                </div>
-
-                {/* Card Body */}
-                <div className="p-6 flex-1 flex flex-col">
-                  {/* Career Outcomes */}
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
-                    Career Outcomes
-                  </p>
-                  <ul className="space-y-2 mb-6 flex-1">
-                    {spec.outcomes.map((outcome) => (
-                      <li
-                        key={outcome}
-                        className="flex items-start gap-2 text-sm text-gray-600"
-                      >
-                        <ArrowRight className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-                        {outcome}
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* Duration & Price */}
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4 border-t border-gray-100 pt-4">
-                    <span>Duration: {spec.duration}</span>
-                    <span className="font-bold text-gray-900">
-                      {spec.price}
-                    </span>
-                  </div>
-
-                  <Button asChild variant="outline" className="w-full">
-                    <Link href={`/programs/${spec.slug}`}>Learn More</Link>
-                  </Button>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>

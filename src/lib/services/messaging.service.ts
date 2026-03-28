@@ -1,7 +1,23 @@
 import type { ActorType, ConversationType } from "@prisma/client";
 import * as messagingRepo from "@/lib/repositories/messaging.repository";
-import { notifyMany } from "@/lib/services/in-app-notification.service";
+import { notify } from "@/lib/services/in-app-notification.service";
 import { resolveActor } from "@/lib/services/actor.service";
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+/** Returns the role-prefixed messages path for a given actor type. */
+function messagesPath(actorType: ActorType, conversationId: string): string {
+  const base: Partial<Record<ActorType, string>> = {
+    STUDENT: "student",
+    TRAINER: "trainer",
+    ADMIN: "admin",
+    CORPORATE_MANAGER: "corporate",
+  };
+  const prefix = base[actorType] ?? "student";
+  return `/${prefix}/messages?conversation=${conversationId}`;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Create or Find Conversation                                        */
@@ -60,7 +76,6 @@ export async function sendMessage(
     attachmentName,
   });
 
-  // Notify other participants
   const conversation = await messagingRepo.getConversationById(conversationId);
   if (conversation) {
     const sender = await resolveActor(senderType, senderId);
@@ -70,19 +85,39 @@ export async function sendMessage(
       (p) => !(p.actorType === senderType && p.actorId === senderId)
     );
 
+    // Auto-upsert contacts (both directions)
+    await Promise.allSettled([
+      ...otherParticipants.map(async (p) => {
+        const contactActor = await resolveActor(p.actorType, p.actorId);
+        return messagingRepo.upsertContact(
+          { actorType: senderType, actorId: senderId },
+          { actorType: p.actorType, actorId: p.actorId, name: contactActor?.name ?? undefined },
+          conversation.tenantId
+        );
+      }),
+      ...otherParticipants.map((p) =>
+        messagingRepo.upsertContact(
+          { actorType: p.actorType, actorId: p.actorId },
+          { actorType: senderType, actorId: senderId, name: senderName },
+          conversation.tenantId
+        )
+      ),
+    ]);
+
+    // Notify other participants
     if (otherParticipants.length > 0) {
-      await notifyMany(
-        otherParticipants.map((p) => ({
-          actorType: p.actorType,
-          actorId: p.actorId,
-        })),
-        {
-          type: "NEW_MESSAGE",
-          title: "New Message",
-          message: `${senderName}: ${content.slice(0, 100)}${content.length > 100 ? "..." : ""}`,
-          linkUrl: `/messages?conversation=${conversationId}`,
-          tenantId: conversation.tenantId,
-        }
+      await Promise.allSettled(
+        otherParticipants.map((p) =>
+          notify({
+            recipientType: p.actorType,
+            recipientId: p.actorId,
+            type: "NEW_MESSAGE",
+            title: "New Message",
+            message: `${senderName}: ${content.slice(0, 100)}${content.length > 100 ? "..." : ""}`,
+            linkUrl: messagesPath(p.actorType, conversationId),
+            tenantId: conversation.tenantId,
+          })
+        )
       );
     }
   }

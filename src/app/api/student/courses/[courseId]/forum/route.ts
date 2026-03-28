@@ -3,6 +3,8 @@ import { getToken } from "next-auth/jwt";
 import { z } from "zod";
 import { getThreadsByCourse, createThread } from "@/lib/repositories/forum.repository";
 import { onForumPost } from "@/lib/services/gamification.service";
+import { requireFeature } from "@/lib/require-feature";
+import { FEATURES } from "@/lib/feature-flags";
 
 const createSchema = z.object({
   title: z.string().min(3).max(200),
@@ -37,6 +39,8 @@ export async function POST(
       return NextResponse.json({ success: false, data: null, error: "Unauthorized" }, { status: 401 });
     }
     const studentId = token.id as string;
+    const featureCheck = await requireFeature((token.tenantId as string | undefined) ?? null, FEATURES.FORUM);
+    if (!featureCheck.ok) return featureCheck.response;
     const { courseId } = await params;
     const body = await request.json();
     const result = createSchema.safeParse(body);

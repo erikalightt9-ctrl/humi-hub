@@ -18,6 +18,8 @@ import {
   evaluateEmailSchema,
 } from "@/lib/validations/ai-email-practice.schema";
 import { requireSubscription } from "@/lib/guards/subscription.guard";
+import { requireFeature } from "@/lib/require-feature";
+import { FEATURES } from "@/lib/feature-flags";
 import type { CourseSlug } from "@/types";
 
 /* ------------------------------------------------------------------ */
@@ -108,6 +110,8 @@ export async function POST(request: NextRequest) {
     const studentId = token.id as string;
     const denied = await requireSubscription(studentId);
     if (denied) return denied;
+    const featureCheck = await requireFeature((token.tenantId as string | undefined) ?? null, FEATURES.AI_EMAIL_PRACTICE);
+    if (!featureCheck.ok) return featureCheck.response;
     const body = await request.json();
 
     const parsed = generateScenarioSchema.safeParse(body);
@@ -193,6 +197,8 @@ export async function PUT(request: NextRequest) {
     const studentId = token.id as string;
     const denied = await requireSubscription(studentId);
     if (denied) return denied;
+    const featureCheckPut = await requireFeature((token.tenantId as string | undefined) ?? null, FEATURES.AI_EMAIL_PRACTICE);
+    if (!featureCheckPut.ok) return featureCheckPut.response;
     const body = await request.json();
 
     const parsed = evaluateEmailSchema.safeParse(body);

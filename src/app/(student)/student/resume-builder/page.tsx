@@ -15,17 +15,23 @@ export default async function ResumeBuilderPage() {
   const studentId = (session?.user as { id: string } | undefined)?.id;
   if (!studentId) redirect("/student/login");
 
-  const student = await prisma.student.findUnique({
-    where: { id: studentId },
-    include: {
-      enrollment: {
-        include: { course: { select: { title: true } } },
+  const [student, subscription] = await Promise.all([
+    prisma.student.findUnique({
+      where: { id: studentId },
+      include: {
+        enrollment: {
+          include: { course: { select: { title: true } } },
+        },
+        certificates: {
+          include: { course: { select: { title: true } } },
+        },
       },
-      certificates: {
-        include: { course: { select: { title: true } } },
-      },
-    },
-  });
+    }),
+    prisma.subscription.findFirst({
+      where: { studentId, status: "ACTIVE" },
+      select: { id: true },
+    }),
+  ]);
 
   if (!student) redirect("/student/login");
 
@@ -59,6 +65,7 @@ export default async function ResumeBuilderPage() {
         initialSkills={technicalSkills}
         initialCertifications={certifications}
         courseTitle={student.enrollment.course.title}
+        hasSubscription={!!subscription}
       />
     </div>
   );

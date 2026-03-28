@@ -11,6 +11,7 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  components: externalComponents,
   ...props
 }: React.ComponentProps<typeof DayPicker>) {
   return (
@@ -67,6 +68,7 @@ function Calendar({
           const Icon = orientation === "left" ? ChevronLeft : ChevronRight;
           return <Icon className="h-4 w-4" />;
         },
+        ...externalComponents,
       }}
       {...props}
     />

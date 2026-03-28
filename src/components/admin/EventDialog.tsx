@@ -13,28 +13,40 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { EVENT_TYPES, EVENT_TYPE_LABELS } from "@/lib/validations/calendar.schema";
-import type { CalendarItem } from "@/components/calendar/CalendarWidget";
+import type { CalendarEvent } from "@/components/calendar/types";
 
-// ── Types ──────────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
+
 interface Course {
   id: string;
   title: string;
 }
 
+interface User {
+  id: string;
+  name: string;
+}
+
 interface EventDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  event?: CalendarItem | null;
+  event?: CalendarEvent | null;
+  /** Prefill values when drag-creating a slot */
+  prefill?: { date: string; startTime: string; endTime: string } | null;
   courses: ReadonlyArray<Course>;
+  users?: ReadonlyArray<User>;
   onSuccess: () => void;
 }
 
-// ── Component ──────────────────────────────────────────────────────
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export function EventDialog({
   open,
   onOpenChange,
   event,
+  prefill,
   courses,
+  users = [],
   onSuccess,
 }: EventDialogProps) {
   const isEdit = Boolean(event);
@@ -46,31 +58,42 @@ export function EventDialog({
   const [description, setDescription] = React.useState("");
   const [date, setDate] = React.useState("");
   const [endDate, setEndDate] = React.useState("");
+  const [startTime, setStartTime] = React.useState("");
+  const [endTime, setEndTime] = React.useState("");
   const [type, setType] = React.useState<string>("CUSTOM");
   const [courseId, setCourseId] = React.useState<string>("");
+  const [assignedUserId, setAssignedUserId] = React.useState<string>("");
   const [isPublished, setIsPublished] = React.useState(true);
 
-  // Populate form when editing
+  // Populate form when editing or using prefill
   React.useEffect(() => {
+    if (!open) return;
+
     if (event) {
       setTitle(event.title);
       setDescription(event.description ?? "");
       setDate(event.date.slice(0, 10));
       setEndDate(event.endDate?.slice(0, 10) ?? "");
+      setStartTime(event.startTime ?? "");
+      setEndTime(event.endTime ?? "");
       setType(event.type);
-      setCourseId("");
+      setCourseId(event.courseId ?? "");
+      setAssignedUserId(event.assignedUserId ?? "");
       setIsPublished(true);
     } else {
       setTitle("");
       setDescription("");
-      setDate("");
+      setDate(prefill?.date ?? "");
       setEndDate("");
+      setStartTime(prefill?.startTime ?? "");
+      setEndTime(prefill?.endTime ?? "");
       setType("CUSTOM");
       setCourseId("");
+      setAssignedUserId("");
       setIsPublished(true);
     }
     setError(null);
-  }, [event, open]);
+  }, [event, prefill, open]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -82,15 +105,16 @@ export function EventDialog({
       description: description.trim() || null,
       date,
       endDate: endDate || null,
+      startTime: startTime || null,
+      endTime: endTime || null,
       type,
       courseId: courseId || null,
+      assignedUserId: assignedUserId || null,
       isPublished,
     };
 
     try {
-      const url = isEdit
-        ? `/api/admin/calendar/${event!.id}`
-        : "/api/admin/calendar";
+      const url = isEdit ? `/api/admin/calendar/${event!.id}` : "/api/admin/calendar";
       const method = isEdit ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -100,7 +124,6 @@ export function EventDialog({
       });
 
       const data = await res.json();
-
       if (!data.success) {
         setError(data.error ?? "Something went wrong");
         return;
@@ -120,16 +143,12 @@ export function EventDialog({
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/admin/calendar/${event.id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(`/api/admin/calendar/${event.id}`, { method: "DELETE" });
       const data = await res.json();
-
       if (!data.success) {
         setError(data.error ?? "Failed to delete");
         return;
       }
-
       onSuccess();
       onOpenChange(false);
     } catch {
@@ -141,7 +160,7 @@ export function EventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit Event" : "New Event"}</DialogTitle>
         </DialogHeader>
@@ -155,12 +174,12 @@ export function EventDialog({
 
           {/* Title */}
           <div>
-            <Label htmlFor="event-title">Title *</Label>
+            <Label htmlFor="ev-title">Title *</Label>
             <Input
-              id="event-title"
+              id="ev-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Orientation Day"
+              placeholder="e.g. Morning Class"
               maxLength={100}
               required
             />
@@ -168,23 +187,23 @@ export function EventDialog({
 
           {/* Description */}
           <div>
-            <Label htmlFor="event-desc">Description</Label>
+            <Label htmlFor="ev-desc">Description</Label>
             <Textarea
-              id="event-desc"
+              id="ev-desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Optional details..."
-              rows={3}
+              placeholder="Optional details…"
+              rows={2}
               maxLength={1000}
             />
           </div>
 
-          {/* Date */}
+          {/* Date row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="event-date">Date *</Label>
+              <Label htmlFor="ev-date">Date *</Label>
               <Input
-                id="event-date"
+                id="ev-date"
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
@@ -192,9 +211,9 @@ export function EventDialog({
               />
             </div>
             <div>
-              <Label htmlFor="event-end-date">End Date</Label>
+              <Label htmlFor="ev-end-date">End Date</Label>
               <Input
-                id="event-end-date"
+                id="ev-end-date"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
@@ -202,11 +221,33 @@ export function EventDialog({
             </div>
           </div>
 
+          {/* Time row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="ev-start-time">Start Time</Label>
+              <Input
+                id="ev-start-time"
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="ev-end-time">End Time</Label>
+              <Input
+                id="ev-end-time"
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              />
+            </div>
+          </div>
+
           {/* Type */}
           <div>
-            <Label htmlFor="event-type">Type</Label>
+            <Label htmlFor="ev-type">Type</Label>
             <select
-              id="event-type"
+              id="ev-type"
               value={type}
               onChange={(e) => setType(e.target.value)}
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -219,11 +260,11 @@ export function EventDialog({
             </select>
           </div>
 
-          {/* Course scope */}
+          {/* Course */}
           <div>
-            <Label htmlFor="event-course">Course</Label>
+            <Label htmlFor="ev-course">Course</Label>
             <select
-              id="event-course"
+              id="ev-course"
               value={courseId}
               onChange={(e) => setCourseId(e.target.value)}
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -237,16 +278,36 @@ export function EventDialog({
             </select>
           </div>
 
-          {/* Published toggle */}
+          {/* Assigned user */}
+          {users.length > 0 && (
+            <div>
+              <Label htmlFor="ev-user">Assigned To</Label>
+              <select
+                id="ev-user"
+                value={assignedUserId}
+                onChange={(e) => setAssignedUserId(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="">Unassigned</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Published */}
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
-              id="event-published"
+              id="ev-published"
               checked={isPublished}
               onChange={(e) => setIsPublished(e.target.checked)}
               className="h-4 w-4 rounded border-gray-300"
             />
-            <Label htmlFor="event-published" className="text-sm font-normal cursor-pointer">
+            <Label htmlFor="ev-published" className="text-sm font-normal cursor-pointer">
               Published (visible to students)
             </Label>
           </div>
@@ -273,7 +334,7 @@ export function EventDialog({
                 Cancel
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? "Saving..." : isEdit ? "Update" : "Create"}
+                {loading ? "Saving…" : isEdit ? "Update" : "Create"}
               </Button>
             </div>
           </DialogFooter>

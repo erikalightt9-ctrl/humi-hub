@@ -60,10 +60,10 @@ export const enrollmentSchema = z.object({
     .string()
     .min(100, "Please provide at least 100 characters explaining why you want to enroll")
     .max(2000, "Response is too long"),
-  courseId: z.string().cuid("Invalid course selection"),
+  courseId: z.string().min(1, "Please select a course"),
   courseTier: z.enum(["BASIC", "PROFESSIONAL", "ADVANCED"]),
-  trainerId: z.string().cuid("Invalid trainer selection").optional().nullable(),
-  scheduleId: z.string().cuid("Invalid schedule selection").optional().nullable(),
+  trainerId: z.string().min(1).optional().nullable(),
+  scheduleId: z.string().min(1).optional().nullable(),
 });
 
 export type EnrollmentFormData = z.infer<typeof enrollmentSchema>;

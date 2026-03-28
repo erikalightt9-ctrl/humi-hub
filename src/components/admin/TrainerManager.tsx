@@ -30,6 +30,7 @@ import {
 import { TrainerForm } from "@/components/admin/TrainerForm";
 import { TrainerAccessPanel } from "@/components/admin/TrainerAccessPanel";
 import { TrainerAvailabilityEditor } from "@/components/admin/TrainerAvailabilityEditor";
+import type { TrainerTierConfig } from "@/lib/repositories/trainer-tier.repository";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -57,6 +58,7 @@ interface Trainer {
   readonly bio: string | null;
   readonly photoUrl: string | null;
   readonly specializations: ReadonlyArray<string>;
+  readonly tier: "BASIC" | "PROFESSIONAL" | "PREMIUM";
   readonly credentials: string | null;
   readonly certifications: ReadonlyArray<string>;
   readonly industryExperience: string | null;
@@ -127,7 +129,11 @@ function StarRating({
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function TrainerManager() {
+interface TrainerManagerProps {
+  readonly tierConfigs?: ReadonlyArray<TrainerTierConfig>;
+}
+
+export function TrainerManager({ tierConfigs }: TrainerManagerProps = {}) {
   const [trainers, setTrainers] = useState<ReadonlyArray<Trainer>>([]);
   const [courses, setCourses] = useState<ReadonlyArray<Course>>([]);
   const [loading, setLoading] = useState(true);
@@ -423,6 +429,7 @@ export function TrainerManager() {
           editingTrainer={editingTrainer}
           onSave={handleFormSave}
           onCancel={closeForm}
+          tierConfigs={tierConfigs}
         />
       )}
 

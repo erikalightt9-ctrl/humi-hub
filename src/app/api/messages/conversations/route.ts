@@ -28,6 +28,21 @@ export async function POST(request: NextRequest) {
 
     const { type, title, courseId, lessonId, participantIds, initialMessage } = result.data;
 
+    // Enforce messaging rules: students may only message trainers.
+    if (actor.actorType === "STUDENT") {
+      const hasAdminParticipant = participantIds.some((p) => p.actorType === "ADMIN");
+      if (hasAdminParticipant) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: "Students cannot message admins directly. Please use Support Tickets to contact the admin team.",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     let conversation;
     if (type === "DIRECT" && participantIds.length === 1) {
       conversation = await messagingService.getOrCreateDirectConversation(

@@ -27,9 +27,11 @@ export default async function PaymentPage({
   const isPaid = enrollment.paymentStatus === "PAID" || enrollment.status === "ENROLLED";
 
   // Use tier-based pricing if available, otherwise fall back to course price
-  const baseProgramPrice = enrollment.baseProgramPrice
-    ? Number(enrollment.baseProgramPrice)
-    : null;
+  // Note: use !== null (not truthy) so a 0 value is still treated as set
+  const baseProgramPrice =
+    enrollment.baseProgramPrice !== null
+      ? Number(enrollment.baseProgramPrice)
+      : null;
   const hasTierPricing = baseProgramPrice !== null;
   const coursePrice = hasTierPricing
     ? baseProgramPrice
@@ -131,7 +133,7 @@ export default async function PaymentPage({
               <PayOnlineButton enrollmentId={enrollmentId} />
 
               <p className="text-xs text-gray-400 text-center mt-4">
-                Secure payment via GCash, PayMaya, or Credit/Debit Card
+                Secure payment via GCash / PayMaya / Card (PayMongo) or Stripe
               </p>
             </>
           )}

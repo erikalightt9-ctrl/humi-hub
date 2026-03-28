@@ -9,6 +9,7 @@ import {
   Globe,
   Award,
   TrendingUp,
+  LogIn,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -69,15 +70,15 @@ export function HeroSection() {
               industry-specific training that produces results.
             </p>
 
-            {/* Dual CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+            {/* Primary CTA — Enroll Now */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-5">
               <Button
                 asChild
                 size="lg"
-                className="bg-white text-blue-900 hover:bg-blue-50 font-bold text-base px-8 py-6 shadow-lg shadow-blue-950/30"
+                className="bg-amber-400 hover:bg-amber-300 text-blue-950 font-extrabold text-base px-8 py-6 shadow-xl shadow-amber-400/40 transition-all hover:-translate-y-0.5 active:translate-y-0"
               >
                 <Link href="/enroll">
-                  Start Your Training <ArrowRight className="ml-2 h-4 w-4" />
+                  Enroll Now <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button
@@ -91,6 +92,17 @@ export function HeroSection() {
                   Corporate Training Solutions
                 </Link>
               </Button>
+            </div>
+
+            {/* Secondary: Log In */}
+            <div className="mb-8">
+              <Link
+                href="/portal"
+                className="inline-flex items-center gap-1.5 text-blue-300 hover:text-white text-sm font-medium transition-colors"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                Already enrolled? Log In
+              </Link>
             </div>
 
             {/* Trust points */}

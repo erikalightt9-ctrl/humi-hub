@@ -65,6 +65,8 @@ enum EventType {
   ORIENTATION
   HOLIDAY
   CUSTOM
+  CLASS
+  MEETING
 }
 
 enum BadgeType {
@@ -103,6 +105,12 @@ enum ScheduleStatus {
   COMPLETED
 }
 
+enum TrainerTier {
+  BASIC
+  PROFESSIONAL
+  PREMIUM
+}
+
 enum WaitlistStatus {
   WAITING
   PROMOTED
@@ -129,6 +137,22 @@ enum TenantPlan {
   ENTERPRISE
 }
 
+enum PageType {
+  LANDING
+  CONTACT
+  CUSTOM
+}
+
+enum SectionType {
+  HERO
+  FEATURES
+  TESTIMONIALS
+  CONTACT
+  CTA
+  TEXT
+  IMAGE
+}
+
 model Course {
   id            String       @id @default(cuid())
   slug          String       @unique
@@ -136,13 +160,21 @@ model Course {
   description   String       @db.Text
   durationWeeks Int
   price         Decimal      @db.Decimal(10, 2)
-  priceBasic        Decimal  @default(1500) @db.Decimal(10, 2)
-  priceProfessional Decimal  @default(3500) @db.Decimal(10, 2)
-  priceAdvanced     Decimal  @default(5500) @db.Decimal(10, 2)
+  priceBasic        Decimal  @default(0) @db.Decimal(10, 2)
+  priceProfessional Decimal  @default(0) @db.Decimal(10, 2)
+  priceAdvanced     Decimal  @default(0) @db.Decimal(10, 2)
   currency      String       @default("PHP")
   outcomes      String[]
   isActive      Boolean      @default(true)
+  featuresBasic        String[]
+  featuresProfessional String[]
+  featuresAdvanced     String[]
+  popularTier   String?
+  industry      String?
   tenantId      String?
+  discountBasic        Json?
+  discountProfessional Json?
+  discountAdvanced     Json?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   tenant          Organization?  @relation(fields: [tenantId], references: [id])
@@ -159,9 +191,24 @@ model Course {
   trainers         CourseTrainer[]
   resources        CourseResource[]
   usageSnapshots   CourseUsageSnapshot[]
+  priceHistory     CoursePriceHistory[]
+  attendanceRecords AttendanceRecord[]
 
   @@index([tenantId])
   @@map("courses")
+}
+
+model CoursePriceHistory {
+  id        String   @id @default(cuid())
+  courseId  String
+  tier      String
+  oldPrice  Decimal  @db.Decimal(10, 2)
+  newPrice  Decimal  @db.Decimal(10, 2)
+  updatedAt DateTime @default(now()) @db.Timestamptz
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@map("course_price_history")
 }
 
 model CourseUsageSnapshot {
@@ -218,7 +265,9 @@ model Enrollment {
   trainerId             String?
   trainer               Trainer?          @relation(fields: [trainerId], references: [id])
   courseTier            CourseTier        @default(BASIC)
+  trainerTier           TrainerTier?
   baseProgramPrice      Decimal?          @db.Decimal(10, 2)
+  trainerUpgradeFee     Decimal?          @db.Decimal(10, 2)
   scheduleId            String?
   schedule              Schedule?         @relation(fields: [scheduleId], references: [id])
   ipAddress             String?
@@ -294,6 +343,7 @@ model Student {
   bio                String?              @db.Text
   avatarUrl          String?
   mustChangePassword    Boolean              @default(true)
+  failedAttempts        Int                  @default(0)
   resetToken            String?              @unique
   resetTokenExpiresAt   DateTime?
   batch              String?
@@ -335,6 +385,9 @@ model Student {
   subscriptions         Subscription[]
   trainerRatings        TrainerRating[]
   sessionAttendances    SessionAttendance[]
+  placementResumes      PlacementResume[]
+  coachingSessions      CoachingSession[]
+  employerApplications  EmployerApplication[]
 
   @@index([email])
   @@index([trainerId])
@@ -406,6 +459,7 @@ model Quiz {
   description  String?
   passingScore Int            @default(70)
   isPublished  Boolean        @default(false)
+  duration     Int?           // quiz duration in minutes; null = unlimited
   createdAt    DateTime       @default(now())
   course       Course         @relation(fields: [courseId], references: [id])
   questions    QuizQuestion[]
@@ -432,15 +486,25 @@ model QuizQuestion {
 }
 
 model QuizAttempt {
-  id          String       @id @default(cuid())
-  studentId   String
-  quizId      String
-  score       Int
-  passed      Boolean
-  completedAt DateTime     @default(now())
-  student     Student      @relation(fields: [studentId], references: [id])
-  quiz        Quiz         @relation(fields: [quizId], references: [id])
-  answers     QuizAnswer[]
+  id            String       @id @default(cuid())
+  studentId     String
+  quizId        String
+  score         Int          @default(0)
+  passed        Boolean      @default(false)
+  correct       Int          @default(0)
+  total         Int          @default(0)
+  completedAt   DateTime     @default(now())
+  // Timer fields
+  startTime     DateTime?
+  endTime       DateTime?
+  isSubmitted   Boolean      @default(false)
+  // Anti-cheat
+  violations    Int          @default(0)
+  // Randomization: ordered question IDs for this attempt
+  questionOrder String[]
+  student       Student      @relation(fields: [studentId], references: [id])
+  quiz          Quiz         @relation(fields: [quizId], references: [id])
+  answers       QuizAnswer[]
 
   @@index([studentId, quizId])
   @@map("quiz_attempts")
@@ -599,15 +663,19 @@ model PointTransaction {
 }
 
 model AttendanceRecord {
-  id        String    @id @default(cuid())
-  studentId String
-  clockIn   DateTime  @default(now())
-  clockOut  DateTime?
-  createdAt DateTime  @default(now())
-  student   Student   @relation(fields: [studentId], references: [id])
+  id              String    @id @default(cuid())
+  studentId       String
+  courseId        String?   // which course this check-in belongs to
+  clockIn         DateTime  @default(now())
+  clockOut        DateTime?
+  durationMinutes Int?      // computed on clock-out: (clockOut - clockIn) in minutes
+  createdAt       DateTime  @default(now())
+  student         Student   @relation(fields: [studentId], references: [id])
+  course          Course?   @relation(fields: [courseId], references: [id])
 
   @@index([studentId])
   @@index([clockIn])
+  @@index([courseId])
   @@map("attendance_records")
 }
 
@@ -662,22 +730,44 @@ model Schedule {
 }
 
 model CalendarEvent {
-  id          String    @id @default(cuid())
-  title       String
-  description String?   @db.Text
-  date        DateTime  @db.Date
-  endDate     DateTime? @db.Date
-  type        EventType @default(CUSTOM)
-  courseId     String?
-  createdBy   String
-  isPublished Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  course      Course?   @relation(fields: [courseId], references: [id])
+  id             String    @id @default(cuid())
+  title          String
+  description    String?   @db.Text
+  date           DateTime  @db.Date
+  endDate        DateTime? @db.Date
+  startTime      String?   // "HH:MM" 24-hour, e.g. "09:00"
+  endTime        String?   // "HH:MM" 24-hour, e.g. "10:30"
+  type           EventType @default(CUSTOM)
+  courseId       String?
+  assignedUserId String?   // user assigned to this event
+  creatorRole    String?   // role of the creator: "admin" | "trainer"
+  createdBy      String
+  isPublished    Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  course         Course?   @relation(fields: [courseId], references: [id])
+
+  googleEventId  String?   // Google Calendar event ID after sync
 
   @@index([date])
   @@index([courseId])
   @@map("calendar_events")
+}
+
+model GoogleCalendarToken {
+  id           String    @id @default(cuid())
+  userId       String
+  userRole     String    // "admin" | "trainer"
+  accessToken  String    @db.Text
+  refreshToken String?   @db.Text
+  tokenType    String?
+  expiresAt    DateTime?
+  calendarId   String    @default("primary")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([userId, userRole])
+  @@map("google_calendar_tokens")
 }
 
 model CareerReadinessScore {
@@ -812,6 +902,7 @@ model Trainer {
   bio                  String?         @db.Text
   photoUrl             String?         @db.Text
   specializations      String[]
+  tier                 TrainerTier     @default(BASIC)
   credentials          String?         @db.Text
   certifications       String[]
   industryExperience   String?         @db.Text
@@ -824,6 +915,8 @@ model Trainer {
   isActive              Boolean         @default(true)
   resetToken            String?         @unique
   resetTokenExpiresAt   DateTime?
+  mustChangePassword    Boolean         @default(true)
+  failedAttempts        Int             @default(0)
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
   courses              CourseTrainer[]
@@ -836,6 +929,7 @@ model Trainer {
   tenantAssignments    TenantTrainer[]
 
   @@index([isActive])
+  @@index([tier])
   @@map("trainers")
 }
 
@@ -1016,6 +1110,33 @@ model JobApplication {
   @@map("job_applications")
 }
 
+model Placement {
+  id               String         @id @default(cuid())
+  studentId        String         @unique
+  jobApplicationId String?        @unique
+  companyName      String
+  jobTitle         String
+  employmentType   PlacementType  @default(FULL_TIME)
+  monthlyRate      Decimal?       @db.Decimal(10, 2)
+  currency         String         @default("USD")
+  startDate        DateTime       @db.Date
+  notes            String?        @db.Text
+  placedAt         DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  student          Student        @relation(fields: [studentId], references: [id])
+  jobApplication   JobApplication? @relation(fields: [jobApplicationId], references: [id])
+
+  @@index([placedAt])
+  @@map("placements")
+}
+
+enum PlacementType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  FREELANCE
+}
+
 model VerifiedSkill {
   id         String    @id @default(cuid())
   studentId  String
@@ -1134,8 +1255,26 @@ model Organization {
   subscriptions  TenantSubscription[]
   tasks          OrganizationTask[]
   files          OrganizationFile[]
+  featureFlags   TenantFeatureFlag[]
+  pages          TenantPage[]
+  theme          TenantTheme?
 
   @@map("organizations")
+}
+
+model TenantFeatureFlag {
+  id        String       @id @default(cuid())
+  tenantId  String
+  feature   String
+  enabled   Boolean      @default(false)
+  config    Json?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  tenant    Organization @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, feature])
+  @@index([tenantId])
+  @@map("tenant_feature_flags")
 }
 
 model TenantSubscription {
@@ -1175,20 +1314,23 @@ model TenantTrainer {
 }
 
 model CorporateManager {
-  id                 String       @id @default(cuid())
-  organizationId     String
-  organization       Organization @relation(fields: [organizationId], references: [id])
-  email              String       @unique
-  passwordHash       String
-  name               String
-  role               String       @default("manager")
-  isActive           Boolean      @default(true)
-  isTenantAdmin         Boolean      @default(false)
-  mustChangePassword    Boolean      @default(false)
-  resetToken            String?      @unique
-  resetTokenExpiresAt   DateTime?
-  createdAt             DateTime     @default(now())
+  id                  String       @id @default(cuid())
+  organizationId      String
+  organization        Organization @relation(fields: [organizationId], references: [id])
+  email               String
+  passwordHash        String
+  name                String
+  role                String       @default("manager")
+  department          String?
+  phone               String?
+  isActive            Boolean      @default(true)
+  isTenantAdmin       Boolean      @default(false)
+  mustChangePassword  Boolean      @default(false)
+  resetToken          String?      @unique
+  resetTokenExpiresAt DateTime?
+  createdAt           DateTime     @default(now())
 
+  @@unique([organizationId, email])
   @@index([organizationId])
   @@map("corporate_managers")
 }
@@ -1245,6 +1387,7 @@ enum NotificationType {
   ASSIGNMENT_SUBMITTED
   ASSIGNMENT_GRADED
   ASSIGNMENT_DUE_SOON
+  CONTACT_MESSAGE
 }
 
 enum KBCategory {
@@ -1267,6 +1410,7 @@ model SupportTicket {
   submitterType ActorType
   submitterId   String
   assignedToId  String?
+  slaDeadline   DateTime?
   resolvedAt    DateTime?
   closedAt      DateTime?
   createdAt     DateTime       @default(now())
@@ -1279,18 +1423,20 @@ model SupportTicket {
   @@index([referenceNo])
   @@index([category])
   @@index([createdAt])
+  @@index([slaDeadline])
   @@map("support_tickets")
 }
 
 model TicketResponse {
-  id         String        @id @default(cuid())
-  ticketId   String
-  authorType ActorType
-  authorId   String
-  content    String        @db.Text
-  isInternal Boolean       @default(false)
-  createdAt  DateTime      @default(now())
-  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  id          String        @id @default(cuid())
+  ticketId    String
+  authorType  ActorType
+  authorId    String
+  content     String        @db.Text
+  isInternal  Boolean       @default(false)
+  attachments Json?
+  createdAt   DateTime      @default(now())
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@index([ticketId])
   @@map("ticket_responses")
@@ -1344,6 +1490,7 @@ model DirectMessage {
   createdAt      DateTime      @default(now())
   conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   reads          MessageRead[]
+  deletions      MessageDeletion[]
 
   @@index([conversationId, createdAt])
   @@index([senderType, senderId])
@@ -1362,6 +1509,37 @@ model MessageRead {
   @@index([messageId])
   @@index([actorType, actorId])
   @@map("message_reads")
+}
+
+model MessageDeletion {
+  id         String        @id @default(cuid())
+  messageId  String
+  actorType  ActorType
+  actorId    String
+  deletedAt  DateTime      @default(now())
+  message    DirectMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, actorType, actorId])
+  @@index([messageId])
+  @@index([actorType, actorId])
+  @@map("message_deletions")
+}
+
+model MessageContact {
+  id            String    @id @default(cuid())
+  ownerType     ActorType
+  ownerId       String
+  contactType   ActorType
+  contactId     String
+  contactName   String?
+  tenantId      String?
+  lastMessageAt DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+
+  @@unique([ownerType, ownerId, contactType, contactId])
+  @@index([ownerType, ownerId])
+  @@index([tenantId])
+  @@map("message_contacts")
 }
 
 model Notification {
@@ -1446,35 +1624,307 @@ model BrandingSettings {
   @@map("branding_settings")
 }
 
-/* ------------------------------------------------------------------ */
-/*  Job Placement Tracking                                              */
-/* ------------------------------------------------------------------ */
+// ============================================================
+// Placement Services Module
+// ============================================================
 
-enum PlacementType {
-  FULL_TIME
-  PART_TIME
-  CONTRACT
-  FREELANCE
+model PlacementResume {
+  id              String   @id @default(cuid())
+  studentId       String?
+  fullName        String
+  email           String
+  phone           String?
+  headline        String?
+  summary         String?  @db.Text
+  skills          String[]
+  experience      String   @db.Text
+  education       String   @db.Text
+  fileUrl         String?
+  fileName        String?
+  fileType        String?
+  // Resume builder v2 fields
+  photoUrl        String?  @db.Text
+  templateId      String   @default("professional")
+  styleColor      String   @default("#2563eb")
+  styleFont       String   @default("inter")
+  styleLayout     String   @default("single")
+  isPremiumDesign Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  student         Student? @relation(fields: [studentId], references: [id])
+
+  @@index([studentId])
+  @@index([email])
+  @@map("placement_resumes")
 }
 
-model Placement {
-  id               String          @id @default(cuid())
-  studentId        String          @unique
-  jobApplicationId String?         @unique
-  companyName      String
-  jobTitle         String
-  employmentType   PlacementType   @default(FULL_TIME)
-  monthlyRate      Decimal?        @db.Decimal(10, 2)
-  currency         String          @default("USD")
-  startDate        DateTime        @db.Date
-  notes            String?         @db.Text
-  placedAt         DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  student          Student         @relation(fields: [studentId], references: [id])
-  jobApplication   JobApplication? @relation(fields: [jobApplicationId], references: [id])
+enum CoachingSessionStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
 
-  @@index([placedAt])
-  @@map("placements")
+enum CoachingPaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  REFUNDED
+}
+
+model CoachingSession {
+  id                  String                @id @default(cuid())
+  studentId           String?
+  fullName            String
+  email               String
+  phone               String?
+  topic               String
+  message             String                @db.Text
+  preferredDate       DateTime?
+  status              CoachingSessionStatus @default(PENDING)
+  adminNotes          String?               @db.Text
+  scheduledAt         DateTime?
+  completedAt         DateTime?
+  // Payment
+  paymentStatus       CoachingPaymentStatus @default(UNPAID)
+  paymentAmount       Float?
+  paymentCurrency     String?               @default("USD")
+  paymentMethod       String?
+  stripeSessionId     String?
+  paymongoPaymentId   String?
+  // Zoom
+  zoomMeetingId       String?
+  zoomJoinUrl         String?
+  zoomStartUrl        String?
+  zoomPassword        String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  student             Student?              @relation(fields: [studentId], references: [id])
+
+  @@index([studentId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@map("coaching_sessions")
+}
+
+/* ------------------------------------------------------------------ */
+/*  Employer / Hiring Pipeline                                         */
+/* ------------------------------------------------------------------ */
+
+enum EmployerStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+model Employer {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  companyName  String
+  website      String?
+  logoUrl      String?
+  description  String?        @db.Text
+  industry     String?
+  location     String?
+  status       EmployerStatus @default(PENDING)
+  jobPostings  EmployerJobPosting[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@map("employers")
+}
+
+model EmployerJobPosting {
+  id           String               @id @default(cuid())
+  employerId   String
+  title        String
+  description  String               @db.Text
+  requirements String[]
+  skills       String[]
+  location     String
+  type         String               @default("Full-time")
+  salaryRange  String?
+  industry     String?
+  isActive     Boolean              @default(true)
+  employer     Employer             @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  applications EmployerApplication[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@index([employerId])
+  @@index([isActive])
+  @@map("employer_job_postings")
+}
+
+enum HiringStage {
+  APPLIED
+  REVIEWED
+  INTERVIEW
+  OFFER
+  HIRED
+  REJECTED
+}
+
+model EmployerApplication {
+  id             String              @id @default(cuid())
+  jobPostingId   String
+  studentId      String?
+  applicantName  String
+  applicantEmail String
+  coverLetter    String              @db.Text
+  resumeUrl      String?
+  stage          HiringStage         @default(APPLIED)
+  employerNotes  String?             @db.Text
+  interviewDate  DateTime?
+  zoomJoinUrl    String?
+  jobPosting     EmployerJobPosting  @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  student        Student?            @relation(fields: [studentId], references: [id])
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([jobPostingId])
+  @@index([studentId])
+  @@index([stage])
+  @@map("employer_applications")
+}
+
+/* ------------------------------------------------------------------ */
+/*  Trainer Tier Configuration                                          */
+/* ------------------------------------------------------------------ */
+
+model TrainerTierConfig {
+  tier             TrainerTier @id
+  label            String      @default("")
+  upgradeFee       Decimal     @default(0)    @db.Decimal(10, 2)
+  baseProgramPrice Decimal     @default(1500) @db.Decimal(10, 2)
+  benefits         String[]
+  maxCapacity      Int         @default(15)
+  revenueSharePct  Int         @default(70)
+  isActive         Boolean     @default(true)
+  updatedAt        DateTime    @updatedAt
+
+  @@map("trainer_tier_configs")
+}
+
+/* ------------------------------------------------------------------ */
+/*  Revenue System                                                      */
+/* ------------------------------------------------------------------ */
+
+enum RevenueType {
+  PLATFORM_FEE
+  TENANT_SUBSCRIPTION
+  ENROLLMENT_PAYMENT
+  TRAINER_EARNING
+  REFUND
+  MANUAL
+}
+
+model RevenueRecord {
+  id            String      @id @default(cuid())
+  tenantId      String?
+  userId        String?
+  userType      String?
+  type          RevenueType @default(MANUAL)
+  amount        Decimal     @db.Decimal(12, 2)
+  currency      String      @default("PHP")
+  description   String?
+  referenceId   String?
+  referenceType String?
+  status        String      @default("active")
+  deletedAt     DateTime?
+  deletedBy     String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  auditLogs     RevenueAuditLog[]
+
+  @@index([tenantId])
+  @@index([userId, userType])
+  @@index([createdAt])
+  @@index([status])
+  @@map("revenue_records")
+}
+
+model RevenueAuditLog {
+  id         String        @id @default(cuid())
+  recordId   String
+  action     String
+  actorId    String
+  actorRole  String
+  before     Json?
+  after      Json?
+  reason     String?
+  createdAt  DateTime      @default(now())
+  record     RevenueRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@index([recordId])
+  @@index([actorId])
+  @@map("revenue_audit_logs")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  tenantId   String?
+  actorId    String
+  actorRole  String
+  action     String
+  entity     String
+  entityId   String?
+  meta       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([actorId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model TenantPage {
+  id             String      @id @default(cuid())
+  organizationId String
+  title          String
+  slug           String
+  type           PageType    @default(CUSTOM)
+  isPublished    Boolean     @default(false)
+  sections       Json        @default("[]")
+  metaTitle      String?
+  metaDescription String?
+  order          Int         @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@index([organizationId, isPublished])
+  @@map("tenant_pages")
+}
+
+model TenantTheme {
+  id              String       @id @default(cuid())
+  organizationId  String       @unique
+  primaryColor    String       @default("#3B82F6")
+  secondaryColor  String       @default("#1E40AF")
+  accentColor     String       @default("#F59E0B")
+  backgroundColor String       @default("#FFFFFF")
+  textColor       String       @default("#111827")
+  fontHeading     String       @default("Inter")
+  fontBody        String       @default("Inter")
+  logoUrl         String?
+  faviconUrl      String?
+  customCss       String?      @db.Text
+  headingSize     String       @default("md")
+  bodySize        String       @default("md")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_themes")
 }
 
 /* ------------------------------------------------------------------ */

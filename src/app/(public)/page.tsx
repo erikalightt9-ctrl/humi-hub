@@ -1,77 +1,58 @@
 import type { Metadata } from "next";
-export const dynamic = "force-dynamic";
-import { HeroSection } from "@/components/public/HeroSection";
-import { IndustryProgramsSection } from "@/components/public/IndustryProgramsSection";
-import { CorporateTrainingSection } from "@/components/public/CorporateTrainingSection";
-import { WhyChooseUs } from "@/components/public/WhyChooseUs";
-import { HowItWorksSection } from "@/components/public/HowItWorksSection";
-import { LearningExperienceSection } from "@/components/public/LearningExperienceSection";
-import { TrainersSection } from "@/components/public/TrainersSection";
-import { TestimonialsSection } from "@/components/public/TestimonialsSection";
-import { CareerPathwaysSection } from "@/components/public/CareerPathwaysSection";
-import { EnrollmentCTASection } from "@/components/public/EnrollmentCTASection";
-import { prisma } from "@/lib/prisma";
-import { resolveTenantFromSubdomain } from "@/lib/tenant";
+
+import { SaasHeroSection } from "@/components/public/SaasHeroSection";
+import { TargetAudienceSection } from "@/components/public/TargetAudienceSection";
+import { ValuePropositionSection } from "@/components/public/ValuePropositionSection";
+import { FeatureBreakdownSection } from "@/components/public/FeatureBreakdownSection";
+import { AdvancedFeaturesSection } from "@/components/public/AdvancedFeaturesSection";
+import { MultiTenantSection } from "@/components/public/MultiTenantSection";
+import { PricingSection } from "@/components/public/PricingSection";
+import { RoiSection } from "@/components/public/RoiSection";
+import { SaasTestimonialsSection } from "@/components/public/SaasTestimonialsSection";
+import { FaqSection } from "@/components/public/FaqSection";
+import { FinalCtaSection } from "@/components/public/FinalCtaSection";
 
 export const metadata: Metadata = {
-  title: "HUMI Training Center — Professional Training Programs",
+  title: "HUMI Training Center — All-in-One Training Management Platform",
   description:
-    "The Philippines' premier professional training platform. Industry-specific programs in Healthcare, Real Estate, Finance, Legal, Tech, and more — with AI-enhanced curriculum and career placement support.",
+    "Manage students, trainers, courses, messaging, and analytics — all in one powerful system. Built for modern training centers and academies.",
 };
 
-/** Convert DB slug (UPPER_SNAKE) → URL slug (lower-kebab) */
-function buildCourseHrefs(
-  courses: readonly { readonly slug: string }[],
-): Record<string, string> {
-  const hrefs: Record<string, string> = {};
-  for (const c of courses) {
-    hrefs[c.slug] = `/programs/${c.slug.toLowerCase().replace(/_/g, "-")}`;
-  }
-  return hrefs;
-}
-
-export default async function HomePage() {
-  const tenant = await resolveTenantFromSubdomain();
-
-  const courses = await prisma.course.findMany({
-    where: {
-      isActive: true,
-      ...(tenant ? { tenantId: tenant.tenantId } : {}),
-    },
-    orderBy: { createdAt: "asc" },
-  });
-
+export default function HomePage() {
   return (
     <>
-      {/* 1. Hero — dual audience positioning */}
-      <HeroSection />
+      {/* 1. Hero — SaaS positioning with dashboard preview */}
+      <SaasHeroSection />
 
-      {/* 2. Industry Programs — dynamic course cards */}
-      <IndustryProgramsSection courses={courses} courseHrefs={buildCourseHrefs(courses)} />
+      {/* 2. Target Audience — who it's for */}
+      <TargetAudienceSection />
 
-      {/* 3. How It Works — 4-step process */}
-      <HowItWorksSection />
+      {/* 3. Value Proposition — 4 key benefits */}
+      <ValuePropositionSection />
 
-      {/* 4. Platform Advantages — 8 advantage cards */}
-      <WhyChooseUs />
+      {/* 4. Feature Breakdown — zig-zag layout with mockups */}
+      <FeatureBreakdownSection />
 
-      {/* 5. Learning Experience — platform features */}
-      <LearningExperienceSection />
+      {/* 5. Advanced Features — competitive edge grid */}
+      <AdvancedFeaturesSection />
 
-      {/* 6. Expert Trainers — tiers + stats */}
-      <TrainersSection />
+      {/* 6. Multi-Tenant — SaaS selling point */}
+      <MultiTenantSection />
 
-      {/* 7. Corporate Training — B2B positioning */}
-      <CorporateTrainingSection />
+      {/* 7. Pricing — 3 tiers */}
+      <PricingSection />
 
-      {/* 8. Testimonials — dynamic from DB */}
-      <TestimonialsSection />
+      {/* 8. ROI / Business Impact */}
+      <RoiSection />
 
-      {/* 9. Career Pathways — outcomes + career table */}
-      <CareerPathwaysSection />
+      {/* 9. Testimonials */}
+      <SaasTestimonialsSection />
 
-      {/* 10. Final CTA — dual audience enrollment */}
-      <EnrollmentCTASection />
+      {/* 10. FAQ */}
+      <FaqSection />
+
+      {/* 11. Final CTA */}
+      <FinalCtaSection />
     </>
   );
 }

@@ -39,6 +39,7 @@ export const NOTIFICATION_TYPE_LABELS: Readonly<Record<string, string>> = {
   JOB_ALERT: "Job Alert",
   COURSE_UPDATE: "Course Update",
   SYSTEM: "System",
+  CONTACT_MESSAGE: "Contact Form",
 };
 
 /* ------------------------------------------------------------------ */

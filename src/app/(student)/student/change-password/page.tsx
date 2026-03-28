@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signOut, signIn, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Lock, ShieldCheck } from "lucide-react";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -53,6 +55,14 @@ export default function ChangePasswordPage() {
       if (!res.ok || !data.success) {
         setError(data.error ?? "Failed to change password. Please try again.");
         return;
+      }
+
+      // Force a fresh JWT so mustChangePassword is cleared in the session.
+      // signOut + signIn with the new password mints a new token immediately.
+      const email = session?.user?.email;
+      if (email) {
+        await signOut({ redirect: false });
+        await signIn("student", { email, password: newPassword, redirect: false });
       }
 
       router.push("/student/dashboard");

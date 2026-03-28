@@ -149,6 +149,10 @@ export async function getRecentActivity(
     .slice(0, limit);
 }
 
+export async function getContactMessageCount(): Promise<number> {
+  return prisma.contactMessage.count();
+}
+
 export async function getCurrentlyPresent(): Promise<ReadonlyArray<PresentStudent>> {
   const records = await prisma.attendanceRecord.findMany({
     where: { clockOut: null },

@@ -20,9 +20,23 @@ import type { EnrollmentFormData } from "@/lib/validations/enrollment.schema";
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
+type TierValue = "BASIC" | "PROFESSIONAL" | "PREMIUM";
+
+interface TierConfigEntry {
+  readonly tier: TierValue;
+  readonly label: string;
+  readonly upgradeFee: number;
+  readonly baseProgramPrice: number;
+  readonly bg: string;
+  readonly text: string;
+  readonly border: string;
+  readonly ring: string;
+}
+
 interface PublicTrainer {
   readonly id: string;
   readonly name: string;
+  readonly tier: TierValue;
   readonly photoUrl: string | null;
   readonly bio: string | null;
   readonly specializations: ReadonlyArray<string>;
@@ -40,6 +54,47 @@ interface StepTrainerSelectProps {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Style map (UI only — not business logic)                          */
+/* ------------------------------------------------------------------ */
+
+const TIER_STYLES: Readonly<Record<TierValue, Pick<TierConfigEntry, "bg" | "text" | "border" | "ring">>> = {
+  BASIC:        { bg: "bg-gray-50",  text: "text-gray-700",  border: "border-gray-200",  ring: "ring-gray-400"  },
+  PROFESSIONAL: { bg: "bg-blue-50",  text: "text-blue-700",  border: "border-blue-200",  ring: "ring-blue-500"  },
+  PREMIUM:      { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", ring: "ring-amber-500" },
+};
+
+const DEFAULT_TIER_CONFIG: Readonly<Record<TierValue, TierConfigEntry>> = {
+  BASIC:        { tier: "BASIC",        label: "Basic",        upgradeFee: 0,    baseProgramPrice: 1500, ...TIER_STYLES.BASIC },
+  PROFESSIONAL: { tier: "PROFESSIONAL", label: "Professional", upgradeFee: 2000, baseProgramPrice: 1500, ...TIER_STYLES.PROFESSIONAL },
+  PREMIUM:      { tier: "PREMIUM",      label: "Premium",      upgradeFee: 6000, baseProgramPrice: 1500, ...TIER_STYLES.PREMIUM },
+};
+
+function toNumber(v: unknown): number {
+  if (typeof v === "number") return v;
+  if (v && typeof (v as { toNumber?: () => number }).toNumber === "function") {
+    return (v as { toNumber: () => number }).toNumber();
+  }
+  return Number(v) || 0;
+}
+
+function buildTierConfig(raw: { tier: string; label: string; upgradeFee: unknown; baseProgramPrice: unknown }[]): Record<TierValue, TierConfigEntry> {
+  const result = { ...DEFAULT_TIER_CONFIG };
+  for (const r of raw) {
+    const tier = r.tier as TierValue;
+    if (TIER_STYLES[tier]) {
+      result[tier] = {
+        tier,
+        label: r.label || tier,
+        upgradeFee: toNumber(r.upgradeFee),
+        baseProgramPrice: toNumber(r.baseProgramPrice),
+        ...TIER_STYLES[tier],
+      };
+    }
+  }
+  return result;
+}
+
+/* ------------------------------------------------------------------ */
 /*  TrainerCard                                                        */
 /* ------------------------------------------------------------------ */
 
@@ -49,13 +104,17 @@ function TrainerCard({
   isExpanded,
   onSelect,
   onToggleExpand,
+  tierConfig,
 }: {
   readonly trainer: PublicTrainer;
   readonly isSelected: boolean;
   readonly isExpanded: boolean;
   readonly onSelect: () => void;
   readonly onToggleExpand: () => void;
+  readonly tierConfig: Record<TierValue, TierConfigEntry>;
 }) {
+  const config = tierConfig[trainer.tier] ?? DEFAULT_TIER_CONFIG[trainer.tier];
+  const totalPrice = config.baseProgramPrice + config.upgradeFee;
   const numRating = trainer.averageRating ? Number(trainer.averageRating) : 0;
 
   return (
@@ -103,6 +162,18 @@ function TrainerCard({
             </p>
           )}
         </button>
+
+        {/* Price */}
+        <div className="text-right shrink-0">
+          <p className="text-lg font-bold text-gray-900">
+            ₱{totalPrice.toLocaleString()}
+          </p>
+          {config.upgradeFee > 0 && (
+            <p className="text-[10px] text-gray-400">
+              ₱{config.baseProgramPrice.toLocaleString()} + ₱{config.upgradeFee.toLocaleString()}
+            </p>
+          )}
+        </div>
 
         {/* Selected indicator */}
         {isSelected && (
@@ -208,6 +279,29 @@ function TrainerCard({
             </div>
           )}
 
+          {/* Pricing breakdown */}
+          <div className={`rounded-lg p-3 ${config.bg}`}>
+            <h4 className={`text-xs font-semibold ${config.text} mb-2`}>
+              Pricing Breakdown
+            </h4>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between text-gray-600">
+                <span>Base Program Fee</span>
+                <span>₱{config.baseProgramPrice.toLocaleString()}</span>
+              </div>
+              {config.upgradeFee > 0 && (
+                <div className="flex justify-between text-gray-600">
+                  <span>{config.label} Tier Upgrade</span>
+                  <span>₱{config.upgradeFee.toLocaleString()}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-gray-900 pt-1 border-t border-gray-200">
+                <span>Total</span>
+                <span>₱{totalPrice.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
           {/* Select button */}
           <button
             type="button"
@@ -276,26 +370,34 @@ function AutoAssignCard({
 
 export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
   const [trainers, setTrainers] = useState<ReadonlyArray<PublicTrainer>>([]);
+  const [tierConfig, setTierConfig] = useState<Record<TierValue, TierConfigEntry>>(DEFAULT_TIER_CONFIG);
   const [loading, setLoading] = useState(true);
   const [expandedTrainerId, setExpandedTrainerId] = useState<string | null>(null);
 
   const selectedTrainerId = form.watch("trainerId");
 
   useEffect(() => {
-    async function fetchTrainers() {
+    async function fetchData() {
       try {
-        const res = await fetch("/api/public/trainers");
-        const json = await res.json();
-        if (json.success) {
-          setTrainers(json.data);
+        const [trainersRes, tierRes] = await Promise.all([
+          fetch("/api/public/trainers"),
+          fetch("/api/tier-configs"),
+        ]);
+        const [trainersJson, tierJson] = await Promise.all([
+          trainersRes.json(),
+          tierRes.json(),
+        ]);
+        if (trainersJson.success) setTrainers(trainersJson.data);
+        if (tierJson.success && Array.isArray(tierJson.data)) {
+          setTierConfig(buildTierConfig(tierJson.data));
         }
       } catch {
-        // Silently fail — auto-assign will be the default
+        // Silently fail — defaults will be used
       } finally {
         setLoading(false);
       }
     }
-    fetchTrainers();
+    fetchData();
   }, []);
 
   function handleSelectTrainer(trainerId: string | null) {
@@ -307,6 +409,13 @@ export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
   function handleToggleExpand(trainerId: string) {
     setExpandedTrainerId((prev) => (prev === trainerId ? null : trainerId));
   }
+
+  // Group trainers by tier
+  const premiumTrainers = trainers.filter((t) => t.tier === "PREMIUM");
+  const professionalTrainers = trainers.filter(
+    (t) => t.tier === "PROFESSIONAL",
+  );
+  const basicTrainers = trainers.filter((t) => t.tier === "BASIC");
 
   if (loading) {
     return (
@@ -336,19 +445,70 @@ export function StepTrainerSelect({ form }: StepTrainerSelectProps) {
         onSelect={() => handleSelectTrainer(null)}
       />
 
-      {/* Trainers list */}
-      {trainers.length > 0 && (
-        <div className="space-y-2">
-          {trainers.map((t) => (
-            <TrainerCard
-              key={t.id}
-              trainer={t}
-              isSelected={selectedTrainerId === t.id}
-              isExpanded={expandedTrainerId === t.id}
-              onSelect={() => handleSelectTrainer(t.id)}
-              onToggleExpand={() => handleToggleExpand(t.id)}
-            />
-          ))}
+      {/* Premium trainers */}
+      {premiumTrainers.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-amber-700 mb-2 flex items-center gap-1">
+            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+            Premium Trainers
+          </h3>
+          <div className="space-y-2">
+            {premiumTrainers.map((t) => (
+              <TrainerCard
+                key={t.id}
+                trainer={t}
+                isSelected={selectedTrainerId === t.id}
+                isExpanded={expandedTrainerId === t.id}
+                onSelect={() => handleSelectTrainer(t.id)}
+                onToggleExpand={() => handleToggleExpand(t.id)}
+                tierConfig={tierConfig}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Professional trainers */}
+      {professionalTrainers.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-blue-700 mb-2">
+            Professional Trainers
+          </h3>
+          <div className="space-y-2">
+            {professionalTrainers.map((t) => (
+              <TrainerCard
+                key={t.id}
+                trainer={t}
+                isSelected={selectedTrainerId === t.id}
+                isExpanded={expandedTrainerId === t.id}
+                onSelect={() => handleSelectTrainer(t.id)}
+                onToggleExpand={() => handleToggleExpand(t.id)}
+                tierConfig={tierConfig}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Basic trainers */}
+      {basicTrainers.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">
+            Basic Trainers
+          </h3>
+          <div className="space-y-2">
+            {basicTrainers.map((t) => (
+              <TrainerCard
+                key={t.id}
+                trainer={t}
+                isSelected={selectedTrainerId === t.id}
+                isExpanded={expandedTrainerId === t.id}
+                onSelect={() => handleSelectTrainer(t.id)}
+                onToggleExpand={() => handleToggleExpand(t.id)}
+                tierConfig={tierConfig}
+              />
+            ))}
+          </div>
         </div>
       )}
 

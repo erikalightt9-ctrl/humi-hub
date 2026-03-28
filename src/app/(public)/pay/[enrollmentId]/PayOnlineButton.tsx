@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CreditCard, Loader2 } from "lucide-react";
+import { CreditCard, Loader2, Smartphone } from "lucide-react";
 
 interface PayOnlineButtonProps {
   readonly enrollmentId: string;
@@ -14,16 +14,23 @@ interface CheckoutResponse {
   readonly error: string | null;
 }
 
+type PaymentProvider = "paymongo" | "stripe";
+
 export function PayOnlineButton({ enrollmentId }: PayOnlineButtonProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState<PaymentProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handlePayOnline = async () => {
-    setIsLoading(true);
+  async function handlePay(provider: PaymentProvider) {
+    setLoading(provider);
     setError(null);
 
+    const endpoint =
+      provider === "stripe"
+        ? "/api/payments/create-checkout-stripe"
+        : "/api/payments/create-checkout";
+
     try {
-      const response = await fetch("/api/payments/create-checkout", {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ enrollmentId }),
@@ -36,33 +43,55 @@ export function PayOnlineButton({ enrollmentId }: PayOnlineButtonProps) {
         return;
       }
 
-      // Redirect to PayMongo checkout page
       window.location.href = json.data.checkoutUrl;
     } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
-      setIsLoading(false);
+      setLoading(null);
     }
-  };
+  }
 
   return (
     <div className="space-y-3">
+      {/* PayMongo — GCash, PayMaya, Card (Philippines) */}
       <Button
         type="button"
-        onClick={handlePayOnline}
-        disabled={isLoading}
+        onClick={() => handlePay("paymongo")}
+        disabled={loading !== null}
         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 text-base font-medium"
         size="lg"
       >
-        {isLoading ? (
+        {loading === "paymongo" ? (
           <>
             <Loader2 className="h-5 w-5 animate-spin mr-2" />
-            Redirecting to payment...
+            Redirecting…
+          </>
+        ) : (
+          <>
+            <Smartphone className="h-5 w-5 mr-2" />
+            Pay via GCash / PayMaya / Card
+          </>
+        )}
+      </Button>
+
+      {/* Stripe — International Credit / Debit Card */}
+      <Button
+        type="button"
+        onClick={() => handlePay("stripe")}
+        disabled={loading !== null}
+        variant="outline"
+        className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 py-3 text-base font-medium"
+        size="lg"
+      >
+        {loading === "stripe" ? (
+          <>
+            <Loader2 className="h-5 w-5 animate-spin mr-2" />
+            Redirecting…
           </>
         ) : (
           <>
             <CreditCard className="h-5 w-5 mr-2" />
-            Pay Online via GCash / PayMaya / Card
+            Pay via Stripe (International Card)
           </>
         )}
       </Button>

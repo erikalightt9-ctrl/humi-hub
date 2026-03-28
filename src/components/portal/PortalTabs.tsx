@@ -7,7 +7,6 @@ import {
   GraduationCap,
   LogIn,
   ShieldCheck,
-  UserPlus,
   UserCog,
   Loader2,
   AlertCircle,
@@ -17,14 +16,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { EnrollmentForm } from "@/components/enrollment/EnrollmentForm";
-import type { Course } from "@prisma/client";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type TabId = "student" | "admin" | "trainer" | "enroll";
+type TabId = "student" | "admin" | "trainer";
 
 interface Tab {
   readonly id: TabId;
@@ -32,9 +29,6 @@ interface Tab {
   readonly icon: React.ElementType;
 }
 
-interface PortalTabsProps {
-  readonly courses: Pick<Course, "id" | "title" | "slug">[];
-}
 
 /* ------------------------------------------------------------------ */
 /*  Tabs config                                                        */
@@ -44,11 +38,10 @@ const TABS: ReadonlyArray<Tab> = [
   { id: "student", label: "Student Login", icon: LogIn },
   { id: "trainer", label: "Trainer Login", icon: UserCog },
   { id: "admin", label: "Admin Login", icon: ShieldCheck },
-  { id: "enroll", label: "Enroll Now", icon: UserPlus },
 ] as const;
 
 function isValidTab(value: string | null): value is TabId {
-  return value === "student" || value === "admin" || value === "trainer" || value === "enroll";
+  return value === "student" || value === "admin" || value === "trainer";
 }
 
 /* ------------------------------------------------------------------ */
@@ -67,6 +60,10 @@ function LoginPanel({ provider }: { readonly provider: "student" | "admin" | "tr
     student: "/student/dashboard",
     trainer: "/trainer",
   };
+  const CHANGE_PASSWORD_MAP: Record<string, string> = {
+    student: "/student/change-password",
+    trainer: "/trainer/change-password",
+  };
   const redirectTo = REDIRECT_MAP[provider] ?? "/";
   const placeholder =
     provider === "admin"
@@ -78,21 +75,60 @@ function LoginPanel({ provider }: { readonly provider: "student" | "admin" | "tr
     setError("");
     setLoading(true);
 
-    const result = await signIn(provider, {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      // Step 1 (student/trainer): fast access-control pre-check — no bcrypt,
+      // surfaces specific errors (locked, no access, expired) immediately.
+      let mustChangePassword = false;
+      if (provider === "student" || provider === "trainer") {
+        const checkRes = await fetch("/api/auth/validate-credentials", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ provider, email }),
+        });
+        const checkData = (await checkRes.json()) as {
+          ok: boolean | null;
+          error?: string;
+          mustChangePassword?: boolean;
+        };
 
-    setLoading(false);
+        if (checkData.ok === false) {
+          setError(checkData.error ?? "Access denied. Please contact admin.");
+          setLoading(false);
+          return;
+        }
 
-    if (result?.error) {
-      setError("Invalid email or password. Please try again.");
-      return;
+        if (checkData.ok === true) {
+          mustChangePassword = checkData.mustChangePassword ?? false;
+        }
+        // ok === null → user not found or no password; fall through to signIn
+      }
+
+      // Step 2: authenticate and create the session
+      const result = await signIn(provider, {
+        email,
+        password,
+        redirect: false,
+      });
+
+      setLoading(false);
+
+      if (result?.error) {
+        setError("Invalid email or password. Please try again.");
+        return;
+      }
+
+      // Step 3: redirect — must-change-password takes priority over default dashboard
+      const changePath = CHANGE_PASSWORD_MAP[provider];
+      if (mustChangePassword && changePath) {
+        router.push(changePath);
+      } else {
+        router.push(redirectTo);
+      }
+      router.refresh();
+    } catch {
+      setLoading(false);
+      setError("Network error. Please try again.");
     }
-
-    router.push(redirectTo);
-    router.refresh();
   }
 
   return (
@@ -170,7 +206,7 @@ function LoginPanel({ provider }: { readonly provider: "student" | "admin" | "tr
 /*  Main Component                                                     */
 /* ------------------------------------------------------------------ */
 
-export function PortalTabs({ courses }: PortalTabsProps) {
+export function PortalTabs() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -266,17 +302,6 @@ export function PortalTabs({ courses }: PortalTabsProps) {
           </div>
         )}
 
-        {activeTab === "enroll" && (
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">
-              Enroll Now
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Start your VA training journey — it takes about 10 minutes
-            </p>
-            <EnrollmentForm courses={courses} />
-          </div>
-        )}
       </div>
     </div>
   );

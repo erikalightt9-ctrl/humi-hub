@@ -10,6 +10,7 @@ import {
   CheckCircle,
   UserCog,
   AlertTriangle,
+  ClipboardList,
 } from "lucide-react";
 import type { EnrollmentFormData } from "@/lib/validations/enrollment.schema";
 
@@ -298,33 +299,86 @@ export function StepScheduleSelect({ form }: StepScheduleSelectProps) {
         </div>
       )}
 
-      {/* Full schedules */}
+      {/* Full schedules — join waitlist */}
       {full.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-gray-400 mb-2">
-            Full Sessions
+            Full Sessions — Join the Waitlist
           </h3>
-          <div className="space-y-2 opacity-50">
-            {full.map((s) => (
-              <div
-                key={s.id}
-                className="w-full text-left rounded-xl border-2 border-gray-200 p-4"
-              >
-                <h4 className="font-semibold text-gray-600 text-sm mb-2">
-                  {s.name}
-                </h4>
-                <div className="flex items-center gap-3 text-xs text-gray-400">
-                  <span>{formatDateRange(s.startDate, s.endDate)}</span>
-                  <span>
-                    {formatTime(s.startTime)} – {formatTime(s.endTime)}
-                  </span>
-                </div>
-                <p className="text-xs text-red-500 mt-2 font-medium">
-                  Session full — {s.maxCapacity}/{s.maxCapacity} enrolled
-                </p>
-              </div>
-            ))}
+          <p className="text-xs text-gray-500 mb-3">
+            These sessions are full. Select one to join the waitlist — you'll be
+            notified when a seat opens up.
+          </p>
+          <div className="space-y-2">
+            {full.map((s) => {
+              const isWaitlistSelected = selectedScheduleId === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => handleSelect(isWaitlistSelected ? null : s.id)}
+                  className={`relative w-full text-left rounded-xl border-2 p-4 transition-all hover:shadow-md ${
+                    isWaitlistSelected
+                      ? "border-amber-400 ring-2 ring-amber-300 shadow-md bg-amber-50"
+                      : "border-gray-200 hover:border-amber-300 bg-gray-50/50"
+                  }`}
+                >
+                  {isWaitlistSelected && (
+                    <div className="absolute top-3 right-3">
+                      <ClipboardList className="h-5 w-5 text-amber-600" />
+                    </div>
+                  )}
+
+                  <h4 className={`font-semibold text-sm mb-1 pr-6 ${isWaitlistSelected ? "text-amber-800" : "text-gray-700"}`}>
+                    {s.name}
+                  </h4>
+
+                  <div className="flex items-center gap-3 text-xs text-gray-500 mb-2">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {formatDateRange(s.startDate, s.endDate)}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {formatTime(s.startTime)} – {formatTime(s.endTime)}
+                    </span>
+                    {s.trainerName && (
+                      <span className="flex items-center gap-1">
+                        <UserCog className="h-3 w-3" />
+                        {s.trainerName}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1 text-xs text-red-500 font-medium">
+                      <Users className="h-3 w-3" />
+                      Full — {s.maxCapacity}/{s.maxCapacity} enrolled
+                    </span>
+                    {isWaitlistSelected ? (
+                      <span className="text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                        ✓ On waitlist
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium text-amber-600 border border-amber-300 px-2 py-0.5 rounded-full hover:bg-amber-50">
+                        Join Waitlist
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
+
+          {selectedScheduleId && full.some((s) => s.id === selectedScheduleId) && (
+            <div className="flex items-start gap-2 mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
+              <span>
+                You'll be added to the waitlist for this session. We'll email you when
+                a seat opens up — you'll have 48 hours to confirm.
+              </span>
+            </div>
+          )}
         </div>
       )}
 

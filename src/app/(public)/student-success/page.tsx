@@ -10,6 +10,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TestimonialsSection } from "@/components/public/TestimonialsSection";
+import { getPublicPlacementStats } from "@/lib/repositories/placement.repository";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Student Success — HUMI Training Center",
@@ -18,21 +21,8 @@ export const metadata: Metadata = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Static data                                                        */
+/*  Static success stories                                             */
 /* ------------------------------------------------------------------ */
-
-interface StatCard {
-  readonly value: string;
-  readonly label: string;
-  readonly icon: React.ComponentType<{ readonly className?: string }>;
-}
-
-const STATS: readonly StatCard[] = [
-  { value: "2,400+", label: "Trained Professionals", icon: Users },
-  { value: "85%", label: "Placement Rate", icon: TrendingUp },
-  { value: "$800\u2013$1,500", label: "Monthly Earnings", icon: DollarSign },
-  { value: "3x", label: "Productivity Increase", icon: Zap },
-] as const;
 
 interface SuccessStory {
   readonly name: string;
@@ -78,10 +68,48 @@ const SUCCESS_STORIES: readonly SuccessStory[] = [
 ] as const;
 
 /* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+function formatRateRange(min: number | null, max: number | null): string {
+  if (min && max) return `$${Math.round(min).toLocaleString()}–$${Math.round(max).toLocaleString()}`;
+  if (min) return `$${Math.round(min).toLocaleString()}+`;
+  if (max) return `Up to $${Math.round(max).toLocaleString()}`;
+  return "$800–$1,500";
+}
+
+/* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
-export default function StudentSuccessPage() {
+export default async function StudentSuccessPage() {
+  // Load live placement stats; fall back gracefully if none recorded yet
+  const liveStats = await getPublicPlacementStats().catch(() => null);
+  const hasLiveData = (liveStats?.totalPlacements ?? 0) >= 5;
+
+  const displayStats = [
+    {
+      value: hasLiveData
+        ? `${(liveStats!.totalGraduates).toLocaleString()}+`
+        : "2,400+",
+      label: "Trained Professionals",
+      icon: Users,
+    },
+    {
+      value: hasLiveData ? `${liveStats!.placementRate}%` : "85%",
+      label: "Placement Rate",
+      icon: TrendingUp,
+    },
+    {
+      value: hasLiveData
+        ? formatRateRange(liveStats!.minMonthlyRate, liveStats!.maxMonthlyRate)
+        : "$800–$1,500",
+      label: "Monthly Earnings",
+      icon: DollarSign,
+    },
+    { value: "3x", label: "Productivity Increase", icon: Zap },
+  ] as const;
+
   return (
     <div className="bg-white">
       {/* Hero */}
@@ -93,13 +121,18 @@ export default function StudentSuccessPage() {
             the numbers, hear their stories, and see how our training transforms
             lives.
           </p>
+          {hasLiveData && (
+            <p className="mt-4 text-blue-200 text-sm">
+              Based on {liveStats!.totalPlacements} verified graduate placements
+            </p>
+          )}
         </div>
       </section>
 
       {/* Stats */}
       <section className="py-12 px-4 bg-white">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
-          {STATS.map((stat) => (
+          {displayStats.map((stat) => (
             <div
               key={stat.label}
               className="bg-blue-50 rounded-xl p-6 text-center border border-blue-100"
@@ -114,7 +147,7 @@ export default function StudentSuccessPage() {
         </div>
       </section>
 
-      {/* Testimonials (existing component) */}
+      {/* Testimonials */}
       <TestimonialsSection />
 
       {/* Success Stories */}
@@ -136,28 +169,21 @@ export default function StudentSuccessPage() {
                 key={story.name}
                 className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
               >
-                {/* Header */}
                 <div className="bg-blue-50 p-6 border-b border-blue-100">
                   <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mb-3">
                     <span className="text-xl font-bold text-blue-700">
                       {story.name.charAt(0)}
                     </span>
                   </div>
-                  <h3 className="font-semibold text-gray-900 text-lg">
-                    {story.name}
-                  </h3>
+                  <h3 className="font-semibold text-gray-900 text-lg">{story.name}</h3>
                   <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
                     <span>{story.previousRole}</span>
                     <ArrowRight className="h-3 w-3 text-blue-600 shrink-0" />
-                    <span className="font-medium text-blue-700">
-                      {story.currentRole}
-                    </span>
+                    <span className="font-medium text-blue-700">{story.currentRole}</span>
                   </div>
                 </div>
 
-                {/* Body */}
                 <div className="p-6">
-                  {/* Quote */}
                   <div className="mb-4">
                     <Quote className="h-5 w-5 text-amber-400 mb-2" />
                     <p className="text-sm text-gray-600 leading-relaxed italic">
@@ -165,14 +191,12 @@ export default function StudentSuccessPage() {
                     </p>
                   </div>
 
-                  {/* Program */}
                   <div className="mb-4">
                     <span className="inline-block bg-amber-50 text-amber-800 px-3 py-1 rounded-full text-xs font-medium">
                       {story.program}
                     </span>
                   </div>
 
-                  {/* Income Comparison */}
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
                       Income Comparison
@@ -180,16 +204,12 @@ export default function StudentSuccessPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-gray-500">Before</p>
-                        <p className="text-lg font-bold text-gray-400">
-                          {story.incomeBefore}
-                        </p>
+                        <p className="text-lg font-bold text-gray-400">{story.incomeBefore}</p>
                       </div>
                       <ArrowRight className="h-5 w-5 text-green-500" />
                       <div className="text-right">
                         <p className="text-xs text-gray-500">After</p>
-                        <p className="text-lg font-bold text-green-600">
-                          {story.incomeAfter}
-                        </p>
+                        <p className="text-lg font-bold text-green-600">{story.incomeAfter}</p>
                       </div>
                     </div>
                   </div>
@@ -200,15 +220,17 @@ export default function StudentSuccessPage() {
         </div>
       </section>
 
-      {/* CTA Banner */}
+      {/* CTA */}
       <section className="bg-blue-700 text-white py-16 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-extrabold mb-4">
-            Start Your Success Story
-          </h2>
+          <h2 className="text-3xl font-extrabold mb-4">Start Your Success Story</h2>
           <p className="text-blue-100 mb-8 text-lg">
-            Join 2,400+ graduates who transformed their careers with AI-powered
-            VA training. Your success story starts here.
+            Join{" "}
+            {hasLiveData
+              ? `${liveStats!.totalGraduates.toLocaleString()}+ graduates`
+              : "2,400+ graduates"}{" "}
+            who transformed their careers with AI-powered VA training. Your success
+            story starts here.
           </p>
           <Button
             asChild

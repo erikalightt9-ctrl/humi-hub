@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { createManagerSchema } from "@/lib/validations/corporate.schema";
+import { sendCorporateCredentialsEmail } from "@/lib/email/send-corporate-credentials";
 
 /* ------------------------------------------------------------------ */
 /*  POST — Create a corporate manager for an organization              */
@@ -23,7 +24,7 @@ export async function POST(
     // Verify org exists
     const org = await prisma.organization.findUnique({
       where: { id: orgId },
-      select: { id: true, isActive: true },
+      select: { id: true, name: true, isActive: true },
     });
 
     if (!org) {
@@ -46,7 +47,7 @@ export async function POST(
 
     // Check for duplicate email
     const existingManager = await prisma.corporateManager.findUnique({
-      where: { email: parsed.data.email.toLowerCase() },
+      where: { organizationId_email: { organizationId: orgId, email: parsed.data.email.toLowerCase() } },
     });
 
     if (existingManager) {
@@ -68,6 +69,17 @@ export async function POST(
         passwordHash,
       },
     });
+
+    // Fire-and-forget welcome email — do not block the response
+    sendCorporateCredentialsEmail({
+      name: manager.name,
+      email: manager.email,
+      organizationName: org.name,
+      temporaryPassword: tempPassword,
+      role: "manager",
+    }).catch((mailErr) =>
+      console.error("[POST /api/admin/organizations/[id]/managers] email failed", mailErr)
+    );
 
     return NextResponse.json(
       {

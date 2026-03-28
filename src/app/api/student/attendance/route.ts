@@ -3,13 +3,23 @@ import { getToken } from "next-auth/jwt";
 import { clockActionSchema } from "@/lib/validations/attendance.schema";
 import {
   getActiveSession,
+  getActiveSessionForCourse,
   clockIn,
+  clockInForCourse,
   clockOut,
+  clockOutForCourse,
 } from "@/lib/repositories/attendance.repository";
 
+function jsonError(msg: string, status: number) {
+  return NextResponse.json(
+    { success: false, data: null, error: msg },
+    { status },
+  );
+}
+
 /* ------------------------------------------------------------------ */
-/*  GET  /api/student/attendance                                       */
-/*  Returns the student's current clock-in status                      */
+/*  GET  /api/student/attendance[?courseId=xxx]                       */
+/*  Returns the student's current clock-in status                     */
 /* ------------------------------------------------------------------ */
 
 export async function GET(request: NextRequest) {
@@ -19,14 +29,15 @@ export async function GET(request: NextRequest) {
   });
 
   if (!token?.id || token.role !== "student") {
-    return NextResponse.json(
-      { success: false, data: null, error: "Unauthorized" },
-      { status: 401 },
-    );
+    return jsonError("Unauthorized", 401);
   }
 
   const studentId = token.id as string;
-  const session = await getActiveSession(studentId);
+  const courseId = request.nextUrl.searchParams.get("courseId") ?? undefined;
+
+  const session = courseId
+    ? await getActiveSessionForCourse(studentId, courseId)
+    : await getActiveSession(studentId);
 
   return NextResponse.json({
     success: true,
@@ -35,6 +46,7 @@ export async function GET(request: NextRequest) {
       session: session
         ? {
             id: session.id,
+            courseId: session.courseId,
             clockIn: session.clockIn.toISOString(),
           }
         : null,
@@ -44,8 +56,8 @@ export async function GET(request: NextRequest) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  POST  /api/student/attendance                                      */
-/*  { action: "clock-in" | "clock-out" }                               */
+/*  POST  /api/student/attendance                                     */
+/*  { action: "clock-in" | "clock-out", courseId?: string }          */
 /* ------------------------------------------------------------------ */
 
 export async function POST(request: NextRequest) {
@@ -55,10 +67,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (!token?.id || token.role !== "student") {
-    return NextResponse.json(
-      { success: false, data: null, error: "Unauthorized" },
-      { status: 401 },
-    );
+    return jsonError("Unauthorized", 401);
   }
 
   const studentId = token.id as string;
@@ -67,56 +76,62 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
-      { success: false, data: null, error: "Invalid JSON body" },
-      { status: 400 },
-    );
+    return jsonError("Invalid JSON body", 400);
   }
 
   const parsed = clockActionSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json(
-      { success: false, data: null, error: "Invalid action. Use 'clock-in' or 'clock-out'." },
-      { status: 422 },
-    );
+    return jsonError("Invalid action. Use 'clock-in' or 'clock-out'.", 422);
   }
 
-  const { action } = parsed.data;
+  const { action, courseId } = parsed.data;
 
   if (action === "clock-in") {
-    // Prevent double clock-in
-    const existing = await getActiveSession(studentId);
+    // Prevent double clock-in for the same course (or globally if no courseId)
+    const existing = courseId
+      ? await getActiveSessionForCourse(studentId, courseId)
+      : await getActiveSession(studentId);
+
     if (existing) {
-      return NextResponse.json(
-        { success: false, data: null, error: "Already clocked in" },
-        { status: 409 },
-      );
+      return jsonError("Already clocked in", 409);
     }
 
-    const record = await clockIn(studentId);
+    const record = courseId
+      ? await clockInForCourse(studentId, courseId)
+      : await clockIn(studentId);
+
     return NextResponse.json({
       success: true,
-      data: { id: record.id, clockIn: record.clockIn.toISOString() },
+      data: {
+        id: record.id,
+        courseId: record.courseId,
+        clockIn: record.clockIn.toISOString(),
+      },
       error: null,
     });
   }
 
   // clock-out
-  const activeSession = await getActiveSession(studentId);
+  const activeSession = courseId
+    ? await getActiveSessionForCourse(studentId, courseId)
+    : await getActiveSession(studentId);
+
   if (!activeSession) {
-    return NextResponse.json(
-      { success: false, data: null, error: "Not clocked in" },
-      { status: 409 },
-    );
+    return jsonError("Not clocked in", 409);
   }
 
-  const record = await clockOut(studentId, activeSession.id);
+  const record = courseId
+    ? await clockOutForCourse(studentId, activeSession.id)
+    : await clockOut(studentId, activeSession.id);
+
   return NextResponse.json({
     success: true,
     data: {
       id: record.id,
+      courseId: record.courseId,
       clockIn: record.clockIn.toISOString(),
       clockOut: record.clockOut?.toISOString() ?? null,
+      durationMinutes: record.durationMinutes,
     },
     error: null,
   });

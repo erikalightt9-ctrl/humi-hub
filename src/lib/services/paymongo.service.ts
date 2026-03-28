@@ -27,9 +27,14 @@ interface PayMongoCheckoutResponse {
 const PAYMONGO_API_URL = "https://api.paymongo.com/v1/checkout_sessions";
 
 function getAuthHeader(): string {
-  const secretKey = process.env.PAYMONGO_SECRET_KEY;
+  const secretKey = (process.env.PAYMONGO_SECRET_KEY ?? "").trim();
   if (!secretKey) {
     throw new Error("PAYMONGO_SECRET_KEY environment variable is not set");
+  }
+  if (!secretKey.startsWith("sk_test_") && !secretKey.startsWith("sk_live_")) {
+    throw new Error(
+      "PAYMONGO_SECRET_KEY has an invalid format — expected sk_test_... or sk_live_..."
+    );
   }
   return `Basic ${Buffer.from(secretKey + ":").toString("base64")}`;
 }

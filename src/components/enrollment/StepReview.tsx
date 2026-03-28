@@ -7,16 +7,11 @@ import {
 } from "@/lib/validations/enrollment.schema";
 import { COURSE_TIER_LABELS, COURSE_TIER_COLORS } from "@/lib/constants/course-tiers";
 import type { Course, CourseTier } from "@prisma/client";
+import { type DiscountConfig, formatDiscountLabel } from "@/lib/types/discount";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
-
-interface PublicTrainer {
-  readonly id: string;
-  readonly name: string;
-  readonly photoUrl: string | null;
-}
 
 interface ScheduleInfo {
   readonly id: string;
@@ -32,6 +27,12 @@ interface CourseTierPricing {
   readonly priceBasic: number;
   readonly priceProfessional: number;
   readonly priceAdvanced: number;
+  readonly finalPriceBasic: number;
+  readonly finalPriceProfessional: number;
+  readonly finalPriceAdvanced: number;
+  readonly discountBasic: DiscountConfig | null;
+  readonly discountProfessional: DiscountConfig | null;
+  readonly discountAdvanced: DiscountConfig | null;
 }
 
 interface StepReviewProps {
@@ -42,6 +43,20 @@ interface StepReviewProps {
 /* ------------------------------------------------------------------ */
 /*  Pricing constants                                                  */
 /* ------------------------------------------------------------------ */
+
+type TrainerTierValue = "BASIC" | "PROFESSIONAL" | "PREMIUM";
+
+const TRAINER_TIER_LABELS: Readonly<Record<TrainerTierValue, string>> = {
+  BASIC: "Basic",
+  PROFESSIONAL: "Professional",
+  PREMIUM: "Premium",
+};
+
+const DEFAULT_UPGRADE_FEES: Readonly<Record<TrainerTierValue, number>> = {
+  BASIC: 0,
+  PROFESSIONAL: 2000,
+  PREMIUM: 6000,
+};
 
 const DEFAULT_COURSE_TIER_PRICES: Readonly<Record<CourseTier, number>> = {
   BASIC: 1500,
@@ -71,16 +86,21 @@ function TierBadge({ tier }: { readonly tier: CourseTier }) {
   );
 }
 
-function getCourseTierPrice(
+function getTierPrices(
   pricing: CourseTierPricing | null,
   tier: CourseTier,
-): number {
-  if (!pricing) return DEFAULT_COURSE_TIER_PRICES[tier];
-  const priceMap: Readonly<Record<CourseTier, number>> = {
-    BASIC: pricing.priceBasic,
-    PROFESSIONAL: pricing.priceProfessional,
-    ADVANCED: pricing.priceAdvanced,
+): { base: number; final: number; discount: DiscountConfig | null } {
+  if (!pricing) {
+    const p = DEFAULT_COURSE_TIER_PRICES[tier];
+    return { base: p, final: p, discount: null };
+  }
+
+  const priceMap: Readonly<Record<CourseTier, { base: number; final: number; discount: DiscountConfig | null }>> = {
+    BASIC: { base: pricing.priceBasic, final: pricing.finalPriceBasic, discount: pricing.discountBasic },
+    PROFESSIONAL: { base: pricing.priceProfessional, final: pricing.finalPriceProfessional, discount: pricing.discountProfessional },
+    ADVANCED: { base: pricing.priceAdvanced, final: pricing.finalPriceAdvanced, discount: pricing.discountAdvanced },
   };
+
   return priceMap[tier];
 }
 
@@ -92,13 +112,68 @@ export function StepReview({ form, courses }: StepReviewProps) {
   const data = useWatch({ control: form.control });
   const course = courses.find((c) => c.id === data.courseId);
   const [trainerName, setTrainerName] = useState<string | null>(null);
+  const [trainerTier, setTrainerTier] = useState<TrainerTierValue>("BASIC");
   const [scheduleName, setScheduleName] = useState<string | null>(null);
   const [scheduleInfo, setScheduleInfo] = useState<ScheduleInfo | null>(null);
   const [courseTierPricing, setCourseTierPricing] = useState<CourseTierPricing | null>(null);
+  const [trainerUpgradeFees, setTrainerUpgradeFees] = useState<Readonly<Record<TrainerTierValue, number>>>(DEFAULT_UPGRADE_FEES);
 
   const selectedCourseTier = (data.courseTier as CourseTier) ?? "BASIC";
 
-  // Fetch course tier pricing
+  // Fetch trainer tier upgrade fees from DB
+  useEffect(() => {
+    async function fetchTierConfigs() {
+      try {
+        const res = await fetch("/api/tier-configs");
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          const fees: Record<TrainerTierValue, number> = { ...DEFAULT_UPGRADE_FEES };
+          for (const config of json.data as ReadonlyArray<{ tier: string; upgradeFee: unknown }>) {
+            if (config.tier === "BASIC" || config.tier === "PROFESSIONAL" || config.tier === "PREMIUM") {
+              fees[config.tier] = typeof config.upgradeFee === "number"
+                ? config.upgradeFee
+                : Number(config.upgradeFee) || 0;
+            }
+          }
+          setTrainerUpgradeFees(fees);
+        }
+      } catch {
+        /* falls back to DEFAULT_UPGRADE_FEES */
+      }
+    }
+    fetchTierConfigs();
+  }, []);
+
+  // Fetch trainer name & tier when trainerId changes
+  useEffect(() => {
+    if (!data.trainerId) {
+      setTrainerName(null);
+      setTrainerTier("BASIC");
+      return;
+    }
+
+    async function fetchTrainer() {
+      try {
+        const res = await fetch("/api/public/trainers");
+        const json = await res.json();
+        if (json.success) {
+          const found = (json.data as ReadonlyArray<{ id: string; name: string; tier: TrainerTierValue }>).find(
+            (t) => t.id === data.trainerId,
+          );
+          if (found) {
+            setTrainerName(found.name);
+            setTrainerTier(found.tier);
+          }
+        }
+      } catch {
+        /* silent */
+      }
+    }
+    fetchTrainer();
+  }, [data.trainerId]);
+
+  // Fetch course tier pricing — always bypass cache so the Review step
+  // reflects the latest prices saved by the admin.
   useEffect(() => {
     if (!data.courseId) {
       setCourseTierPricing(null);
@@ -107,7 +182,9 @@ export function StepReview({ form, courses }: StepReviewProps) {
 
     async function fetchPricing() {
       try {
-        const res = await fetch(`/api/courses/${data.courseId}/pricing`);
+        const res = await fetch(`/api/courses/${data.courseId}/pricing`, {
+          cache: "no-store",
+        });
         const json = await res.json();
         if (json.success) {
           setCourseTierPricing(json.data);
@@ -118,32 +195,6 @@ export function StepReview({ form, courses }: StepReviewProps) {
     }
     fetchPricing();
   }, [data.courseId]);
-
-  // Fetch trainer name if one was selected
-  useEffect(() => {
-    if (!data.trainerId) {
-      setTrainerName(null);
-      return;
-    }
-
-    async function fetchTrainer() {
-      try {
-        const res = await fetch("/api/public/trainers");
-        const json = await res.json();
-        if (json.success) {
-          const found = (json.data as ReadonlyArray<PublicTrainer>).find(
-            (t) => t.id === data.trainerId,
-          );
-          if (found) {
-            setTrainerName(found.name);
-          }
-        }
-      } catch {
-        /* silent */
-      }
-    }
-    fetchTrainer();
-  }, [data.trainerId]);
 
   // Fetch schedule info if one was selected
   useEffect(() => {
@@ -173,7 +224,12 @@ export function StepReview({ form, courses }: StepReviewProps) {
     fetchSchedule();
   }, [data.scheduleId, data.courseId]);
 
-  const courseTierPrice = getCourseTierPrice(courseTierPricing, selectedCourseTier);
+  const { base: baseTierPrice, final: finalTierPrice, discount: tierDiscount } =
+    getTierPrices(courseTierPricing, selectedCourseTier);
+
+  const hasDiscount = !!tierDiscount && tierDiscount.active && finalTierPrice < baseTierPrice;
+  const trainerUpgradeFee = trainerUpgradeFees[trainerTier];
+  const totalPrice = finalTierPrice + trainerUpgradeFee;
 
   return (
     <div className="space-y-6">
@@ -200,13 +256,10 @@ export function StepReview({ form, courses }: StepReviewProps) {
       {/* Course & Tier Selection */}
       <div className="bg-gray-50 rounded-xl p-5">
         <h3 className="font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wide">
-          Course & Tier
+          Course &amp; Tier
         </h3>
         <dl>
-          <ReviewRow
-            label="Course"
-            value={course?.title ?? "\u2014"}
-          />
+          <ReviewRow label="Course" value={course?.title ?? "\u2014"} />
           <ReviewRow
             label="Course Tier"
             value={<TierBadge tier={selectedCourseTier} />}
@@ -217,22 +270,46 @@ export function StepReview({ form, courses }: StepReviewProps) {
       {/* Trainer & Pricing */}
       <div className="bg-gray-50 rounded-xl p-5">
         <h3 className="font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wide">
-          Trainer & Pricing
+          Trainer &amp; Pricing
         </h3>
         <dl>
           <ReviewRow
             label="Trainer"
-            value={trainerName ?? "Auto-assign Trainer"}
+            value={
+              trainerName
+                ? `${trainerName} (${TRAINER_TIER_LABELS[trainerTier]})`
+                : "Auto-assign Basic Trainer"
+            }
           />
           <ReviewRow
             label="Course Tier Price"
-            value={`\u20B1${courseTierPrice.toLocaleString()}`}
+            value={
+              hasDiscount && tierDiscount ? (
+                <span className="flex items-center gap-2 flex-wrap">
+                  <span className="line-through text-gray-400">
+                    ₱{baseTierPrice.toLocaleString()}
+                  </span>
+                  <span className="text-xs font-semibold bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full">
+                    {formatDiscountLabel(tierDiscount)}
+                  </span>
+                  <span className="font-semibold">₱{finalTierPrice.toLocaleString()}</span>
+                </span>
+              ) : (
+                `₱${finalTierPrice.toLocaleString()}`
+              )
+            }
           />
+          {trainerUpgradeFee > 0 && (
+            <ReviewRow
+              label="Trainer Upgrade"
+              value={`₱${trainerUpgradeFee.toLocaleString()}`}
+            />
+          )}
           <ReviewRow
             label="Total"
             value={
               <span className="font-bold text-green-700">
-                {"\u20B1"}{courseTierPrice.toLocaleString()}
+                {"₱"}{totalPrice.toLocaleString()}
               </span>
             }
           />
