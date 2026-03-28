@@ -79,7 +79,7 @@ function LiveTimer({ clockInIso }: { readonly clockInIso: string }) {
   const label = h > 0 ? `${h}h ${m}m` : `${m}m`;
 
   return (
-    <span className="tabular-nums text-green-700 font-medium">{label}</span>
+    <span className="tabular-nums text-emerald-400 font-medium">{label}</span>
   );
 }
 
@@ -138,7 +138,7 @@ export function TrainerAttendanceTable({
   /* ── Render ── */
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12 gap-2 text-gray-400">
+      <div className="flex items-center justify-center py-12 gap-2 text-ds-muted">
         <Loader2 className="h-5 w-5 animate-spin" />
         Loading attendance…
       </div>
@@ -151,20 +151,20 @@ export function TrainerAttendanceTable({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5 text-sm">
-            <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-            <span className="font-medium text-gray-900">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-medium text-ds-text">
               {activeRows.length}
             </span>
-            <span className="text-gray-500">present now</span>
+            <span className="text-ds-muted">present now</span>
           </div>
-          <div className="text-sm text-gray-400">
+          <div className="text-sm text-ds-muted">
             {rows.length} total today
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           {lastUpdated && (
-            <span className="flex items-center gap-1 text-xs text-gray-400">
+            <span className="flex items-center gap-1 text-xs text-ds-muted">
               <Wifi className="h-3 w-3" />
               {lastUpdated.toLocaleTimeString("en-PH", {
                 hour: "2-digit",
@@ -175,7 +175,7 @@ export function TrainerAttendanceTable({
           <button
             onClick={() => void fetchData(false)}
             disabled={refreshing}
-            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 text-xs text-ds-muted hover:text-blue-400 transition-colors disabled:opacity-50"
           >
             <RefreshCw
               className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
@@ -187,13 +187,13 @@ export function TrainerAttendanceTable({
 
       {/* Error */}
       {error && (
-        <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+        <div className="text-sm text-red-400 bg-red-900/40 border border-red-800 rounded-lg px-4 py-3">
           {error}
         </div>
       )}
 
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-gray-400 gap-2">
+        <div className="flex flex-col items-center justify-center py-12 text-ds-muted gap-2">
           <Users className="h-8 w-8 opacity-40" />
           <p className="text-sm">No students have clocked in yet.</p>
         </div>
@@ -202,45 +202,45 @@ export function TrainerAttendanceTable({
           {/* Currently present */}
           {activeRows.length > 0 && (
             <div>
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+              <h4 className="text-xs font-semibold text-ds-muted uppercase tracking-wider mb-2">
                 Currently Present ({activeRows.length})
               </h4>
-              <div className="rounded-lg border border-gray-200 overflow-hidden">
+              <div className="rounded-lg border border-ds-border overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-ds-surface border-b border-ds-border">
                     <tr>
-                      <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500">
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-ds-muted">
                         Student
                       </th>
-                      <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500">
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-ds-muted">
                         Clocked In
                       </th>
-                      <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500">
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-ds-muted">
                         Duration
                       </th>
-                      <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500">
+                      <th className="text-right px-4 py-2.5 text-xs font-medium text-ds-muted">
                         Status
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-ds-border">
                     {activeRows.map((row) => (
-                      <tr key={row.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 font-medium text-gray-900">
+                      <tr key={row.id} className="hover:bg-ds-surface/50">
+                        <td className="px-4 py-3 font-medium text-ds-text">
                           {row.studentName}
                         </td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td className="px-4 py-3 text-ds-muted">
                           {formatTime(row.clockIn)}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
-                            <Clock className="h-3.5 w-3.5 text-green-500" />
+                            <Clock className="h-3.5 w-3.5 text-emerald-400" />
                             <LiveTimer clockInIso={row.clockIn} />
                           </div>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/40 text-emerald-400 border border-emerald-800">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             Active
                           </span>
                         </td>
@@ -255,47 +255,47 @@ export function TrainerAttendanceTable({
           {/* Completed sessions */}
           {completedRows.length > 0 && (
             <div>
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+              <h4 className="text-xs font-semibold text-ds-muted uppercase tracking-wider mb-2">
                 Completed ({completedRows.length})
               </h4>
-              <div className="rounded-lg border border-gray-200 overflow-hidden">
+              <div className="rounded-lg border border-ds-border overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-ds-surface border-b border-ds-border">
                     <tr>
-                      <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500">
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-ds-muted">
                         Student
                       </th>
-                      <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500">
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-ds-muted">
                         In
                       </th>
-                      <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500">
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-ds-muted">
                         Out
                       </th>
-                      <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500">
+                      <th className="text-left px-4 py-2.5 text-xs font-medium text-ds-muted">
                         Duration
                       </th>
-                      <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500">
+                      <th className="text-right px-4 py-2.5 text-xs font-medium text-ds-muted">
                         Status
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-ds-border">
                     {completedRows.map((row) => (
-                      <tr key={row.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 font-medium text-gray-900">
+                      <tr key={row.id} className="hover:bg-ds-surface/50">
+                        <td className="px-4 py-3 font-medium text-ds-text">
                           {row.studentName}
                         </td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td className="px-4 py-3 text-ds-muted">
                           {formatTime(row.clockIn)}
                         </td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td className="px-4 py-3 text-ds-muted">
                           {row.clockOut ? formatTime(row.clockOut) : "—"}
                         </td>
-                        <td className="px-4 py-3 text-gray-700">
+                        <td className="px-4 py-3 text-ds-text">
                           {formatDuration(row.durationMinutes)}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-ds-surface text-ds-muted border border-ds-border">
                             <CheckCircle2 className="h-3 w-3" />
                             Done
                           </span>
@@ -311,7 +311,7 @@ export function TrainerAttendanceTable({
       )}
 
       {/* Polling indicator */}
-      <p className="text-xs text-gray-400 text-right">
+      <p className="text-xs text-ds-muted text-right">
         Auto-refreshes every 30 seconds
       </p>
     </div>

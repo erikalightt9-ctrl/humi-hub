@@ -22,8 +22,8 @@ export default async function TrainerSubmissionsPage() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Grading Queue</h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <h1 className="text-2xl font-bold text-ds-text">Grading Queue</h1>
+        <p className="text-ds-muted text-sm mt-1">
           Review and grade pending student submissions.
         </p>
       </div>

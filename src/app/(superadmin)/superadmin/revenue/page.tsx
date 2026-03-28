@@ -345,7 +345,7 @@ export default function SuperadminRevenuePage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="flex items-center gap-2">
-            <Globe className="w-5 h-5 text-blue-400" />
+            <Globe className="w-5 h-5 text-violet-400" />
             <h1 className="text-2xl font-bold text-white">
               Platform Revenue — All Tenants
             </h1>
@@ -375,7 +375,7 @@ export default function SuperadminRevenuePage() {
           </label>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors"
           >
             <Plus className="w-4 h-4" />
             Add Record
@@ -436,7 +436,7 @@ export default function SuperadminRevenuePage() {
           <div className="flex items-center justify-between mb-3">
             <span className="text-gray-400 text-sm">Platform Revenue</span>
             <div className="p-2 bg-blue-900/40 rounded-lg">
-              <DollarSign className="w-4 h-4 text-blue-400" />
+              <DollarSign className="w-4 h-4 text-violet-400" />
             </div>
           </div>
           <p className="text-2xl font-bold text-white">
@@ -593,7 +593,7 @@ export default function SuperadminRevenuePage() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => openEdit(record)}
-                          className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-900/20 rounded transition-colors"
+                          className="p-1.5 text-gray-400 hover:text-violet-400 hover:bg-violet-900/20 rounded transition-colors"
                           title="Edit"
                         >
                           <Pencil className="w-3.5 h-3.5" />
@@ -668,7 +668,7 @@ export default function SuperadminRevenuePage() {
                       type: e.target.value as RevenueType,
                     })
                   }
-                  className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
                 >
                   {REVENUE_TYPES.map((t) => (
                     <option key={t} value={t}>
@@ -691,7 +691,7 @@ export default function SuperadminRevenuePage() {
                       setCreateForm({ ...createForm, amount: e.target.value })
                     }
                     placeholder="0.00"
-                    className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
                   />
                 </div>
                 <div>
@@ -708,7 +708,7 @@ export default function SuperadminRevenuePage() {
                       })
                     }
                     placeholder="PHP"
-                    className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
                   />
                 </div>
               </div>
@@ -724,7 +724,7 @@ export default function SuperadminRevenuePage() {
                     setCreateForm({ ...createForm, tenantId: e.target.value })
                   }
                   placeholder="Leave blank for platform-level"
-                  className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
                 />
               </div>
               <div>
@@ -741,7 +741,7 @@ export default function SuperadminRevenuePage() {
                     })
                   }
                   placeholder="Optional description"
-                  className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -756,7 +756,7 @@ export default function SuperadminRevenuePage() {
                       setCreateForm({ ...createForm, userId: e.target.value })
                     }
                     placeholder="Optional"
-                    className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
                   />
                 </div>
                 <div>
@@ -773,7 +773,7 @@ export default function SuperadminRevenuePage() {
                       })
                     }
                     placeholder="e.g. student"
-                    className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
                   />
                 </div>
               </div>
@@ -788,7 +788,7 @@ export default function SuperadminRevenuePage() {
               <button
                 onClick={handleCreate}
                 disabled={submitting || !createForm.amount}
-                className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-sm bg-violet-600 hover:bg-violet-700 text-white rounded-lg disabled:opacity-50 transition-colors"
               >
                 {submitting ? "Creating..." : "Create Record"}
               </button>
@@ -825,7 +825,7 @@ export default function SuperadminRevenuePage() {
                       type: e.target.value as RevenueType,
                     })
                   }
-                  className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
                 >
                   {REVENUE_TYPES.map((t) => (
                     <option key={t} value={t}>
@@ -847,7 +847,7 @@ export default function SuperadminRevenuePage() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, amount: e.target.value })
                     }
-                    className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
                   />
                 </div>
                 <div>
@@ -860,7 +860,7 @@ export default function SuperadminRevenuePage() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, currency: e.target.value })
                     }
-                    className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
                   />
                 </div>
               </div>
@@ -874,7 +874,7 @@ export default function SuperadminRevenuePage() {
                   onChange={(e) =>
                     setEditForm({ ...editForm, description: e.target.value })
                   }
-                  className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
                 />
               </div>
               <div>
@@ -889,7 +889,7 @@ export default function SuperadminRevenuePage() {
                     setEditForm({ ...editForm, reason: e.target.value })
                   }
                   placeholder="Describe why you are editing this record"
-                  className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#152030] border border-[#243047] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
                 />
               </div>
               {selectedRecord.tenantId && (
@@ -929,7 +929,7 @@ export default function SuperadminRevenuePage() {
               <button
                 onClick={handleEdit}
                 disabled={submitting || !editForm.reason}
-                className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-sm bg-violet-600 hover:bg-violet-700 text-white rounded-lg disabled:opacity-50 transition-colors"
               >
                 {submitting ? "Saving..." : "Save Changes"}
               </button>

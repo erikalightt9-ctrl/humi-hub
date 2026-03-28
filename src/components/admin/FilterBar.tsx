@@ -47,7 +47,7 @@ export function FilterBar() {
     <div className="flex flex-col sm:flex-row gap-3 mb-6">
       {/* Search */}
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ds-muted" />
         <Input
           placeholder="Search name or email..."
           defaultValue={searchParams.get("search") ?? ""}
@@ -96,7 +96,7 @@ export function FilterBar() {
           onClick={() =>
             router.push(pathname)
           }
-          className="gap-1 text-gray-600"
+          className="gap-1 text-ds-muted"
         >
           <X className="h-4 w-4" />
           Clear

@@ -127,7 +127,7 @@ export function EnrolleesTable({ enrollments }: EnrolleesTableProps) {
 
   if (enrollments.length === 0) {
     return (
-      <div className="text-center py-16 text-gray-500">
+      <div className="text-center py-16 text-ds-muted">
         <p className="text-lg font-medium">No enrollments found</p>
         <p className="text-sm mt-1">Try adjusting your filters.</p>
       </div>
@@ -151,9 +151,9 @@ export function EnrolleesTable({ enrollments }: EnrolleesTableProps) {
 
       {/* Inline edit form */}
       {editingId && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-ds-surface border border-ds-primary/30 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-blue-900">
+            <h3 className="text-sm font-semibold text-ds-text">
               Edit Application
             </h3>
             <Button variant="ghost" size="sm" onClick={cancelEdit}>
@@ -225,16 +225,16 @@ export function EnrolleesTable({ enrollments }: EnrolleesTableProps) {
         </div>
       )}
 
-      <div className="rounded-lg border border-gray-200 overflow-hidden">
+      <div className="rounded-xl border border-ds-border overflow-hidden">
         <Table>
-          <TableHeader className="bg-gray-50">
+          <TableHeader className="bg-ds-surface border-b border-ds-border">
             <TableRow>
-              <TableHead className="w-[200px]">Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Course</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Applied</TableHead>
-              <TableHead className="w-[120px] text-right">Actions</TableHead>
+              <TableHead className="w-[200px] text-ds-muted">Name</TableHead>
+              <TableHead className="text-ds-muted">Email</TableHead>
+              <TableHead className="text-ds-muted">Course</TableHead>
+              <TableHead className="text-ds-muted">Status</TableHead>
+              <TableHead className="text-ds-muted">Applied</TableHead>
+              <TableHead className="w-[120px] text-right text-ds-muted">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -245,15 +245,15 @@ export function EnrolleesTable({ enrollments }: EnrolleesTableProps) {
               return (
                 <TableRow
                   key={e.id}
-                  className={`hover:bg-gray-50 ${isDeleting ? "opacity-50" : ""}`}
+                  className={`hover:bg-ds-surface/50 ${isDeleting ? "opacity-50" : ""}`}
                 >
-                  <TableCell className="font-medium text-gray-900">
+                  <TableCell className="font-medium text-ds-text">
                     {e.fullName}
                   </TableCell>
-                  <TableCell className="text-gray-600 text-sm">
+                  <TableCell className="text-ds-muted text-sm">
                     {e.email}
                   </TableCell>
-                  <TableCell className="text-gray-600 text-sm">
+                  <TableCell className="text-ds-muted text-sm">
                     {e.course.title}
                   </TableCell>
                   <TableCell>
@@ -262,7 +262,7 @@ export function EnrolleesTable({ enrollments }: EnrolleesTableProps) {
                       currentStatus={e.status}
                     />
                   </TableCell>
-                  <TableCell className="text-gray-500 text-sm">
+                  <TableCell className="text-ds-muted text-sm">
                     {new Date(e.createdAt).toLocaleDateString("en-PH", {
                       year: "numeric",
                       month: "short",

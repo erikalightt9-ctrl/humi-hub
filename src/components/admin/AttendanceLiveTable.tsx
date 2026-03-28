@@ -101,7 +101,7 @@ export function AttendanceLiveTable() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-ds-muted" />
       </div>
     );
   }
@@ -111,15 +111,15 @@ export function AttendanceLiveTable() {
       {/* Date picker + refresh */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-2">
-          <CalendarDays className="h-5 w-5 text-gray-500" />
+          <CalendarDays className="h-5 w-5 text-ds-muted" />
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-ds-surface border border-ds-border text-ds-text rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ds-primary/50"
           />
           {isToday && (
-            <span className="text-xs bg-green-100 text-green-700 rounded-full px-2 py-0.5 font-medium">
+            <span className="text-xs bg-emerald-900/40 text-emerald-400 border border-emerald-800 rounded-full px-2 py-0.5 font-medium">
               Live
             </span>
           )}
@@ -145,48 +145,48 @@ export function AttendanceLiveTable() {
             title="Present Now"
             value={data.presentNow}
             icon={Users}
-            colorClass="text-green-600 bg-green-100"
+            colorClass="text-emerald-400 bg-emerald-900/40"
             subtitle="Currently clocked in"
           />
           <AnalyticsCard
             title="Clocked Out"
             value={data.clockedOutToday}
             icon={LogOut}
-            colorClass="text-gray-600 bg-gray-100"
+            colorClass="text-ds-muted bg-ds-surface"
             subtitle="Completed for today"
           />
           <AnalyticsCard
             title="Total Records"
             value={data.totalToday}
             icon={CalendarDays}
-            colorClass="text-blue-600 bg-blue-100"
+            colorClass="text-blue-400 bg-blue-900/40"
             subtitle={isToday ? "Today" : date}
           />
         </div>
       )}
 
       {/* Attendance table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-ds-card rounded-xl border border-ds-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 font-medium text-gray-600">
+              <tr className="bg-ds-surface border-b border-ds-border">
+                <th className="text-left px-4 py-3 font-medium text-ds-muted">
                   Student
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">
+                <th className="text-left px-4 py-3 font-medium text-ds-muted">
                   Course
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">
+                <th className="text-left px-4 py-3 font-medium text-ds-muted">
                   Clock In
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">
+                <th className="text-left px-4 py-3 font-medium text-ds-muted">
                   Clock Out
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">
+                <th className="text-left px-4 py-3 font-medium text-ds-muted">
                   Duration
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">
+                <th className="text-left px-4 py-3 font-medium text-ds-muted">
                   Status
                 </th>
               </tr>
@@ -196,31 +196,31 @@ export function AttendanceLiveTable() {
                 data.records.map((row) => (
                   <tr
                     key={row.id}
-                    className="border-b border-gray-100 hover:bg-gray-50"
+                    className="border-b border-ds-border hover:bg-ds-surface/50"
                   >
-                    <td className="px-4 py-3 font-medium text-gray-900">
+                    <td className="px-4 py-3 font-medium text-ds-text">
                       {row.studentName}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
+                    <td className="px-4 py-3 text-ds-muted">
                       {row.courseTitle}
                     </td>
-                    <td className="px-4 py-3 text-gray-700">
+                    <td className="px-4 py-3 text-ds-text">
                       {formatTime(row.clockIn)}
                     </td>
-                    <td className="px-4 py-3 text-gray-700">
+                    <td className="px-4 py-3 text-ds-text">
                       {row.clockOut ? formatTime(row.clockOut) : "—"}
                     </td>
-                    <td className="px-4 py-3 text-gray-700 font-mono text-xs">
+                    <td className="px-4 py-3 text-ds-text font-mono text-xs">
                       {formatDuration(row.clockIn, row.clockOut)}
                     </td>
                     <td className="px-4 py-3">
                       {row.isActive ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-100 rounded-full px-2.5 py-0.5">
-                          <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400 bg-emerald-900/40 border border-emerald-800 rounded-full px-2.5 py-0.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                           Present
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-full px-2.5 py-0.5">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-ds-muted bg-ds-surface border border-ds-border rounded-full px-2.5 py-0.5">
                           Completed
                         </span>
                       )}
@@ -231,7 +231,7 @@ export function AttendanceLiveTable() {
                 <tr>
                   <td
                     colSpan={6}
-                    className="px-4 py-12 text-center text-gray-400"
+                    className="px-4 py-12 text-center text-ds-muted"
                   >
                     No attendance records for this date
                   </td>

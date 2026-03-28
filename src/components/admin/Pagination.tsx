@@ -27,7 +27,7 @@ export function Pagination({ page, totalPages, total, limit }: PaginationProps) 
 
   return (
     <div className="flex items-center justify-between mt-4">
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-ds-muted">
         Showing {start}–{end} of {total} results
       </p>
       <div className="flex items-center gap-2">
@@ -40,7 +40,7 @@ export function Pagination({ page, totalPages, total, limit }: PaginationProps) 
         >
           <ChevronLeft className="h-4 w-4" /> Previous
         </Button>
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-ds-muted">
           {page} / {totalPages}
         </span>
         <Button

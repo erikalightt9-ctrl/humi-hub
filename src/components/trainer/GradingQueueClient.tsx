@@ -136,64 +136,64 @@ export function GradingQueueClient({ submissions }: GradingQueueClientProps) {
   return (
     <>
       {/* Submissions table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-ds-card rounded-xl border border-ds-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-5 py-3 font-medium text-gray-600">
+              <tr className="bg-ds-surface border-b border-ds-border">
+                <th className="text-left px-5 py-3 font-medium text-ds-muted">
                   Student
                 </th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">
+                <th className="text-left px-5 py-3 font-medium text-ds-muted">
                   Assignment
                 </th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">
+                <th className="text-left px-5 py-3 font-medium text-ds-muted">
                   Course
                 </th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">
+                <th className="text-left px-5 py-3 font-medium text-ds-muted">
                   File
                 </th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">
+                <th className="text-left px-5 py-3 font-medium text-ds-muted">
                   Submitted
                 </th>
-                <th className="text-right px-5 py-3 font-medium text-gray-600">
+                <th className="text-right px-5 py-3 font-medium text-ds-muted">
                   Action
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-ds-border">
               {submissions.map((submission) => (
-                <tr key={submission.id} className="hover:bg-gray-50">
+                <tr key={submission.id} className="hover:bg-ds-surface/50">
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="bg-blue-100 rounded-full p-1.5">
-                        <User className="h-3.5 w-3.5 text-blue-600" />
+                      <div className="bg-blue-900/40 rounded-full p-1.5">
+                        <User className="h-3.5 w-3.5 text-blue-400" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900 text-xs">
+                        <p className="font-medium text-ds-text text-xs">
                           {submission.student.name}
                         </p>
-                        <p className="text-gray-400 text-xs">
+                        <p className="text-ds-muted text-xs">
                           {submission.student.email}
                         </p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-3 text-gray-700 text-xs">
+                  <td className="px-5 py-3 text-ds-text text-xs">
                     {submission.assignment.title}
                   </td>
-                  <td className="px-5 py-3 text-gray-500 text-xs">
+                  <td className="px-5 py-3 text-ds-muted text-xs">
                     {submission.assignment.courseTitle}
                   </td>
                   <td className="px-5 py-3">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-ds-muted">
                       {submission.fileName}
                     </span>
-                    <span className="block text-xs text-gray-400">
+                    <span className="block text-xs text-ds-muted opacity-70">
                       {formatFileSize(submission.fileSize)}
                     </span>
                   </td>
-                  <td className="px-5 py-3 text-gray-500 text-xs">
+                  <td className="px-5 py-3 text-ds-muted text-xs">
                     {formatDate(submission.submittedAt)}
                   </td>
                   <td className="px-5 py-3 text-right">
@@ -226,15 +226,15 @@ export function GradingQueueClient({ submissions }: GradingQueueClientProps) {
             <AlertDialogTitle>Grade Submission</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-ds-muted">
                   <strong>Student:</strong>{" "}
                   {selectedSubmission?.student.name}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-ds-muted">
                   <strong>Assignment:</strong>{" "}
                   {selectedSubmission?.assignment.title}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-ds-muted">
                   <strong>File:</strong>{" "}
                   {selectedSubmission?.fileName} (
                   {selectedSubmission
@@ -251,7 +251,7 @@ export function GradingQueueClient({ submissions }: GradingQueueClientProps) {
             <div>
               <label
                 htmlFor="grade-input"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-ds-text mb-1"
               >
                 Grade (0-100)
               </label>
@@ -262,7 +262,7 @@ export function GradingQueueClient({ submissions }: GradingQueueClientProps) {
                 max={100}
                 value={grade}
                 onChange={(e) => setGrade(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full bg-ds-surface border border-ds-border rounded-lg px-3 py-2 text-sm text-ds-text placeholder:text-ds-muted focus:outline-none focus:ring-2 focus:ring-ds-primary/50 focus:border-ds-primary/50"
                 placeholder="Enter grade..."
               />
             </div>
@@ -271,7 +271,7 @@ export function GradingQueueClient({ submissions }: GradingQueueClientProps) {
             <div>
               <label
                 htmlFor="feedback-input"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-ds-text mb-1"
               >
                 Feedback (optional)
               </label>
@@ -280,13 +280,13 @@ export function GradingQueueClient({ submissions }: GradingQueueClientProps) {
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 rows={4}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                className="w-full bg-ds-surface border border-ds-border rounded-lg px-3 py-2 text-sm text-ds-text placeholder:text-ds-muted focus:outline-none focus:ring-2 focus:ring-ds-primary/50 focus:border-ds-primary/50 resize-none"
                 placeholder="Provide feedback to the student..."
               />
             </div>
 
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+              <p className="text-sm text-red-400 bg-red-900/40 border border-red-800 px-3 py-2 rounded-lg">
                 {error}
               </p>
             )}

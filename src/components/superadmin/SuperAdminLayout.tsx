@@ -48,7 +48,7 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
       >
         {/* Brand */}
         <div className="flex items-center gap-2.5 px-5 py-5 border-b border-ds-border">
-          <div className="h-8 w-8 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0">
+          <div className="h-8 w-8 rounded-xl bg-violet-600 flex items-center justify-center shrink-0">
             <Shield className="h-4 w-4 text-white" />
           </div>
           <div>
@@ -65,7 +65,7 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
               href={href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 isActive(href, exact)
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-violet-600 text-white"
                   : "text-ds-muted hover:bg-ds-card hover:text-ds-text"
               }`}
               onClick={() => setMobileOpen(false)}
@@ -109,7 +109,7 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
           <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-indigo-400" />
+            <Shield className="h-4 w-4 text-violet-400" />
             <span className="text-sm font-semibold text-ds-text">Platform Administration</span>
           </div>
         </header>

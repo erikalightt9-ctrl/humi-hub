@@ -187,14 +187,14 @@ export default function TrainerProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
       </div>
     );
   }
 
   if (error || !profile) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-4">
+      <div className="bg-red-900/40 border border-red-800 text-red-400 text-sm rounded-lg p-4">
         {error ?? "Unable to load profile."}
         <Button
           variant="outline"
@@ -218,8 +218,8 @@ export default function TrainerProfilePage() {
     <>
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-ds-text">My Profile</h1>
+          <p className="text-ds-muted text-sm mt-1">
             View and update your trainer profile information.
           </p>
         </div>
@@ -235,10 +235,10 @@ export default function TrainerProfilePage() {
         /* -------- Edit Form -------- */
         <form
           onSubmit={handleSave}
-          className="bg-white rounded-xl border border-gray-200 p-6 space-y-6"
+          className="bg-ds-card rounded-xl border border-ds-border p-6 space-y-6"
         >
           {saveError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">
+            <div className="bg-red-900/40 border border-red-800 text-red-400 text-sm rounded-lg p-3">
               {saveError}
             </div>
           )}
@@ -252,26 +252,26 @@ export default function TrainerProfilePage() {
                   <img
                     src={photoPreview}
                     alt="Preview"
-                    className="h-20 w-20 rounded-full object-cover border-2 border-gray-200"
+                    className="h-20 w-20 rounded-full object-cover border-2 border-ds-border"
                   />
                   <button
                     type="button"
                     onClick={removePhoto}
-                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
+                    className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full p-0.5 hover:bg-red-700"
                     title="Remove photo"
                   >
                     <X className="h-3 w-3" />
                   </button>
                 </div>
               ) : (
-                <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
-                  <Camera className="h-6 w-6 text-gray-400" />
+                <div className="h-20 w-20 rounded-full bg-ds-surface flex items-center justify-center border-2 border-dashed border-ds-border">
+                  <Camera className="h-6 w-6 text-ds-muted" />
                 </div>
               )}
               <div className="flex-1">
                 <label
                   htmlFor="profile-photo"
-                  className="inline-flex items-center gap-1.5 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+                  className="inline-flex items-center gap-1.5 cursor-pointer bg-ds-surface hover:bg-ds-card text-ds-text text-sm font-medium px-3 py-1.5 rounded-lg transition-colors border border-ds-border"
                 >
                   <Camera className="h-3.5 w-3.5" />
                   {photoPreview ? "Change Photo" : "Upload Photo"}
@@ -283,7 +283,7 @@ export default function TrainerProfilePage() {
                   onChange={handlePhotoChange}
                   className="hidden"
                 />
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-ds-muted mt-1">
                   JPG, PNG &middot; Max 500KB
                 </p>
               </div>
@@ -314,7 +314,7 @@ export default function TrainerProfilePage() {
               placeholder="Tell your students about yourself..."
               maxLength={2000}
               rows={4}
-              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="flex w-full rounded-md border border-ds-border bg-ds-surface px-3 py-2 text-sm text-ds-text shadow-xs transition-colors placeholder:text-ds-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ds-primary/50"
             />
           </div>
 
@@ -347,28 +347,28 @@ export default function TrainerProfilePage() {
         /* -------- View Mode -------- */
         <div className="space-y-6">
           {/* Profile Header Card */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="bg-ds-card rounded-xl border border-ds-border p-6">
             <div className="flex items-start gap-5">
               {profile.photoUrl ? (
                 <img
                   src={profile.photoUrl}
                   alt={profile.name}
-                  className="h-20 w-20 rounded-full object-cover border-2 border-gray-200 shrink-0"
+                  className="h-20 w-20 rounded-full object-cover border-2 border-ds-border shrink-0"
                 />
               ) : (
-                <div className="h-20 w-20 rounded-full bg-blue-50 flex items-center justify-center shrink-0 border-2 border-gray-200">
+                <div className="h-20 w-20 rounded-full bg-blue-900/40 flex items-center justify-center shrink-0 border-2 border-ds-border">
                   <UserCircle className="h-10 w-10 text-blue-400" />
                 </div>
               )}
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-1">
-                  <h2 className="text-xl font-bold text-gray-900">
+                  <h2 className="text-xl font-bold text-ds-text">
                     {profile.name}
                   </h2>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-3">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-ds-muted mb-3">
                   <span className="inline-flex items-center gap-1.5">
                     <Mail className="h-4 w-4" />
                     {profile.email}
@@ -383,23 +383,23 @@ export default function TrainerProfilePage() {
 
                 {/* Stats row */}
                 <div className="flex flex-wrap gap-4 text-sm">
-                  <span className="text-gray-600">
-                    <strong className="text-gray-900">
+                  <span className="text-ds-muted">
+                    <strong className="text-ds-text">
                       {profile.studentsTrainedCount}
                     </strong>{" "}
                     students trained
                   </span>
                   {profile.averageRating !== null && (
-                    <span className="inline-flex items-center gap-1 text-gray-600">
-                      <Star className="h-4 w-4 text-amber-500" />
-                      <strong className="text-gray-900">
+                    <span className="inline-flex items-center gap-1 text-ds-muted">
+                      <Star className="h-4 w-4 text-amber-400" />
+                      <strong className="text-ds-text">
                         {Number(profile.averageRating).toFixed(1)}
                       </strong>{" "}
                       ({profile.totalRatings} ratings)
                     </span>
                   )}
-                  <span className="text-gray-600">
-                    <strong className="text-gray-900">
+                  <span className="text-ds-muted">
+                    <strong className="text-ds-text">
                       {profile.yearsOfExperience}
                     </strong>{" "}
                     years experience
@@ -411,12 +411,12 @@ export default function TrainerProfilePage() {
 
           {/* Bio */}
           {profile.bio && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+            <div className="bg-ds-card rounded-xl border border-ds-border p-6">
+              <h3 className="text-sm font-medium text-ds-muted uppercase tracking-wider mb-2 flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 About
               </h3>
-              <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+              <p className="text-sm text-ds-text whitespace-pre-line leading-relaxed">
                 {profile.bio}
               </p>
             </div>
@@ -426,12 +426,12 @@ export default function TrainerProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Credentials */}
             {profile.credentials && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <div className="bg-ds-card rounded-xl border border-ds-border p-6">
+                <h3 className="text-sm font-medium text-ds-muted uppercase tracking-wider mb-2 flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4" />
                   Credentials
                 </h3>
-                <p className="text-sm text-gray-700 whitespace-pre-line">
+                <p className="text-sm text-ds-text whitespace-pre-line">
                   {profile.credentials}
                 </p>
               </div>
@@ -439,8 +439,8 @@ export default function TrainerProfilePage() {
 
             {/* Certifications */}
             {profile.certifications.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <div className="bg-ds-card rounded-xl border border-ds-border p-6">
+                <h3 className="text-sm font-medium text-ds-muted uppercase tracking-wider mb-2 flex items-center gap-2">
                   <Award className="h-4 w-4" />
                   Certifications
                 </h3>
@@ -448,7 +448,7 @@ export default function TrainerProfilePage() {
                   {profile.certifications.map((cert) => (
                     <span
                       key={cert}
-                      className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full text-xs font-medium"
+                      className="bg-blue-900/40 text-blue-400 border border-blue-800 px-2.5 py-1 rounded-full text-xs font-medium"
                     >
                       {cert}
                     </span>
@@ -459,12 +459,12 @@ export default function TrainerProfilePage() {
 
             {/* Industry Experience */}
             {profile.industryExperience && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <div className="bg-ds-card rounded-xl border border-ds-border p-6">
+                <h3 className="text-sm font-medium text-ds-muted uppercase tracking-wider mb-2 flex items-center gap-2">
                   <Briefcase className="h-4 w-4" />
                   Industry Experience
                 </h3>
-                <p className="text-sm text-gray-700 whitespace-pre-line">
+                <p className="text-sm text-ds-text whitespace-pre-line">
                   {profile.industryExperience}
                 </p>
               </div>
@@ -472,8 +472,8 @@ export default function TrainerProfilePage() {
 
             {/* Specializations */}
             {profile.specializations.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <div className="bg-ds-card rounded-xl border border-ds-border p-6">
+                <h3 className="text-sm font-medium text-ds-muted uppercase tracking-wider mb-2 flex items-center gap-2">
                   <Star className="h-4 w-4" />
                   Specializations
                 </h3>
@@ -481,7 +481,7 @@ export default function TrainerProfilePage() {
                   {profile.specializations.map((spec) => (
                     <span
                       key={spec}
-                      className="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full text-xs font-medium"
+                      className="bg-blue-900/40 text-blue-400 border border-blue-800 px-2.5 py-1 rounded-full text-xs font-medium"
                     >
                       {spec}
                     </span>

@@ -13,20 +13,20 @@ export function AnalyticsCard({
   title,
   value,
   icon: Icon,
-  colorClass = "text-blue-600 bg-blue-100",
+  colorClass = "text-blue-400 bg-blue-900/40",
   subtitle,
 }: AnalyticsCardProps) {
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card className="border border-ds-border bg-ds-card shadow-sm rounded-xl">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm font-medium text-gray-500">{title}</p>
+          <p className="text-sm font-medium text-ds-muted">{title}</p>
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorClass}`}>
             <Icon className="h-5 w-5" />
           </div>
         </div>
-        <p className="text-3xl font-extrabold text-gray-900">{value}</p>
-        {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
+        <p className="text-3xl font-extrabold text-ds-text">{value}</p>
+        {subtitle && <p className="text-xs text-ds-muted mt-1">{subtitle}</p>}
       </CardContent>
     </Card>
   );

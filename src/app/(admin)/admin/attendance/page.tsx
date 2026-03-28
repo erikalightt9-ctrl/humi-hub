@@ -19,8 +19,8 @@ export default async function AdminAttendancePage() {
   return (
     <>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Attendance Analytics</h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <h1 className="text-2xl font-bold text-ds-text">Attendance Analytics</h1>
+        <p className="text-ds-muted text-sm mt-1">
           Course attendance rates, check-in trends, and top students
         </p>
       </div>

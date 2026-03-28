@@ -67,17 +67,17 @@ function StatCard({ href, icon: Icon, iconClass, bgClass, label, value, sub }: S
   return (
     <Link
       href={href}
-      className="group bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-start gap-4 hover:border-blue-300 hover:shadow-md transition-all"
+      className="group bg-ds-card rounded-2xl border border-ds-border shadow-sm p-5 flex items-start gap-4 hover:border-blue-500 hover:shadow-md transition-all"
     >
       <div className={`rounded-xl p-2.5 shrink-0 ${bgClass}`}>
         <Icon className={`h-5 w-5 ${iconClass}`} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-gray-500 mb-1">{label}</p>
-        <p className="text-2xl font-bold text-gray-900 leading-none">{value}</p>
-        {sub && <p className="text-xs text-gray-400 mt-1.5">{sub}</p>}
+        <p className="text-xs font-medium text-ds-muted mb-1">{label}</p>
+        <p className="text-2xl font-bold text-ds-text leading-none">{value}</p>
+        {sub && <p className="text-xs text-ds-muted mt-1.5">{sub}</p>}
       </div>
-      <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-blue-500 transition-colors self-center shrink-0" />
+      <ArrowRight className="h-4 w-4 text-ds-muted group-hover:text-blue-400 transition-colors self-center shrink-0" />
     </Link>
   );
 }
@@ -114,10 +114,10 @@ export default async function TrainerDashboardPage() {
     <>
       {/* Header */}
       <div className="mb-7">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-ds-text">
           Welcome back, {user.name ?? "Trainer"}
         </h1>
-        <p className="text-sm text-gray-400 mt-0.5">
+        <p className="text-sm text-ds-muted mt-0.5">
           Your training activity — click any card to view details
         </p>
       </div>
@@ -127,8 +127,8 @@ export default async function TrainerDashboardPage() {
         <StatCard
           href="/trainer/students"
           icon={Users}
-          iconClass="text-blue-600"
-          bgClass="bg-blue-100"
+          iconClass="text-blue-400"
+          bgClass="bg-blue-900/40"
           label="My Students"
           value={stats.totalStudents}
           sub="Across all courses"
@@ -136,8 +136,8 @@ export default async function TrainerDashboardPage() {
         <StatCard
           href="/trainer/schedule"
           icon={CalendarClock}
-          iconClass="text-indigo-600"
-          bgClass="bg-indigo-100"
+          iconClass="text-indigo-400"
+          bgClass="bg-indigo-900/40"
           label="Active Schedules"
           value={stats.activeSchedules}
           sub="Currently running"
@@ -145,8 +145,8 @@ export default async function TrainerDashboardPage() {
         <StatCard
           href="/trainer/ratings"
           icon={Star}
-          iconClass="text-amber-600"
-          bgClass="bg-amber-100"
+          iconClass="text-amber-400"
+          bgClass="bg-amber-900/40"
           label="Avg Rating"
           value={
             stats.averageRating !== null
@@ -158,8 +158,8 @@ export default async function TrainerDashboardPage() {
         <StatCard
           href="/trainer/ratings"
           icon={MessageSquare}
-          iconClass="text-purple-600"
-          bgClass="bg-purple-100"
+          iconClass="text-purple-400"
+          bgClass="bg-purple-900/40"
           label="Total Ratings"
           value={stats.totalRatings}
           sub="Reviews received"
@@ -169,13 +169,13 @@ export default async function TrainerDashboardPage() {
       {/* ── Two-column: Schedules + Ratings ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Upcoming Schedules */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <div className="bg-ds-card rounded-2xl border border-ds-border shadow-sm p-6">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-              <CalendarClock className="h-4 w-4 text-blue-600" />
+            <h2 className="font-semibold text-ds-text flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-blue-400" />
               Upcoming Schedules
             </h2>
-            <Link href="/trainer/schedule" className="text-xs text-blue-600 hover:underline">
+            <Link href="/trainer/schedule" className="text-xs text-blue-400 hover:underline">
               View all →
             </Link>
           </div>
@@ -186,18 +186,18 @@ export default async function TrainerDashboardPage() {
                 <Link
                   key={schedule.id}
                   href="/trainer/schedule"
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-blue-50 hover:border-blue-100 border border-transparent transition-all group"
+                  className="flex items-center justify-between p-3 bg-ds-surface rounded-xl hover:bg-blue-900/20 hover:border-blue-800 border border-ds-border transition-all group"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-700 transition-colors">
+                    <p className="text-sm font-medium text-ds-text truncate group-hover:text-blue-400 transition-colors">
                       {schedule.name}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-ds-muted">
                       {schedule.course.title} · {formatDate(schedule.startDate)}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 ml-4 shrink-0">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-ds-muted">
                       {schedule._count.students}/{schedule.maxCapacity}
                     </span>
                     <ScheduleStatusBadge status={schedule.status} />
@@ -206,7 +206,7 @@ export default async function TrainerDashboardPage() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+            <div className="flex flex-col items-center justify-center py-10 text-ds-muted">
               <Clock className="h-8 w-8 mb-3 opacity-40" />
               <p className="text-sm">No upcoming schedules</p>
             </div>
@@ -214,13 +214,13 @@ export default async function TrainerDashboardPage() {
         </div>
 
         {/* Recent Ratings */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <div className="bg-ds-card rounded-2xl border border-ds-border shadow-sm p-6">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-              <Star className="h-4 w-4 text-amber-500" />
+            <h2 className="font-semibold text-ds-text flex items-center gap-2">
+              <Star className="h-4 w-4 text-amber-400" />
               Recent Ratings
             </h2>
-            <Link href="/trainer/ratings" className="text-xs text-blue-600 hover:underline">
+            <Link href="/trainer/ratings" className="text-xs text-blue-400 hover:underline">
               View all →
             </Link>
           </div>
@@ -231,25 +231,25 @@ export default async function TrainerDashboardPage() {
                 <Link
                   key={rating.id}
                   href="/trainer/ratings"
-                  className="block p-3 bg-gray-50 rounded-xl hover:bg-amber-50 border border-transparent hover:border-amber-100 transition-all"
+                  className="block p-3 bg-ds-surface rounded-xl hover:bg-amber-900/20 border border-ds-border hover:border-amber-800 transition-all"
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-ds-text">
                       {rating.student.name}
                     </span>
-                    <span className="text-xs text-gray-400">{timeAgo(rating.createdAt)}</span>
+                    <span className="text-xs text-ds-muted">{timeAgo(rating.createdAt)}</span>
                   </div>
-                  <div className="text-amber-500 text-sm mb-1">
+                  <div className="text-amber-400 text-sm mb-1">
                     {renderStars(rating.rating)}
                   </div>
                   {rating.review && (
-                    <p className="text-xs text-gray-500 line-clamp-2">{rating.review}</p>
+                    <p className="text-xs text-ds-muted line-clamp-2">{rating.review}</p>
                   )}
                 </Link>
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+            <div className="flex flex-col items-center justify-center py-10 text-ds-muted">
               <Star className="h-8 w-8 mb-3 opacity-40" />
               <p className="text-sm">No ratings received yet</p>
             </div>
@@ -275,7 +275,7 @@ export default async function TrainerDashboardPage() {
         </Link>
         <Link
           href="/trainer/messages"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-800 text-white rounded-xl text-sm font-semibold hover:bg-gray-700 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-ds-surface text-ds-text border border-ds-border rounded-xl text-sm font-semibold hover:bg-ds-card transition-colors"
         >
           <MessageSquare className="h-4 w-4" />
           Messages

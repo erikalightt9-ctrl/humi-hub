@@ -71,10 +71,10 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
-      <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-        <Icon className="h-4 w-4 text-slate-400" />
-        <h2 className="font-semibold text-slate-800">{title}</h2>
+    <div className="bg-ds-card border border-ds-border rounded-xl p-6 space-y-4">
+      <div className="flex items-center gap-2 pb-2 border-b border-ds-border">
+        <Icon className="h-4 w-4 text-ds-muted" />
+        <h2 className="font-semibold text-ds-text">{title}</h2>
       </div>
       {children}
     </div>
@@ -92,9 +92,9 @@ function Field({
 }) {
   return (
     <div className="space-y-1">
-      <Label className="text-slate-700">{label}</Label>
+      <Label className="text-ds-text">{label}</Label>
       {children}
-      {hint && <p className="text-xs text-slate-400">{hint}</p>}
+      {hint && <p className="text-xs text-ds-muted">{hint}</p>}
     </div>
   );
 }
@@ -224,14 +224,14 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+        <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
       </div>
     );
   }
 
   if (!tenant) {
     return (
-      <div className="text-center py-20 text-slate-400">
+      <div className="text-center py-20 text-ds-muted">
         <Building2 className="h-8 w-8 mx-auto mb-2 opacity-40" />
         <p>Tenant not found.</p>
       </div>
@@ -244,13 +244,13 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
       <div className="flex items-center gap-3">
         <Link
           href={`/superadmin/tenants/${id}`}
-          className="text-slate-400 hover:text-slate-700 transition-colors"
+          className="text-ds-muted hover:text-ds-text transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Edit Tenant</h1>
-          <p className="text-sm text-slate-500 mt-0.5">{tenant.name}</p>
+          <h1 className="text-2xl font-bold text-ds-text">Edit Tenant</h1>
+          <p className="text-sm text-ds-muted mt-0.5">{tenant.name}</p>
         </div>
       </div>
 
@@ -295,7 +295,7 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
             </Field>
           </div>
 
-          <div className="text-xs text-slate-400 bg-slate-50 rounded px-3 py-2">
+          <div className="text-xs text-ds-muted bg-ds-surface rounded px-3 py-2">
             <strong>Slug:</strong> {tenant.slug} &nbsp;·&nbsp;
             <strong>ID:</strong> {tenant.id}
           </div>
@@ -360,8 +360,8 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
         <Section icon={ShieldAlert} title="Account Status">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-800">Tenant Active</p>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-sm font-medium text-ds-text">Tenant Active</p>
+              <p className="text-xs text-ds-muted mt-0.5">
                 Inactive tenants cannot log in and are hidden from directories.
               </p>
             </div>
@@ -379,7 +379,7 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
             </button>
           </div>
           {tenant.isDefault && (
-            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+            <p className="text-xs text-amber-400 bg-amber-900/20 border border-amber-800 rounded px-3 py-2">
               This is the default (platform owner) tenant and cannot be deactivated.
             </p>
           )}
@@ -490,13 +490,13 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
 
         {/* Feedback banners */}
         {error && (
-          <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+          <div className="flex items-start gap-2 bg-red-900/20 border border-red-800 text-red-400 text-sm rounded-xl px-4 py-3">
             <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
             {error}
           </div>
         )}
         {saved && (
-          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-lg px-4 py-3">
+          <div className="flex items-center gap-2 bg-emerald-900/20 border border-emerald-800 text-emerald-400 text-sm rounded-xl px-4 py-3">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
             Changes saved successfully.
           </div>

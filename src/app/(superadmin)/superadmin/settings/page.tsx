@@ -24,12 +24,12 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+    <div className="bg-ds-card rounded-xl border border-ds-border p-6 space-y-4">
       <div className="flex items-center gap-2 mb-1">
-        <Icon className="h-4 w-4 text-slate-400" />
-        <h2 className="font-semibold text-slate-800">{title}</h2>
+        <Icon className="h-4 w-4 text-ds-muted" />
+        <h2 className="font-semibold text-ds-text">{title}</h2>
       </div>
-      {description && <p className="text-xs text-slate-500 -mt-2">{description}</p>}
+      {description && <p className="text-xs text-ds-muted -mt-2">{description}</p>}
       {children}
     </div>
   );
@@ -37,20 +37,20 @@ function Section({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
-      <span className="text-slate-500">{label}</span>
-      <span className="text-slate-800 font-medium font-mono text-xs">{value}</span>
+    <div className="flex justify-between text-sm border-b border-ds-border pb-2 last:border-0 last:pb-0">
+      <span className="text-ds-muted">{label}</span>
+      <span className="text-ds-text font-medium font-mono text-xs">{value}</span>
     </div>
   );
 }
 
 function EnvBadge({ set }: { set: boolean }) {
   return set ? (
-    <span className="inline-flex items-center gap-1 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
+    <span className="inline-flex items-center gap-1 text-xs bg-emerald-900/40 text-emerald-400 px-2 py-0.5 rounded-full font-medium">
       ✓ Set
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium">
+    <span className="inline-flex items-center gap-1 text-xs bg-red-900/40 text-red-400 px-2 py-0.5 rounded-full font-medium">
       ✗ Missing
     </span>
   );
@@ -82,14 +82,14 @@ export default function SuperAdminSettingsPage() {
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <div className="bg-slate-100 rounded-lg p-2">
-            <Settings className="h-5 w-5 text-slate-700" />
+          <div className="bg-violet-900/40 rounded-lg p-2">
+            <Settings className="h-5 w-5 text-violet-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Platform Settings</h1>
-            <p className="text-sm text-slate-500">
+            <h1 className="text-2xl font-bold text-ds-text">Platform Settings</h1>
+            <p className="text-sm text-ds-muted">
               Read-only view of environment configuration. Edit values in your{" "}
-              <code className="text-xs bg-slate-100 px-1 rounded">.env</code> file or deployment secrets.
+              <code className="text-xs bg-ds-surface px-1 rounded">.env</code> file or deployment secrets.
             </p>
           </div>
         </div>
@@ -119,7 +119,7 @@ export default function SuperAdminSettingsPage() {
             { label: "STRIPE_WEBHOOK_SECRET",set: env.stripeWebhook },
           ].map(({ label, set }) => (
             <div key={label} className="flex items-center justify-between text-sm">
-              <span className="text-slate-600 font-mono text-xs">{label}</span>
+              <span className="text-ds-muted font-mono text-xs">{label}</span>
               <EnvBadge set={set} />
             </div>
           ))}
@@ -144,12 +144,12 @@ export default function SuperAdminSettingsPage() {
       <Section icon={Database} title="Database">
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-600 font-mono text-xs">DATABASE_URL</span>
+            <span className="text-ds-muted font-mono text-xs">DATABASE_URL</span>
             <EnvBadge set={env.databaseUrl} />
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-ds-muted">
             Schema migrations are managed with Prisma. Run{" "}
-            <code className="bg-slate-100 px-1 rounded">npx prisma migrate deploy</code> to apply pending migrations.
+            <code className="bg-ds-surface px-1 rounded">npx prisma migrate deploy</code> to apply pending migrations.
           </p>
         </div>
       </Section>
@@ -166,12 +166,12 @@ export default function SuperAdminSettingsPage() {
             { label: "STRIPE_WEBHOOK_SECRET", set: env.stripeWebhook },
           ].map(({ label, set }) => (
             <div key={label} className="flex items-center justify-between text-sm">
-              <span className="text-slate-600 font-mono text-xs">{label}</span>
+              <span className="text-ds-muted font-mono text-xs">{label}</span>
               <EnvBadge set={set} />
             </div>
           ))}
-          <p className="text-xs text-slate-400">
-            Webhook endpoint: <code className="bg-slate-100 px-1 rounded">/api/webhooks/stripe</code>
+          <p className="text-xs text-ds-muted">
+            Webhook endpoint: <code className="bg-ds-surface px-1 rounded">/api/webhooks/stripe</code>
           </p>
         </div>
       </Section>
@@ -182,7 +182,7 @@ export default function SuperAdminSettingsPage() {
         title="Notifications"
         description="Platform-level notification triggers."
       >
-        <ul className="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
+        <ul className="text-sm text-ds-muted space-y-1.5 list-disc list-inside">
           <li>Tenant welcome email on creation</li>
           <li>Admin credential emails for new managers</li>
           <li>Student enrollment confirmation emails</li>
@@ -191,7 +191,7 @@ export default function SuperAdminSettingsPage() {
         </ul>
         <p className="text-xs text-slate-400 mt-2">
           All transactional emails use the SMTP settings above. Templates live in{" "}
-          <code className="bg-slate-100 px-1 rounded">src/lib/email/</code>.
+          <code className="bg-ds-surface px-1 rounded">src/lib/email/</code>.
         </p>
       </Section>
     </div>

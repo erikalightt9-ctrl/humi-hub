@@ -70,7 +70,7 @@ export function StudentManagementTabs({
   return (
     <>
       {/* Tab bar */}
-      <div className="border-b border-gray-200 mb-6">
+      <div className="border-b border-ds-border mb-6">
         <nav className="-mb-px flex gap-6" aria-label="Student management tabs">
           {TABS.map((tab) => {
             const Icon = tab.icon;
@@ -81,8 +81,8 @@ export function StudentManagementTabs({
                 onClick={() => switchTab(tab.key)}
                 className={`flex items-center gap-2 pb-3 border-b-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-ds-primary text-ds-primary"
+                    : "border-transparent text-ds-muted hover:text-ds-text hover:border-ds-border"
                 }`}
               >
                 <Icon className="h-4 w-4" />

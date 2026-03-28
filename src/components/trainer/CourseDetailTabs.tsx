@@ -80,12 +80,12 @@ function formatDate(date: string | null): string {
 
 function PublishedBadge({ published }: { readonly published: boolean }) {
   return published ? (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/40 text-emerald-400 border border-emerald-800">
       <CheckCircle2 className="h-3 w-3" />
       Published
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-ds-surface text-ds-muted border border-ds-border">
       <XCircle className="h-3 w-3" />
       Draft
     </span>
@@ -160,9 +160,9 @@ export function CourseDetailTabs({
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200">
+    <div className="bg-ds-card rounded-xl border border-ds-border">
       {/* Tab headers */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-ds-border">
         {tabs.map((tab) => (
           <button
             key={tab.key}
@@ -170,8 +170,8 @@ export function CourseDetailTabs({
             className={cn(
               "flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors",
               activeTab === tab.key
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
+                ? "border-blue-500 text-blue-400"
+                : "border-transparent text-ds-muted hover:text-ds-text hover:border-ds-border",
             )}
           >
             <tab.icon className="h-4 w-4" />
@@ -181,8 +181,8 @@ export function CourseDetailTabs({
                 className={cn(
                   "ml-1 px-1.5 py-0.5 rounded-full text-xs",
                   activeTab === tab.key
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-gray-100 text-gray-500",
+                    ? "bg-blue-900/40 text-blue-400"
+                    : "bg-ds-surface text-ds-muted",
                 )}
               >
                 {tab.count}
@@ -220,7 +220,7 @@ function LessonsTab({
 
   if (lessons.length === 0) {
     return (
-      <p className="text-sm text-gray-500 text-center py-8">
+      <p className="text-sm text-ds-muted text-center py-8">
         No lessons have been added to this course yet.
       </p>
     );
@@ -243,8 +243,8 @@ function LessonsTab({
             className={cn(
               "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
               tierFilter === "ALL"
-                ? "bg-gray-900 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200",
+                ? "bg-ds-text text-ds-card"
+                : "bg-ds-surface text-ds-muted hover:bg-ds-card border border-ds-border",
             )}
           >
             All ({lessons.length})
@@ -260,7 +260,7 @@ function LessonsTab({
                   "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
                   isActive
                     ? `${colors.bg} ${colors.text} ring-1 ${colors.border}`
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200",
+                    : "bg-ds-surface text-ds-muted hover:bg-ds-card border border-ds-border",
                 )}
               >
                 {COURSE_TIER_LABELS[group.tier]} ({group.lessons.length})
@@ -276,27 +276,27 @@ function LessonsTab({
           {hasTiers && tierFilter === "ALL" && (
             <div className="flex items-center gap-2 mb-2 mt-2">
               <TierBadge tier={group.tier} />
-              <span className="text-xs text-gray-400">{group.lessons.length} lessons</span>
+              <span className="text-xs text-ds-muted">{group.lessons.length} lessons</span>
             </div>
           )}
           <div className="space-y-2">
             {group.lessons.map((lesson) => (
               <div
                 key={lesson.id}
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-between p-3 rounded-lg hover:bg-ds-surface transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-7 h-7 rounded-full bg-blue-100 text-blue-600 text-xs font-bold flex items-center justify-center shrink-0">
+                  <span className="w-7 h-7 rounded-full bg-blue-900/40 text-blue-400 text-xs font-bold flex items-center justify-center shrink-0">
                     {lesson.order}
                   </span>
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-ds-text">
                     {lesson.title}
                   </span>
                   {!hasTiers && <TierBadge tier={lesson.tier} />}
                 </div>
                 <div className="flex items-center gap-3">
                   {lesson.durationMin > 0 && (
-                    <span className="flex items-center gap-1 text-xs text-gray-400">
+                    <span className="flex items-center gap-1 text-xs text-ds-muted">
                       <Clock className="h-3.5 w-3.5" />
                       {lesson.durationMin} min
                     </span>
@@ -319,7 +319,7 @@ function AssignmentsTab({
 }) {
   if (assignments.length === 0) {
     return (
-      <p className="text-sm text-gray-500 text-center py-8">
+      <p className="text-sm text-ds-muted text-center py-8">
         No assignments have been added to this course yet.
       </p>
     );
@@ -330,15 +330,15 @@ function AssignmentsTab({
       {assignments.map((assignment) => (
         <div
           key={assignment.id}
-          className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+          className="border border-ds-border rounded-lg p-4 hover:bg-ds-surface transition-colors"
         >
           <div className="flex items-start justify-between mb-2">
-            <h4 className="text-sm font-semibold text-gray-900">
+            <h4 className="text-sm font-semibold text-ds-text">
               {assignment.title}
             </h4>
             <PublishedBadge published={assignment.isPublished} />
           </div>
-          <div className="flex items-center gap-4 text-xs text-gray-500">
+          <div className="flex items-center gap-4 text-xs text-ds-muted">
             <span className="flex items-center gap-1">
               <CalendarClock className="h-3.5 w-3.5" />
               {formatDate(assignment.dueDate)}
@@ -346,7 +346,7 @@ function AssignmentsTab({
             <span>{assignment.maxPoints} pts</span>
             <span>{assignment.totalSubmissions} submissions</span>
             {assignment.pendingCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
+              <span className="px-2 py-0.5 rounded-full bg-amber-900/40 text-amber-400 border border-amber-800 font-medium">
                 {assignment.pendingCount} pending
               </span>
             )}
@@ -364,7 +364,7 @@ function QuizzesTab({
 }) {
   if (quizzes.length === 0) {
     return (
-      <p className="text-sm text-gray-500 text-center py-8">
+      <p className="text-sm text-ds-muted text-center py-8">
         No quizzes have been added to this course yet.
       </p>
     );
@@ -375,20 +375,20 @@ function QuizzesTab({
       {quizzes.map((quiz) => (
         <div
           key={quiz.id}
-          className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+          className="border border-ds-border rounded-lg p-4 hover:bg-ds-surface transition-colors"
         >
           <div className="flex items-start justify-between mb-2">
-            <h4 className="text-sm font-semibold text-gray-900">
+            <h4 className="text-sm font-semibold text-ds-text">
               {quiz.title}
             </h4>
             <PublishedBadge published={quiz.isPublished} />
           </div>
           {quiz.description && (
-            <p className="text-xs text-gray-500 mb-2 line-clamp-2">
+            <p className="text-xs text-ds-muted mb-2 line-clamp-2">
               {quiz.description}
             </p>
           )}
-          <div className="flex items-center gap-4 text-xs text-gray-500">
+          <div className="flex items-center gap-4 text-xs text-ds-muted">
             <span>{quiz.questionCount} questions</span>
             <span>Passing: {quiz.passingScore}%</span>
             <span>{quiz.attemptCount} attempts</span>
