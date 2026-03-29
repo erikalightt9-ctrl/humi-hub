@@ -150,6 +150,7 @@ model Course {
   currency      String       @default("PHP")
   outcomes      String[]
   isActive      Boolean      @default(true)
+  deletedAt     DateTime?
   featuresBasic        String[]
   featuresProfessional String[]
   featuresAdvanced     String[]
