@@ -3,7 +3,8 @@
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { GraduationCap, Users, ShieldCheck, Briefcase, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { GraduationCap, Users, ShieldCheck, Briefcase, Eye, EyeOff, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 interface TenantBranding {
   id: string;
@@ -264,8 +265,19 @@ function TenantLoginContent() {
         </div>
       </div>
 
+      {/* Back to Home */}
+      <div className="mt-5">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to Home
+        </Link>
+      </div>
+
       {/* Tenant slug badge + powered by */}
-      <div className="mt-6 flex flex-col items-center gap-1">
+      <div className="mt-4 flex flex-col items-center gap-1">
         <span
           className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-mono font-medium border"
           style={{ color: primaryColor, borderColor: `${primaryColor}40`, backgroundColor: `${primaryColor}10` }}
