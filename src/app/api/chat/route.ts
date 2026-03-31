@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { chatMessageSchema } from "@/lib/validations/chat.schema";
 import { streamChatResponse, streamChatResponseWithRole } from "@/lib/services/chat.service";
+import { faqFallbackResponse } from "@/lib/services/chat-fallback.service";
 
 // Simple in-memory rate limiter (per IP, 10 requests per minute)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -48,13 +49,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { success: false, data: null, error: "Chat is temporarily unavailable." },
-        { status: 503 }
-      );
-    }
-
     const body = await request.json();
     const result = chatMessageSchema.safeParse(body);
 
@@ -63,6 +57,38 @@ export async function POST(request: NextRequest) {
         { success: false, data: null, error: result.error.issues[0]?.message ?? "Invalid input" },
         { status: 400 }
       );
+    }
+
+    // If no OpenAI key, use FAQ fallback (always works, no external API needed)
+    if (!process.env.OPENAI_API_KEY) {
+      const lastMessage = result.data.messages[result.data.messages.length - 1];
+      const answer = faqFallbackResponse(lastMessage?.content ?? "");
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          // Stream word-by-word for a natural typing effect
+          const words = answer.split(" ");
+          let i = 0;
+          const interval = setInterval(() => {
+            if (i < words.length) {
+              const chunk = (i === 0 ? "" : " ") + words[i];
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`));
+              i++;
+            } else {
+              controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+              controller.close();
+              clearInterval(interval);
+            }
+          }, 30);
+        },
+      });
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
     }
 
     // Check if authenticated — use role-aware prompts if so

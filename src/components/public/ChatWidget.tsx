@@ -145,7 +145,7 @@ export function ChatWidget() {
             <div className="flex items-center gap-2">
               <MessageCircle className="h-5 w-5" />
               <div>
-                <p className="font-semibold text-sm">VA Training Assistant</p>
+                <p className="font-semibold text-sm">HUMI Hub Assistant</p>
                 <p className="text-xs text-blue-200">
                   Ask about courses & enrollment
                 </p>
