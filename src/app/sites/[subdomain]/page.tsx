@@ -122,6 +122,7 @@ interface CourseCardProps {
 }
 
 function CourseCard({
+  id,
   title,
   slug,
   description,
@@ -130,6 +131,7 @@ function CourseCard({
   outcomes,
   primaryColor,
 }: CourseCardProps) {
+  void slug; // id is used for the register URL; slug kept for future use
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all group flex flex-col overflow-hidden">
       {/* Color accent bar */}
@@ -182,7 +184,7 @@ function CourseCard({
             )}
           </div>
           <Link
-            href={`/enroll?courseId=${slug}`}
+            href={`/register?courseId=${id}`}
             className="inline-flex items-center gap-1.5 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:opacity-90 hover:-translate-y-px"
             style={{ backgroundColor: primaryColor }}
           >
@@ -245,7 +247,7 @@ export default async function TenantLandingPage({
   const primary = org.primaryColor ?? "#1d4ed8";
   const secondary = org.secondaryColor ?? "#3b82f6";
   const displayName = org.siteName ?? org.name;
-  const enrollUrl = "/enroll";
+  const enrollUrl = "/register";
   const loginUrl = "/login";
 
   const activeStudents = org._count.students;

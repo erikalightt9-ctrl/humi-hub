@@ -40,7 +40,9 @@ export async function GET(request: NextRequest) {
       prisma.student.count({ where: { accessGranted: true, organizationId: tid } }),
       prisma.tenantTrainer.count({ where: { tenantId: tid, isActive: true } }),
       prisma.course.count({ where: { isActive: true, tenantId: tid } }),
-      prisma.directMessage.count({ where: { createdAt: { gte: todayStart } } }),
+      prisma.directMessage.count({
+        where: { createdAt: { gte: todayStart }, conversation: { tenantId: tid } },
+      }),
       getRecentActivity(10, tid),
       getEnrollmentPipeline(tid),
       getRevenueSnapshot(tid),
