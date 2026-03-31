@@ -19,6 +19,75 @@ const MAX_FAILED_ATTEMPTS = 5;
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    /* ── HUMI ADMIN (Platform Support Staff) ───────────────────── */
+    CredentialsProvider({
+      id: "humi-admin",
+      name: "HUMI Admin Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
+        }
+
+        const humiAdmin = await prisma.humiAdmin.findUnique({
+          where: { email: credentials.email.toLowerCase() },
+        });
+
+        if (!humiAdmin) {
+          console.error("[auth][humi-admin] Login failed — email not found:", credentials.email);
+          throw new Error("Invalid credentials");
+        }
+
+        if (!humiAdmin.isActive) {
+          throw new Error("Account deactivated. Contact the Super Admin.");
+        }
+
+        if (humiAdmin.failedAttempts >= MAX_FAILED_ATTEMPTS) {
+          throw new Error("Account locked after too many failed attempts. Contact the Super Admin.");
+        }
+
+        const isValid = await bcrypt.compare(credentials.password, humiAdmin.passwordHash);
+
+        if (!isValid) {
+          await prisma.humiAdmin.update({
+            where: { id: humiAdmin.id },
+            data: { failedAttempts: { increment: 1 } },
+          });
+          console.error("[auth][humi-admin] Login failed — password mismatch for:", credentials.email);
+          throw new Error("Invalid credentials");
+        }
+
+        // Reset failed attempts on success
+        await prisma.humiAdmin.update({
+          where: { id: humiAdmin.id },
+          data: { failedAttempts: 0 },
+        });
+
+        return {
+          id: humiAdmin.id,
+          email: humiAdmin.email,
+          name: humiAdmin.name,
+          role: "humi_admin" as const,
+          isHumiAdmin: true,
+          isSuperAdmin: false,
+          isTenantAdmin: false,
+          tenantId: null,
+          organizationId: null,
+          mustChangePassword: humiAdmin.mustChangePassword,
+          humiAdminPermissions: {
+            canReviewTenants: humiAdmin.canReviewTenants,
+            canOnboardTenants: humiAdmin.canOnboardTenants,
+            canMonitorPlatform: humiAdmin.canMonitorPlatform,
+            canProvideSupport: humiAdmin.canProvideSupport,
+            canManageContent: humiAdmin.canManageContent,
+          },
+        };
+      },
+    }),
+
     /* ── ADMIN ─────────────────────────────────────────────────── */
     CredentialsProvider({
       id: "admin",
@@ -430,6 +499,10 @@ export const authOptions: NextAuthOptions = {
           (user as typeof user & { isSuperAdmin?: boolean }).isSuperAdmin ?? false;
         token.isTenantAdmin =
           (user as typeof user & { isTenantAdmin?: boolean }).isTenantAdmin ?? false;
+        token.isHumiAdmin =
+          (user as typeof user & { isHumiAdmin?: boolean }).isHumiAdmin ?? false;
+        token.humiAdminPermissions =
+          (user as typeof user & { humiAdminPermissions?: object | null }).humiAdminPermissions ?? null;
         // orgSubdomain stored for Edge middleware cross-tenant guard (avoids DB in middleware)
         token.orgSubdomain =
           (user as typeof user & { orgSubdomain?: string | null }).orgSubdomain ?? null;
@@ -454,6 +527,10 @@ export const authOptions: NextAuthOptions = {
         user.tenantId = (token.tenantId as string) ?? null;
         user.isSuperAdmin = (token.isSuperAdmin as boolean) ?? false;
         user.isTenantAdmin = (token.isTenantAdmin as boolean) ?? false;
+        (user as typeof user & { isHumiAdmin: boolean }).isHumiAdmin =
+          (token.isHumiAdmin as boolean) ?? false;
+        (user as typeof user & { humiAdminPermissions: object | null }).humiAdminPermissions =
+          (token.humiAdminPermissions as object | null) ?? null;
       }
       return session;
     },

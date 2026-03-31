@@ -74,6 +74,8 @@ export async function proxy(request: NextRequest) {
   // ── Auth token (decoded JWT — no DB call) ────────────────────────────────
   const needsAuth =
     pathname.startsWith("/superadmin") ||
+    (pathname.startsWith("/humi-admin") && !pathname.startsWith("/humi-admin/login")) ||
+    pathname.startsWith("/api/humi-admin") ||
     (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) ||
     pathname.startsWith("/api/admin") ||
     (pathname.startsWith("/student") && !pathname.startsWith("/student/login")) ||
@@ -89,6 +91,29 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/superadmin") && !pathname.startsWith("/superadmin/login")) {
     if (!token?.isSuperAdmin) {
       return NextResponse.redirect(new URL("/superadmin/login", request.url));
+    }
+  }
+
+  // ── HUMI Admin route protection ──────────────────────────────────────────
+  const isHumiAdminRoute = pathname.startsWith("/humi-admin") && !pathname.startsWith("/humi-admin/login");
+  const isHumiAdminApi = pathname.startsWith("/api/humi-admin");
+
+  if (isHumiAdminRoute || isHumiAdminApi) {
+    if (!token || token.isHumiAdmin !== true) {
+      if (isHumiAdminApi) {
+        return NextResponse.json({ success: false, data: null, error: "Unauthorized" }, { status: 401 });
+      }
+      const loginUrl = new URL("/humi-admin/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  // Block HUMI Admins from accessing tenant or platform admin routes
+  if (token?.isHumiAdmin === true) {
+    const blockedPrefixes = ["/admin", "/superadmin", "/student", "/trainer", "/corporate"];
+    if (blockedPrefixes.some((p) => pathname.startsWith(p))) {
+      return NextResponse.redirect(new URL("/humi-admin", request.url));
     }
   }
 

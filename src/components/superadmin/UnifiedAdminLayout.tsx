@@ -35,6 +35,7 @@ interface UnifiedAdminLayoutProps {
 const PLATFORM_NAV = [
   { href: "/superadmin", label: "Overview", icon: LayoutDashboard, exact: true },
   { href: "/superadmin/tenants", label: "Tenants", icon: Building2 },
+  { href: "/superadmin/humi-admins", label: "HUMI Admins", icon: Shield },
   { href: "/superadmin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/superadmin/settings", label: "Platform Settings", icon: Settings },
 ] as const;

@@ -335,6 +335,29 @@ model Admin {
   @@map("admins")
 }
 
+model HumiAdmin {
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  passwordHash          String
+  name                  String
+  isActive              Boolean   @default(true)
+  failedAttempts        Int       @default(0)
+  mustChangePassword    Boolean   @default(true)
+  resetToken            String?   @unique
+  resetTokenExpiresAt   DateTime?
+  // Feature-based permissions (principle of least privilege — all false by default)
+  canReviewTenants      Boolean   @default(false)
+  canOnboardTenants     Boolean   @default(false)
+  canMonitorPlatform    Boolean   @default(false)
+  canProvideSupport     Boolean   @default(false)
+  canManageContent      Boolean   @default(false)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([email])
+  @@map("humi_admins")
+}
+
 model Student {
   id                 String               @id @default(cuid())
   enrollmentId       String               @unique
@@ -1241,6 +1264,7 @@ model Organization {
   secondaryColor String?
   faviconUrl     String?
   bannerImageUrl String?
+  adminRoleLabel String?     @db.VarChar(50)
   mission        String?     @db.Text
   vision         String?     @db.Text
   createdAt      DateTime    @default(now())
@@ -1366,6 +1390,7 @@ enum TicketCategory {
 
 enum ActorType {
   ADMIN
+  HUMI_ADMIN
   STUDENT
   TRAINER
   CORPORATE_MANAGER

@@ -1,6 +1,14 @@
 import "next-auth";
 import "next-auth/jwt";
 
+export type HumiAdminPermissions = {
+  canReviewTenants: boolean;
+  canOnboardTenants: boolean;
+  canMonitorPlatform: boolean;
+  canProvideSupport: boolean;
+  canManageContent: boolean;
+};
+
 declare module "next-auth" {
   interface Session {
     user: {
@@ -10,10 +18,12 @@ declare module "next-auth" {
       role: string;
       isSuperAdmin: boolean;
       isTenantAdmin: boolean;
+      isHumiAdmin: boolean;
       tenantId: string | null;
       organizationId: string | null;
       mustChangePassword: boolean;
       accessExpiry: string | null;
+      humiAdminPermissions: HumiAdminPermissions | null;
     };
   }
 }
@@ -24,9 +34,11 @@ declare module "next-auth/jwt" {
     role: string;
     isSuperAdmin: boolean;
     isTenantAdmin: boolean;
+    isHumiAdmin: boolean;
     tenantId: string | null;
     organizationId: string | null;
     mustChangePassword: boolean;
     accessExpiry: string | null;
+    humiAdminPermissions: HumiAdminPermissions | null;
   }
 }
