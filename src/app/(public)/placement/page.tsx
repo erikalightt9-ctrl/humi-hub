@@ -30,7 +30,7 @@ const HOW_IT_WORKS = [
     icon: Briefcase,
     title: "Match to Jobs",
     description:
-      "Browse job listings curated for HUMI graduates and apply directly to roles that align with your skills and goals.",
+      "Browse job listings curated for Humi Hub graduates and apply directly to roles that align with your skills and goals.",
   },
   {
     step: 4,
@@ -101,7 +101,7 @@ export default function PlacementPage() {
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-2xl font-bold mb-3">Ready to Launch Your Career?</h2>
           <p className="text-blue-100 text-sm mb-6 leading-relaxed">
-            Enroll in a HUMI training program today and gain access to all placement services
+            Enroll in a Humi Hub training program today and gain access to all placement services
             including resume support, AI mock interviews, job matching, and career coaching.
           </p>
           <Button asChild size="lg" className="bg-white text-blue-700 hover:bg-blue-50 font-semibold">

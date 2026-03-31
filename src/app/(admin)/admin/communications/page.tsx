@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { MessageSquare } from "lucide-react";
 
-export const metadata: Metadata = { title: "Communications | HUMI Admin" };
+export const metadata: Metadata = { title: "Communications | Humi Hub Admin" };
 
 export default async function CommunicationsPage() {
   const [contactMessages, forumStats] = await Promise.all([

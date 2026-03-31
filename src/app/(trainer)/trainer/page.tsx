@@ -19,7 +19,7 @@ import {
 import { getRatingsByTrainer } from "@/lib/repositories/trainer-rating.repository";
 import { ScheduleStatusBadge } from "@/components/admin/ScheduleStatusBadge";
 
-export const metadata: Metadata = { title: "Dashboard | HUMI Trainer Portal" };
+export const metadata: Metadata = { title: "Dashboard | Humi Hub Trainer Portal" };
 export const dynamic = "force-dynamic";
 
 // ---------------------------------------------------------------------------

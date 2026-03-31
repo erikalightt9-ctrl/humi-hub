@@ -9,7 +9,7 @@ import { SubscriptionGate } from "@/components/student/SubscriptionGate";
 import { Mail } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Email Practice | HUMI Student",
+  title: "Email Practice | Humi Hub Student",
 };
 
 export default async function AIEmailPracticePage() {

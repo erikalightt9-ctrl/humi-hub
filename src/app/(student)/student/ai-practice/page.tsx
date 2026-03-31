@@ -9,7 +9,7 @@ import { getAIPracticeData } from "@/lib/constants/ai-practice-scenarios";
 import { AIPracticeScenarioCard } from "@/components/student/AIPracticeScenarioCard";
 import { Bot, FileText, Calendar, Shield, MessageCircle, Home, Users, TrendingUp, ClipboardList, Database, Receipt, Building, Tags, BarChart, ArrowLeftRight } from "lucide-react";
 
-export const metadata: Metadata = { title: "AI Practice | HUMI Student" };
+export const metadata: Metadata = { title: "AI Practice | Humi Hub Student" };
 
 /* Map icon string names to Lucide components */
 const ICON_MAP: Record<string, typeof Bot> = {

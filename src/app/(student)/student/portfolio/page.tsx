@@ -9,7 +9,7 @@ import { PortfolioPreview } from "@/components/student/PortfolioPreview";
 import { PortfolioToggle } from "@/components/student/PortfolioToggle";
 import { UserCircle } from "lucide-react";
 
-export const metadata: Metadata = { title: "My Portfolio | HUMI Student" };
+export const metadata: Metadata = { title: "My Portfolio | Humi Hub Student" };
 
 export default async function StudentPortfolioPage() {
   const session = await getServerSession(authOptions);

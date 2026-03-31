@@ -8,7 +8,7 @@ import { getOrganizationDashboardStats } from "@/lib/repositories/organization.r
 import { CorporateDashboard } from "@/components/corporate/CorporateDashboard";
 
 export const metadata: Metadata = {
-  title: "Dashboard | HUMI Corporate",
+  title: "Dashboard | Humi Hub Corporate",
 };
 
 export default async function CorporateDashboardPage() {

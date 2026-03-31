@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { getTrainerSchedules } from "@/lib/repositories/trainer.repository";
 import { ScheduleStatusBadge } from "@/components/admin/ScheduleStatusBadge";
 
-export const metadata: Metadata = { title: "My Schedule | HUMI Trainer Portal" };
+export const metadata: Metadata = { title: "My Schedule | Humi Hub Trainer Portal" };
 export const dynamic = "force-dynamic";
 
 // ---------------------------------------------------------------------------

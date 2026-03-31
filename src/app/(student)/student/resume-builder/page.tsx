@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { ResumeBuilder } from "@/components/student/ResumeBuilder";
 import { FileText } from "lucide-react";
 
-export const metadata: Metadata = { title: "Resume Builder | HUMI Student" };
+export const metadata: Metadata = { title: "Resume Builder | Humi Hub Student" };
 
 export default async function ResumeBuilderPage() {
   const session = await getServerSession(authOptions);

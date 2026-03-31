@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { TrainingAnnouncements } from "@/components/corporate/TrainingAnnouncements";
 
-export const metadata: Metadata = { title: "Announcements | HUMI Corporate" };
+export const metadata: Metadata = { title: "Announcements | Humi Hub Corporate" };
 
 export default async function CorporateAnnouncementsPage() {
   const session = await getServerSession(authOptions);

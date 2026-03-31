@@ -23,7 +23,7 @@ export default async function PostJobPage() {
         </Link>
         <h1 className="text-2xl font-extrabold text-gray-900 mb-2">Post a New Job</h1>
         <p className="text-gray-600 mb-6 text-sm">
-          Your listing will be visible to all HUMI graduates seeking placement.
+          Your listing will be visible to all Humi Hub graduates seeking placement.
         </p>
         <JobPostingForm />
       </div>

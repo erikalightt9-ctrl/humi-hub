@@ -5,7 +5,7 @@ import { AdminAttendancePageClient } from "@/components/admin/AdminAttendancePag
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Attendance Analytics | HUMI Admin",
+  title: "Attendance Analytics | Humi Hub Admin",
   description: "Course-level attendance analytics for Humi Hub",
 };
 

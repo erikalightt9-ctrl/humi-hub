@@ -81,7 +81,7 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
             <Shield className="h-4 w-4 text-white" />
           </div>
           <div>
-            <p className="text-sm font-bold text-white leading-none">HUMI</p>
+            <p className="text-sm font-bold text-white leading-none">Humi Hub</p>
             <p className="text-[10px] text-blue-200 mt-0.5">Super Admin</p>
           </div>
         </div>

@@ -8,7 +8,7 @@ import { getTheme } from "@/lib/services/tenant-theme.service";
 import { ThemeEditor } from "@/components/theme-panel/ThemeEditor";
 
 export const metadata: Metadata = {
-  title: "Brand & Theme | HUMI Corporate",
+  title: "Brand & Theme | Humi Hub Corporate",
 };
 
 export default async function CorporateThemePage() {

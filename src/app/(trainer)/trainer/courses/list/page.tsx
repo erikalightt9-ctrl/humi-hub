@@ -13,7 +13,7 @@ import {
 import { authOptions } from "@/lib/auth";
 import { getTrainerCourses } from "@/lib/repositories/trainer.repository";
 
-export const metadata: Metadata = { title: "My Courses | HUMI Trainer Portal" };
+export const metadata: Metadata = { title: "My Courses | Humi Hub Trainer Portal" };
 export const dynamic = "force-dynamic";
 
 export default async function TrainerCourseListPage() {

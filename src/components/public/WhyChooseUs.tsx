@@ -75,10 +75,10 @@ export function WhyChooseUs() {
         {/* Header */}
         <div className="text-center mb-14">
           <p className="text-blue-400 font-semibold text-sm uppercase tracking-wide mb-2">
-            Why HUMI
+            Why Humi Hub
           </p>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
-            The HUMI <span className="text-blue-400">Advantage</span>
+            The Humi Hub <span className="text-blue-400">Advantage</span>
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto text-lg">
             We don&apos;t just teach skills — we build careers. Our platform

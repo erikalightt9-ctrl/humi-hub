@@ -12,7 +12,7 @@ import Link from "next/link";
 import type { EnrollmentFilters } from "@/types";
 import type { EnrollmentStatus } from "@prisma/client";
 
-export const metadata: Metadata = { title: "Student Directory | HUMI Admin" };
+export const metadata: Metadata = { title: "Student Directory | Humi Hub Admin" };
 
 interface PageProps {
   searchParams: Promise<{

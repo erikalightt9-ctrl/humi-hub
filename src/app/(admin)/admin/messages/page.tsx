@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { MessagingView } from "@/components/shared/MessagingView";
 import { BroadcastMessageComposer } from "@/components/admin/BroadcastMessageComposer";
 
-export const metadata: Metadata = { title: "Messages | HUMI Admin" };
+export const metadata: Metadata = { title: "Messages | Humi Hub Admin" };
 
 export default async function AdminMessagesPage() {
   const session = await getServerSession(authOptions);

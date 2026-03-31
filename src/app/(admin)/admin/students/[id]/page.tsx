@@ -12,7 +12,7 @@ import { StudentDetailTabs } from "@/components/admin/StudentDetailTabs";
 /*  Metadata                                                            */
 /* ------------------------------------------------------------------ */
 
-export const metadata: Metadata = { title: "Student Detail | HUMI Admin" };
+export const metadata: Metadata = { title: "Student Detail | Humi Hub Admin" };
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                               */

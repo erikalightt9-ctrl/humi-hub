@@ -298,7 +298,7 @@ export default function PricingPage() {
           Ready to launch your training platform?
         </h2>
         <p className="text-blue-200 mb-8 text-sm">
-          Join hundreds of training centers already running on HUMI.
+          Join hundreds of training centers already running on Humi Hub.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link

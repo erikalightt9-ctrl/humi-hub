@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Users, BookOpen, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Students | HUMI Corporate",
+  title: "Students | Humi Hub Corporate",
 };
 
 export default async function CorporateEmployeesPage() {

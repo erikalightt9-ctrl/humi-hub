@@ -66,7 +66,7 @@ export function HeroSection() {
               <strong className="text-white">individual professional</strong>{" "}
               advancing your career or an{" "}
               <strong className="text-white">organization</strong>{" "}
-              building a skilled workforce — HUMI delivers
+              building a skilled workforce — Humi Hub delivers
               industry-specific training that produces results.
             </p>
 

@@ -32,7 +32,7 @@ export async function sendTrainerCredentialsEmail(
   </div>
   <div style="background: #f9fafb; padding: 32px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
     <h2 style="color: #1d4ed8; margin-top: 0;">Welcome, ${opts.name}!</h2>
-    <p>You have been granted access to the <strong>HUMI Trainer Portal</strong>. You can now manage your training schedules, students, and course materials.</p>
+    <p>You have been granted access to the <strong>Humi Hub Trainer Portal</strong>. You can now manage your training schedules, students, and course materials.</p>
     <div style="background: #fff; border: 1px solid #d1d5db; border-radius: 6px; padding: 20px; margin: 24px 0;">
       <p style="margin: 0 0 8px; font-weight: bold; color: #374151;">Your Login Credentials:</p>
       <p style="margin: 4px 0;">Email: <strong>${opts.email}</strong></p>

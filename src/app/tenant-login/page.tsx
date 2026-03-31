@@ -285,7 +285,7 @@ function TenantLoginContent() {
           {slug}.portal
         </span>
         <p className="text-xs text-slate-400">
-          Powered by <span className="font-semibold text-slate-500">HUMI</span>
+          Powered by <span className="font-semibold text-slate-500">Humi Hub</span>
         </p>
       </div>
     </div>

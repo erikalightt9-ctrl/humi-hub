@@ -9,7 +9,7 @@ import { getAllTierConfigs } from "@/lib/repositories/trainer-tier.repository";
 import { UserCog } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Trainers | HUMI Admin",
+  title: "Trainers | Humi Hub Admin",
 };
 
 export default async function TrainersPage() {

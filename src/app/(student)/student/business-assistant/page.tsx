@@ -9,7 +9,7 @@ import { SubscriptionGate } from "@/components/student/SubscriptionGate";
 import { Briefcase } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Business Assistant | HUMI Student",
+  title: "Business Assistant | Humi Hub Student",
 };
 
 export default async function BusinessAssistantPage() {

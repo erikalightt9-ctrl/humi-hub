@@ -42,7 +42,7 @@ export default function TrainerLoginPage() {
             <UserCog className="h-6 w-6 text-white" />
           </div>
           <div className="text-center">
-            <p className="text-white font-bold text-lg leading-tight">HUMI</p>
+            <p className="text-white font-bold text-lg leading-tight">Humi Hub</p>
             <p className="text-white/70 text-sm mt-0.5">Trainer Portal</p>
           </div>
         </div>

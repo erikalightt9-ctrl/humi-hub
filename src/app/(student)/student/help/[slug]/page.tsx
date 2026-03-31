@@ -13,7 +13,7 @@ interface Article {
   readonly updatedAt: string;
 }
 
-export const metadata: Metadata = { title: "Help Article | HUMI Student" };
+export const metadata: Metadata = { title: "Help Article | Humi Hub Student" };
 
 export default async function HelpArticlePage({
   params,

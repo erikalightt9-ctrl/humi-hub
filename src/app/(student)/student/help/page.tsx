@@ -4,7 +4,7 @@ import Link from "next/link";
 import { BookOpen, Search } from "lucide-react";
 import { KB_CATEGORIES } from "@/lib/constants/communications";
 
-export const metadata: Metadata = { title: "Help Center | HUMI Student" };
+export const metadata: Metadata = { title: "Help Center | Humi Hub Student" };
 
 interface Article {
   readonly id: string;

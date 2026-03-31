@@ -7,7 +7,7 @@ import { CourseManager } from "@/components/admin/CourseManager";
 import { BookOpen, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "All Courses | HUMI Admin" };
+export const metadata: Metadata = { title: "All Courses | Humi Hub Admin" };
 
 export default async function CourseListPage() {
   const session = await getServerSession(authOptions);

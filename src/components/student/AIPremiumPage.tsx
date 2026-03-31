@@ -369,7 +369,7 @@ export function AIPremiumPage() {
             <p className="font-medium">Send payment via:</p>
             <div className="space-y-1 text-xs">
               <p>
-                <strong>GCash:</strong> 0917-XXX-XXXX (HUMI Training)
+                <strong>GCash:</strong> 0917-XXX-XXXX (Humi Hub Training)
               </p>
               <p>
                 <strong>Bank Transfer:</strong> BDO SA 001234567890

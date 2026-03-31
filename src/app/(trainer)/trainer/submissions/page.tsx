@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth";
 import TrainerGradingQueue from "@/components/trainer/TrainerGradingQueue";
 
 export const metadata: Metadata = {
-  title: "Grading Queue | HUMI Trainer Portal",
+  title: "Grading Queue | Humi Hub Trainer Portal",
 };
 export const dynamic = "force-dynamic";
 

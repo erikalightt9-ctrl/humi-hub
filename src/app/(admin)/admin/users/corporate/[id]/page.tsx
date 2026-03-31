@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CorporateDetailClient } from "@/components/admin/CorporateDetailClient";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Company Detail | HUMI Admin" };
+export const metadata: Metadata = { title: "Company Detail | Humi Hub Admin" };
 
 export default async function CorporateDetailPage({
   params,

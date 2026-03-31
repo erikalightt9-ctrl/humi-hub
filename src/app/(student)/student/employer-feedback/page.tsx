@@ -9,7 +9,7 @@ import { EmployerFeedbackList } from "@/components/student/EmployerFeedbackList"
 import { MessageSquare } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Employer Feedback | HUMI Student",
+  title: "Employer Feedback | Humi Hub Student",
 };
 
 export default async function EmployerFeedbackPage() {

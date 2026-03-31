@@ -8,7 +8,7 @@ import { getOrganizationAnalytics } from "@/lib/repositories/organization.reposi
 import { BarChart3, Users, Award, BookOpen } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Analytics | HUMI Corporate",
+  title: "Analytics | Humi Hub Corporate",
 };
 
 export default async function CorporateAnalyticsPage() {

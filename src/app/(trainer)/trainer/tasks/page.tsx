@@ -13,7 +13,7 @@ import { authOptions } from "@/lib/auth";
 import { ModuleDashboard } from "@/components/shared/ModuleDashboard";
 import type { DashboardCardProps } from "@/components/shared/DashboardCard";
 
-export const metadata: Metadata = { title: "Tasks | HUMI Trainer Portal" };
+export const metadata: Metadata = { title: "Tasks | Humi Hub Trainer Portal" };
 
 const TASKS_CARDS: ReadonlyArray<Omit<DashboardCardProps, "currentRole">> = [
   {
