@@ -112,28 +112,36 @@ export async function POST(request: NextRequest) {
     }
 
     // ── OpenAI Streaming ─────────────────────────────────────────────────────
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    const role = token?.role as string | undefined;
-    const currentPage = body.currentPage as string | undefined;
+    try {
+      const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+      const role = token?.role as string | undefined;
+      const currentPage = body.currentPage as string | undefined;
 
-    const stream = role
-      ? await streamChatResponseWithRole(result.data.messages, role, currentPage)
-      : await streamChatResponse(result.data.messages);
+      const stream = role
+        ? await streamChatResponseWithRole(result.data.messages, role, currentPage)
+        : await streamChatResponse(result.data.messages);
 
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    });
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    } catch (openaiError) {
+      // OpenAI unavailable — fall back to FAQ response
+      console.warn("OpenAI unavailable, using FAQ fallback:", openaiError);
+      const answer = faqFallbackResponse(userText);
+      return streamTextAnswer(answer);
+    }
   } catch (error) {
     console.error("Chat API error:", error);
+    // Last-resort: return a helpful message instead of a generic error
     return NextResponse.json(
       {
         success: false,
         data: null,
-        error: "Chat is temporarily unavailable. Please try again shortly.",
+        error: "Sorry, I couldn't process your message. Please try again or visit /contact for help.",
       },
       { status: 500 }
     );
