@@ -101,7 +101,7 @@ const MODULE_GROUPS = [
 
 const COMPARISON = [
   { label: "Traditional LMS",       items: ["Single tenant", "Shared data risk", "Manual setup", "No white-label", "Limited AI"] },
-  { label: "Humi Hub Training Platform", items: ["True multi-tenant", "Fully isolated data", "Instant provisioning", "Full white-label", "AI tools built-in"] },
+  { label: "HUMI Hub Training Platform", items: ["True multi-tenant", "Fully isolated data", "Instant provisioning", "Full white-label", "AI tools built-in"] },
 ] as const;
 
 /* ------------------------------------------------------------------ */
@@ -121,7 +121,7 @@ export default function FeaturesPage() {
           Everything your training business needs — in one platform
         </h1>
         <p className="text-blue-200 text-lg max-w-xl mx-auto mb-8">
-          From course delivery to AI tools, from analytics to white-label branding — Humi Hub gives
+          From course delivery to AI tools, from analytics to white-label branding — HUMI Hub gives
           you the full stack to run and scale your training center.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
@@ -143,7 +143,7 @@ export default function FeaturesPage() {
       {/* Core pillars */}
       <section className="max-w-6xl mx-auto px-4 py-20">
         <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">Built for multi-tenant scale</h2>
-        <p className="text-center text-gray-500 text-sm mb-12">The foundation that makes Humi Hub different from every other LMS.</p>
+        <p className="text-center text-gray-500 text-sm mb-12">The foundation that makes HUMI Hub different from every other LMS.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {PILLARS.map((p) => {
             const Icon = p.icon;
@@ -192,10 +192,10 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* Humi Hub vs Traditional */}
+      {/* HUMI Hub vs Traditional */}
       <section className="max-w-4xl mx-auto px-4 py-20">
-        <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">Humi Hub vs Traditional LMS</h2>
-        <p className="text-center text-gray-500 text-sm mb-12">Why training businesses are switching to Humi Hub.</p>
+        <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">HUMI Hub vs Traditional LMS</h2>
+        <p className="text-center text-gray-500 text-sm mb-12">Why training businesses are switching to HUMI Hub.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {COMPARISON.map((col, i) => (
             <div

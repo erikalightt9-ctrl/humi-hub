@@ -11,7 +11,7 @@ import { prisma } from "@/lib/prisma";
 import type { ScheduleFilters as ScheduleFilterType } from "@/types";
 import type { ScheduleStatus } from "@prisma/client";
 
-export const metadata: Metadata = { title: "Schedules | Humi Hub Admin" };
+export const metadata: Metadata = { title: "Schedules | HUMI Hub Admin" };
 
 interface PageProps {
   searchParams: Promise<{

@@ -5,8 +5,8 @@ import { AdminAttendancePageClient } from "@/components/admin/AdminAttendancePag
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Attendance Analytics | Humi Hub Admin",
-  description: "Course-level attendance analytics for Humi Hub",
+  title: "Attendance Analytics | HUMI Hub Admin",
+  description: "Course-level attendance analytics for HUMI Hub",
 };
 
 export default async function AdminAttendancePage() {

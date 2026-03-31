@@ -5,7 +5,7 @@ import { findEnrollmentById } from "@/lib/repositories/enrollment.repository";
 import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Payment Successful | Humi Hub",
+  title: "Payment Successful | HUMI Hub",
 };
 
 export default async function PaymentSuccessPage({

@@ -48,7 +48,7 @@ function SitePreview({ data }: { data: SiteData }) {
           <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
         </div>
         <span className="text-xs text-gray-400 ml-1 font-mono truncate">
-          {data.subdomain ? `${data.subdomain}.vatrainingcenter.com` : "yourorg.vatrainingcenter.com"}
+          {data.subdomain ? `${data.subdomain}.humihub.com` : "yourorg.humihub.com"}
         </span>
       </div>
 

@@ -38,7 +38,7 @@ export type PublicSettings = {
 /* ------------------------------------------------------------------ */
 
 const PLATFORM_DEFAULTS = {
-  siteName: "Humi Hub",
+  siteName: "HUMI Hub",
   timezone: "Asia/Manila",
   currency: "PHP",
   language: "en",
@@ -49,7 +49,7 @@ const EMAIL_DEFAULTS = {
   smtpPort: 587,
   smtpUser: "",
   smtpPassword: "",
-  fromName: "Humi Hub",
+  fromName: "HUMI Hub",
   fromEmail: "",
   enrollmentEmails: true,
   lessonEmails: true,

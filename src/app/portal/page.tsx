@@ -5,7 +5,7 @@ import { TenantFinder } from "@/components/public/TenantFinder";
 
 export const metadata: Metadata = {
   title: "Portal — Select Your Role",
-  description: "Access the VA Training Center admin or student portal.",
+  description: "Access the HUMI Hub admin or student portal.",
 };
 
 export default function PortalPage() {
@@ -18,7 +18,7 @@ export default function PortalPage() {
           className="flex items-center gap-2 text-white/90 hover:text-white transition-colors"
         >
           <GraduationCap className="h-7 w-7 text-blue-300" />
-          <span className="font-bold text-lg tracking-tight">VA Training Center</span>
+          <span className="font-bold text-lg tracking-tight">HUMI Hub</span>
         </Link>
         <Link
           href="/"
@@ -158,7 +158,7 @@ export default function PortalPage() {
 
       {/* Footer */}
       <div className="text-center py-4 text-blue-400 text-xs">
-        &copy; {new Date().getFullYear()} VA Training Center. All rights reserved.
+        &copy; {new Date().getFullYear()} HUMI Hub. All rights reserved.
       </div>
     </div>
   );

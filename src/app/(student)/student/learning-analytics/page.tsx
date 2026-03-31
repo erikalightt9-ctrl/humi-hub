@@ -9,7 +9,7 @@ import { LearningAnalytics } from "@/components/student/LearningAnalytics";
 import { BarChart3 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Learning Analytics | Humi Hub Student",
+  title: "Learning Analytics | HUMI Hub Student",
 };
 
 export default async function LearningAnalyticsPage() {

@@ -18,7 +18,7 @@ interface BaseLayoutProps {
 export function BaseLayout({
   children,
   previewText,
-  siteName = "Humi Hub",
+  siteName = "HUMI Hub",
 }: BaseLayoutProps) {
   return (
     <Html lang="en">

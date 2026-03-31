@@ -8,7 +8,7 @@ import { JobApplicationManager } from "@/components/admin/JobApplicationManager"
 import { ClipboardCheck } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Job Applications | Humi Hub Admin",
+  title: "Job Applications | HUMI Hub Admin",
 };
 
 export default async function JobApplicationsPage() {

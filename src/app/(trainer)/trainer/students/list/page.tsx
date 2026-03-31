@@ -7,7 +7,7 @@ import { authOptions } from "@/lib/auth";
 import { getTrainerStudents } from "@/lib/repositories/trainer.repository";
 import { StudentProgressTable } from "@/components/trainer/StudentProgressTable";
 
-export const metadata: Metadata = { title: "My Students | Humi Hub Trainer Portal" };
+export const metadata: Metadata = { title: "My Students | HUMI Hub Trainer Portal" };
 export const dynamic = "force-dynamic";
 
 export default async function TrainerStudentListPage() {

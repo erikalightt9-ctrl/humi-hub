@@ -7,7 +7,7 @@ import { StudentEngagementTable } from "@/components/admin/StudentEngagementTabl
 import { AttendanceLiveTable } from "@/components/admin/AttendanceLiveTable";
 import { TrainerUtilizationTable } from "@/components/admin/TrainerUtilizationTable";
 
-export const metadata: Metadata = { title: "Analytics | Humi Hub Admin" };
+export const metadata: Metadata = { title: "Analytics | HUMI Hub Admin" };
 
 export default async function AnalyticsPage() {
   const [courseMetrics, trainerStats] = await Promise.all([

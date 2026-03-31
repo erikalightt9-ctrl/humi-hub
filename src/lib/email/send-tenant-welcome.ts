@@ -17,7 +17,7 @@ export async function sendTenantWelcomeEmail(opts: TenantWelcomeOptions): Promis
   const rootDomain = process.env.ROOT_DOMAIN ?? "localhost:3000";
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
   const portalUrl = `${protocol}://${opts.subdomain}.${rootDomain}/corporate/login`;
-  const supportEmail = process.env.SUPPORT_EMAIL ?? "support@vatrainingcenter.com";
+  const supportEmail = process.env.SUPPORT_EMAIL ?? "support@humihub.com";
 
   const planLabel =
     opts.plan.charAt(0) + opts.plan.slice(1).toLowerCase(); // e.g. "Trial", "Starter"
@@ -30,7 +30,7 @@ export async function sendTenantWelcomeEmail(opts: TenantWelcomeOptions): Promis
 
   <!-- Header -->
   <div style="background: linear-gradient(135deg, #1d4ed8 0%, #4338ca 100%); padding: 32px 28px; border-radius: 12px 12px 0 0; text-align: center;">
-    <h1 style="color: #fff; margin: 0; font-size: 26px; letter-spacing: -0.3px;">Welcome to VA Training Center</h1>
+    <h1 style="color: #fff; margin: 0; font-size: 26px; letter-spacing: -0.3px;">Welcome to HUMI Hub</h1>
     <p style="color: #c7d2fe; margin: 10px 0 0; font-size: 15px;">Your organization portal is ready</p>
   </div>
 
@@ -98,24 +98,24 @@ export async function sendTenantWelcomeEmail(opts: TenantWelcomeOptions): Promis
     <p style="color: #6b7280; font-size: 13px; margin: 0; line-height: 1.6;">
       Questions? Reply to this email or reach us at
       <a href="mailto:${supportEmail}" style="color: #1d4ed8;">${supportEmail}</a>.<br>
-      VA Training Center &bull; Empowering teams through learning.
+      HUMI Hub &bull; Empowering teams through learning.
     </p>
   </div>
 
 </body>
 </html>`;
 
-  const fromName = process.env.EMAIL_FROM_NAME ?? "VA Training Center";
+  const fromName = process.env.EMAIL_FROM_NAME ?? "HUMI Hub";
   const fromAddr =
     process.env.EMAIL_FROM_ADDRESS ??
     process.env.GMAIL_USER ??
-    "noreply@vatrainingcenter.com";
+    "noreply@humihub.com";
 
   await sendMailWithRetry(
     {
       from: `"${fromName}" <${fromAddr}>`,
       to: opts.adminEmail,
-      subject: `Welcome to VA Training Center — Your ${planLabel} Portal is Ready`,
+      subject: `Welcome to HUMI Hub — Your ${planLabel} Portal is Ready`,
       html,
     },
     `Tenant welcome email to ${opts.adminEmail} (${opts.orgName})`,

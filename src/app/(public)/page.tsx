@@ -12,7 +12,7 @@ import { SaasTestimonialsSection } from "@/components/public/SaasTestimonialsSec
 import { FaqSection } from "@/components/public/FaqSection";
 
 export const metadata: Metadata = {
-  title: "Humi Hub — All-in-One Training Management Platform",
+  title: "HUMI Hub — All-in-One Training Management Platform",
   description:
     "Manage students, trainers, courses, messaging, and analytics — all in one powerful system. Built for modern training centers and academies.",
 };

@@ -201,7 +201,7 @@ export default function InvitePage() {
       </div>
 
       <p className="mt-6 text-xs text-slate-400">
-        Powered by <span className="font-semibold text-slate-500">Humi Hub</span>
+        Powered by <span className="font-semibold text-slate-500">HUMI Hub</span>
       </p>
     </div>
   );

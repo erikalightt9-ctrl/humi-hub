@@ -8,7 +8,7 @@ import { InternshipProgram } from "@/components/student/InternshipProgram";
 import { GraduationCap } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Internship Program | Humi Hub Student",
+  title: "Internship Program | HUMI Hub Student",
 };
 
 export default async function InternshipProgramPage() {

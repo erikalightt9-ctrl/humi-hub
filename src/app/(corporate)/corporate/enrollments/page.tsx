@@ -8,7 +8,7 @@ import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "Enrollments | Humi Hub Corporate",
+  title: "Enrollments | HUMI Hub Corporate",
 };
 
 export default async function CorporateEnrollmentsPage() {

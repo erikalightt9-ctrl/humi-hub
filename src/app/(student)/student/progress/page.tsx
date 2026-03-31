@@ -18,7 +18,7 @@ import { authOptions } from "@/lib/auth";
 import { ModuleDashboard } from "@/components/shared/ModuleDashboard";
 import type { DashboardCardProps } from "@/components/shared/DashboardCard";
 
-export const metadata: Metadata = { title: "Progress | Humi Hub Student" };
+export const metadata: Metadata = { title: "Progress | HUMI Hub Student" };
 
 const PROGRESS_CARDS: ReadonlyArray<Omit<DashboardCardProps, "currentRole">> = [
   {

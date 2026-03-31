@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { TenantRevenueClient } from "@/components/admin/TenantRevenueClient";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Revenue | Humi Hub Admin" };
+export const metadata: Metadata = { title: "Revenue | HUMI Hub Admin" };
 
 export default async function TenantRevenuePage() {
   const session = await getServerSession(authOptions);

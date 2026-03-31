@@ -39,7 +39,7 @@ export function EnrollmentCTASection() {
 
         <p className="text-blue-100 text-lg sm:text-xl max-w-2xl mx-auto mb-8 leading-relaxed">
           Join thousands of professionals who transformed their careers through
-          Humi Hub. Applications are open year-round — start your
+          HUMI Hub. Applications are open year-round — start your
           journey today.
         </p>
 

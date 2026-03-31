@@ -6,7 +6,7 @@ import { PlacementManager } from "@/components/admin/PlacementManager";
 import { Briefcase } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Placements | Humi Hub Admin",
+  title: "Placements | HUMI Hub Admin",
 };
 
 export default async function PlacementsPage() {

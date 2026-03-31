@@ -2,7 +2,7 @@
 import { StudentRankingBoard } from "@/components/public/StudentRankingBoard";
 
 export const metadata: Metadata = {
-  title: "Student Ranking | Humi Hub",
+  title: "Student Ranking | HUMI Hub",
   description:
     "See the top-performing virtual assistant students ranked by composite scores across career readiness, quizzes, assignments, and more.",
 };

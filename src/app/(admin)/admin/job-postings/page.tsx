@@ -8,7 +8,7 @@ import { JobPostingManager } from "@/components/admin/JobPostingManager";
 import { Briefcase } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Job Postings | Humi Hub Admin",
+  title: "Job Postings | HUMI Hub Admin",
 };
 
 export default async function AdminJobPostingsPage() {

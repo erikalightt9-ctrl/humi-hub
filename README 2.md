@@ -1,4 +1,4 @@
-# VA Training Center
+# HUMI Hub
 
 A full-stack Learning Management System (LMS) built for a Virtual Assistant training center. It manages the entire student lifecycle — from enrollment and payment verification to course delivery, assessments, certifications, and gamification.
 
@@ -274,7 +274,7 @@ npm run dev
 ```
 
 ### Default Admin Credentials
-- **Email:** admin@vatrainingcenter.com
+- **Email:** admin@humihub.com
 - **Password:** Admin@123456!
 
 ---

@@ -87,7 +87,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               <GraduationCap className="h-4 w-4 text-white" />
             </div>
             <div>
-              <p className="text-sm font-bold text-white leading-none">Humi Hub</p>
+              <p className="text-sm font-bold text-white leading-none">HUMI Hub</p>
               <p className="text-[10px] text-blue-200 mt-0.5">Admin Portal</p>
             </div>
           </div>
@@ -166,7 +166,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           {/* Logo — mobile only */}
           <div className="flex items-center gap-2 font-bold text-sm text-white md:hidden">
             <GraduationCap className="h-5 w-5 text-ds-primary" />
-            Humi Hub Admin
+            HUMI Hub Admin
           </div>
 
           <div className="flex-1" />

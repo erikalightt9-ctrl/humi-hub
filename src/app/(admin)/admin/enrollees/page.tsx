@@ -17,7 +17,7 @@ import {
 import type { EnrollmentFilters, EnrolleeFilters } from "@/types";
 import type { EnrollmentStatus, StudentPaymentStatus } from "@prisma/client";
 
-export const metadata: Metadata = { title: "Enrollees | Humi Hub Admin" };
+export const metadata: Metadata = { title: "Enrollees | HUMI Hub Admin" };
 
 interface PageProps {
   searchParams: Promise<{

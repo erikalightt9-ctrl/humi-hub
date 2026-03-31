@@ -66,7 +66,7 @@ export default async function CourseLandingPage({ params }: Props) {
   if (!course) notFound();
 
   const primaryColor = tenant?.tenant.primaryColor ?? "#1E3A8A";
-  const tenantName = tenant?.tenant.siteName ?? tenant?.tenant.name ?? "Humi Hub";
+  const tenantName = tenant?.tenant.siteName ?? tenant?.tenant.name ?? "HUMI Hub";
   const logoUrl = tenant?.tenant.logoUrl ?? null;
 
   const price = Number(course.price ?? 0);

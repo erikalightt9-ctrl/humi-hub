@@ -5,7 +5,7 @@ import { PlacementHubCards } from "@/components/placement/PlacementHubCards";
 import { FileText, Mic, Briefcase, Users } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Placement Services — Humi Hub",
+  title: "Placement Services — HUMI Hub",
   description:
     "Comprehensive career placement support including resume building, AI interview practice, job matching, and one-on-one career coaching to help you land your dream role.",
 };
@@ -30,7 +30,7 @@ const HOW_IT_WORKS = [
     icon: Briefcase,
     title: "Match to Jobs",
     description:
-      "Browse job listings curated for Humi Hub graduates and apply directly to roles that align with your skills and goals.",
+      "Browse job listings curated for HUMI Hub graduates and apply directly to roles that align with your skills and goals.",
   },
   {
     step: 4,
@@ -49,7 +49,7 @@ export default function PlacementPage() {
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-4xl font-extrabold mb-4 tracking-tight">Placement Services</h1>
           <p className="text-blue-100 text-lg leading-relaxed">
-            From building your resume to landing your first client, Humi Hub provides
+            From building your resume to landing your first client, HUMI Hub provides
             comprehensive career placement support every step of the way.
           </p>
         </div>
@@ -101,7 +101,7 @@ export default function PlacementPage() {
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-2xl font-bold mb-3">Ready to Launch Your Career?</h2>
           <p className="text-blue-100 text-sm mb-6 leading-relaxed">
-            Enroll in a Humi Hub training program today and gain access to all placement services
+            Enroll in a HUMI Hub training program today and gain access to all placement services
             including resume support, AI mock interviews, job matching, and career coaching.
           </p>
           <Button asChild size="lg" className="bg-white text-blue-700 hover:bg-blue-50 font-semibold">

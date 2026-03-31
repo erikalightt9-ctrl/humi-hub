@@ -64,7 +64,7 @@ function EmailRecoveryPanel({ userType }: { readonly userType: UserType }) {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800 leading-relaxed text-left">
         <p className="font-medium mb-1">To recover your email, please:</p>
         <ol className="list-decimal list-inside space-y-1 text-blue-400">
-          <li>Contact us at <span className="font-medium">info@vatrainingcenter.com</span></li>
+          <li>Contact us at <span className="font-medium">info@humihub.com</span></li>
           <li>Include your full name and the course you enrolled in</li>
           <li>Our team will verify your identity and send your email</li>
         </ol>
@@ -72,7 +72,7 @@ function EmailRecoveryPanel({ userType }: { readonly userType: UserType }) {
 
       <div className="space-y-3 pt-1">
         <Button asChild className="w-full bg-blue-700 hover:bg-blue-800">
-          <a href="mailto:info@vatrainingcenter.com">
+          <a href="mailto:info@humihub.com">
             <Mail className="mr-2 h-4 w-4" />
             Email Support
           </a>
@@ -249,7 +249,7 @@ export function ForgotPasswordForm() {
             </div>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Humi Hub
+            HUMI Hub
           </h1>
           <p className="text-gray-500 text-sm mt-1">
             {isEmailMode ? "Account Recovery" : "Password Reset"}
@@ -271,7 +271,7 @@ export function ForgotPasswordForm() {
           <Link href="/contact" className="text-blue-400 hover:underline">
             Contact us
           </Link>{" "}
-          at info@vatrainingcenter.com
+          at info@humihub.com
         </p>
       </div>
     </div>

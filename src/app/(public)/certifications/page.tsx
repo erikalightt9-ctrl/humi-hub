@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Certifications & Credentials — Humi Hub",
+  title: "Certifications & Credentials — HUMI Hub",
   description:
     "Earn industry-recognized VA certifications in Medical, Real Estate, or US Bookkeeping. Verifiable credentials that prove your expertise.",
 };
@@ -195,7 +195,7 @@ export default function CertificationsPage() {
               How to Earn Your Certificate
             </h2>
             <p className="text-gray-600">
-              Follow these four steps to earn your official Humi Hub
+              Follow these four steps to earn your official HUMI Hub
               certification.
             </p>
           </div>
@@ -235,7 +235,7 @@ export default function CertificationsPage() {
             Verify a Certificate
           </h2>
           <p className="text-gray-600 mb-6 leading-relaxed">
-            All Humi Hub certificates come with a unique verification
+            All HUMI Hub certificates come with a unique verification
             code. Employers and clients can verify the authenticity and validity
             of any certificate online.
           </p>
@@ -252,7 +252,7 @@ export default function CertificationsPage() {
             Earn Your Certification
           </h2>
           <p className="text-blue-100 mb-8 text-lg">
-            Stand out from the competition with a verified Humi Hub
+            Stand out from the competition with a verified HUMI Hub
             certification. Enroll in your chosen specialization today.
           </p>
           <Button

@@ -51,7 +51,7 @@ export function EnrollmentRejectedEmail({
       )}
 
       <Text style={styles.textMuted}>
-        We appreciate your interest in Humi Hub and wish you the best.
+        We appreciate your interest in HUMI Hub and wish you the best.
       </Text>
     </BaseLayout>
   );

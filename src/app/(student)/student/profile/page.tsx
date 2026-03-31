@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { UserCircle } from "lucide-react";
 import { ProfileEditor } from "@/components/student/ProfileEditor";
 
-export const metadata: Metadata = { title: "My Profile | Humi Hub Student" };
+export const metadata: Metadata = { title: "My Profile | HUMI Hub Student" };
 
 export default async function StudentProfilePage() {
   const session = await getServerSession(authOptions);

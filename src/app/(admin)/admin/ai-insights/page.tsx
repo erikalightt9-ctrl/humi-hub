@@ -8,7 +8,7 @@ import { AIInsightsDashboard } from "@/components/admin/AIInsightsDashboard";
 import { Brain } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "AI Insights | Humi Hub Admin",
+  title: "AI Insights | HUMI Hub Admin",
 };
 
 export default async function AdminAIInsightsPage() {

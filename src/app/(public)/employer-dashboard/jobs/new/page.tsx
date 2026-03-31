@@ -5,7 +5,7 @@ import { JobPostingForm } from "@/components/employer/JobPostingForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export const metadata: Metadata = { title: "Post a Job — Humi Hub" };
+export const metadata: Metadata = { title: "Post a Job — HUMI Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function PostJobPage() {
@@ -23,7 +23,7 @@ export default async function PostJobPage() {
         </Link>
         <h1 className="text-2xl font-extrabold text-gray-900 mb-2">Post a New Job</h1>
         <p className="text-gray-600 mb-6 text-sm">
-          Your listing will be visible to all Humi Hub graduates seeking placement.
+          Your listing will be visible to all HUMI Hub graduates seeking placement.
         </p>
         <JobPostingForm />
       </div>

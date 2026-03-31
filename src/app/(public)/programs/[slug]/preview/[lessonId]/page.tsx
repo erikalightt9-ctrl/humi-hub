@@ -24,7 +24,7 @@ import {
 /*  Metadata                                                           */
 /* ------------------------------------------------------------------ */
 
-export const metadata: Metadata = { title: "Free Lesson Preview | Humi Hub" };
+export const metadata: Metadata = { title: "Free Lesson Preview | HUMI Hub" };
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                              */

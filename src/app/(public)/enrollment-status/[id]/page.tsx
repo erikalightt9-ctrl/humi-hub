@@ -5,7 +5,7 @@ import { findEnrollmentById } from "@/lib/repositories/enrollment.repository";
 import { EnrollmentStatusTracker } from "@/components/public/EnrollmentStatusTracker";
 
 export const metadata: Metadata = {
-  title: "Enrollment Status | Humi Hub",
+  title: "Enrollment Status | HUMI Hub",
 };
 
 export default async function EnrollmentStatusPage({
@@ -34,7 +34,7 @@ export default async function EnrollmentStatusPage({
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
-            Humi Hub
+            HUMI Hub
           </h1>
           <p className="text-gray-500 mt-1">Enrollment Status</p>
         </div>
@@ -46,7 +46,7 @@ export default async function EnrollmentStatusPage({
           <Link href="/contact" className="text-blue-600 hover:underline">
             Contact us
           </Link>{" "}
-          at info@vatrainingcenter.com
+          at info@humihub.com
         </p>
       </div>
     </div>

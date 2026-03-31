@@ -8,7 +8,7 @@ import { WorkPaceMonitor } from "@/components/student/WorkPaceMonitor";
 import { Activity } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Work Pace Monitor | Humi Hub Student",
+  title: "Work Pace Monitor | HUMI Hub Student",
 };
 
 export default async function WorkPacePage() {

@@ -35,7 +35,7 @@ export function EmailVerificationEmail({
 
       <Text style={styles.textMuted}>
         This link will expire in {expiresInHours} hours. If you did not enroll
-        at Humi Hub, please ignore this email.
+        at HUMI Hub, please ignore this email.
       </Text>
     </BaseLayout>
   );

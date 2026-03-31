@@ -3,7 +3,7 @@ import { Mic } from "lucide-react";
 import { InterviewPanel } from "@/components/placement/InterviewPanel";
 
 export const metadata: Metadata = {
-  title: "AI Interview Practice — Placement Services | Humi Hub",
+  title: "AI Interview Practice — Placement Services | HUMI Hub",
   description:
     "Practice job interviews with AI-generated questions tailored to your role. Get scored feedback on communication, knowledge, problem solving, and professionalism.",
 };

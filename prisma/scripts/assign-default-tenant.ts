@@ -24,10 +24,10 @@ async function main() {
     await prisma.organization.create({
       data: {
         id: defaultTenantId,
-        name: "Humi Hub",
+        name: "HUMI Hub",
         slug: "default",
         subdomain: "app",
-        email: process.env.ADMIN_EMAIL ?? "admin@vatrainingcenter.com",
+        email: process.env.ADMIN_EMAIL ?? "admin@humihub.com",
         plan: "ENTERPRISE",
         isActive: true,
         isDefault: true,

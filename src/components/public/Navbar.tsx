@@ -44,7 +44,7 @@ export function Navbar({ branding }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isTenant = !!branding;
-  const siteName = branding?.siteName ?? "Humi Hub";
+  const siteName = branding?.siteName ?? "HUMI Hub";
   const logoUrl = branding?.logoUrl ?? null;
   const brandColor = branding?.primaryColor ?? "#1E3A8A";
 

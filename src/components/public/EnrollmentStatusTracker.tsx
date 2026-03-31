@@ -395,7 +395,7 @@ export function EnrollmentStatusTracker({
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 text-xs text-gray-400">
             <Mail className="h-3.5 w-3.5" />
-            <span>info@vatrainingcenter.com</span>
+            <span>info@humihub.com</span>
           </div>
           <Button
             variant="outline"

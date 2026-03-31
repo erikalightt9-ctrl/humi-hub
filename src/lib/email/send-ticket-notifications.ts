@@ -12,10 +12,10 @@ import { sendMailWithRetry } from "@/lib/mailer";
 import { TicketCreatedEmail } from "@/lib/email/templates/ticket-created";
 import { TicketReplyEmail } from "@/lib/email/templates/ticket-reply";
 
-const FROM_NAME = process.env.EMAIL_FROM_NAME ?? "Humi Hub";
+const FROM_NAME = process.env.EMAIL_FROM_NAME ?? "HUMI Hub";
 const FROM_ADDRESS =
-  process.env.EMAIL_FROM_ADDRESS ?? process.env.GMAIL_USER ?? "noreply@vatrainingcenter.com";
-const APP_URL = process.env.NEXTAUTH_URL ?? "https://vatrainingcenter.com";
+  process.env.EMAIL_FROM_ADDRESS ?? process.env.GMAIL_USER ?? "noreply@humihub.com";
+const APP_URL = process.env.NEXTAUTH_URL ?? "https://humihub.com";
 
 /* ------------------------------------------------------------------ */
 /*  New Ticket → Admin                                                 */

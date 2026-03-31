@@ -3,7 +3,7 @@ import { AIPremiumPage } from "@/components/student/AIPremiumPage";
 import { Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "AI Premium | Humi Hub Student",
+  title: "AI Premium | HUMI Hub Student",
 };
 
 export default function AIPremiumRoute() {

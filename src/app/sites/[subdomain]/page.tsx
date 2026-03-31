@@ -654,7 +654,7 @@ export default async function TenantLandingPage({
           &nbsp;·&nbsp;
           Powered by{" "}
           <span className="font-semibold" style={{ color: primary }}>
-            Humi Hub
+            HUMI Hub
           </span>
         </p>
       </footer>

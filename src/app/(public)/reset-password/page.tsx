@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { ResetPasswordForm } from "@/components/public/ResetPasswordForm";
 
 export const metadata: Metadata = {
-  title: "Reset Password | Humi Hub",
-  description: "Set a new password for your Humi Hub account.",
+  title: "Reset Password | HUMI Hub",
+  description: "Set a new password for your HUMI Hub account.",
 };
 
 export default function ResetPasswordPage() {

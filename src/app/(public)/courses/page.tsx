@@ -7,7 +7,7 @@ import { SearchableCourseGrid } from "@/components/public/SearchableCourseGrid";
 export const metadata: Metadata = {
   title: "Courses",
   description:
-    "Explore Humi Hub's professional training programs across multiple specializations.",
+    "Explore HUMI Hub's professional training programs across multiple specializations.",
 };
 
 function resolveHref(slug: string): string {

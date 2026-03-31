@@ -18,8 +18,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${data.studentName} — Humi Hub Graduate`,
-    description: `View ${data.studentName}'s portfolio and achievements from the ${data.courseTitle} program at Humi Hub.`,
+    title: `${data.studentName} — HUMI Hub Graduate`,
+    description: `View ${data.studentName}'s portfolio and achievements from the ${data.courseTitle} program at HUMI Hub.`,
   };
 }
 
@@ -38,7 +38,7 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-sm font-semibold text-blue-900">
             <GraduationCap className="h-5 w-5 text-blue-600" />
-            Humi Hub
+            HUMI Hub
           </Link>
           <span className="text-xs text-gray-400">Verified Graduate Portfolio</span>
         </div>
@@ -73,7 +73,7 @@ export default async function PublicPortfolioPage({ params }: PageProps) {
           href="/enroll"
           className="inline-block bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-blue-800 transition-colors text-sm"
         >
-          Enroll at Humi Hub
+          Enroll at HUMI Hub
         </Link>
       </div>
     </div>

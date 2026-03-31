@@ -89,7 +89,7 @@ async function generateInsights(
     )
     .join("\n");
 
-  const userPrompt = `Analyze this Humi Hub platform data:
+  const userPrompt = `Analyze this HUMI Hub platform data:
 
 **Overview**:
 - Total Active Students: ${overview.totalStudents}

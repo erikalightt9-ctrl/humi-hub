@@ -68,13 +68,13 @@ export async function GET(req: NextRequest) {
 
   try {
     await sendMail({
-      from: `"${fromName ?? "VA Training Center"}" <${fromAddr ?? gmailUser ?? "noreply@vatrainingcenter.com"}>`,
+      from: `"${fromName ?? "HUMI Hub"}" <${fromAddr ?? gmailUser ?? "noreply@humihub.com"}>`,
       to,
-      subject: "✅ VA Training Center — Mailer Test",
+      subject: "✅ HUMI Hub — Mailer Test",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px;">
           <h2 style="color: #1d4ed8;">Mailer Test — Success!</h2>
-          <p>If you're reading this, the VA Training Center mailer is configured correctly.</p>
+          <p>If you're reading this, the HUMI Hub mailer is configured correctly.</p>
           <p style="color: #6b7280; font-size: 13px;">Sent at: ${new Date().toISOString()}</p>
         </div>
       `,

@@ -14,7 +14,7 @@ import { NewsletterSignup } from "@/components/public/NewsletterSignup";
 export const metadata: Metadata = {
   title: "Community",
   description:
-    "Join the Humi Hub community. Connect with fellow students, access mentorship, and grow your VA career together.",
+    "Join the HUMI Hub community. Connect with fellow students, access mentorship, and grow your VA career together.",
 };
 
 const features = [

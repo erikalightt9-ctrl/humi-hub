@@ -26,7 +26,7 @@ import {
   getContactMessageCount,
 } from "@/lib/repositories/dashboard.repository";
 
-export const metadata: Metadata = { title: "Dashboard | Humi Hub Admin" };
+export const metadata: Metadata = { title: "Dashboard | HUMI Hub Admin" };
 
 // ---------------------------------------------------------------------------
 // Helpers

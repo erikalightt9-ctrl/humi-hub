@@ -183,7 +183,7 @@ export default async function SiteLayout({ children, params }: SiteLayoutProps) 
       >
         <p className="text-sm text-gray-500">
           &copy; {new Date().getFullYear()} {businessName}.{" "}
-          <span className="text-gray-400">Powered by Humi Hub</span>
+          <span className="text-gray-400">Powered by HUMI Hub</span>
         </p>
       </footer>
 

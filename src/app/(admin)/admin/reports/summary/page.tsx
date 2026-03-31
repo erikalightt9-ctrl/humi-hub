@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { ReportsPageClient } from "@/components/admin/ReportsPageClient";
 
-export const metadata: Metadata = { title: "Reports Export | Humi Hub Admin" };
+export const metadata: Metadata = { title: "Reports Export | HUMI Hub Admin" };
 
 export default function ReportsSummaryPage() {
   return (

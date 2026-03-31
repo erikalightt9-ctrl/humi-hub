@@ -101,7 +101,7 @@ export function GeneralSettingsForm({ initialValues }: GeneralSettingsFormProps)
           id="siteName"
           value={siteName}
           onChange={(e) => setSiteName(e.target.value)}
-          placeholder="Humi Hub"
+          placeholder="HUMI Hub"
           maxLength={100}
           required
         />

@@ -46,7 +46,7 @@ export async function TestimonialsSection() {
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto text-lg">
             Hear from real professionals who transformed their careers through
-            Humi Hub.
+            HUMI Hub.
           </p>
         </div>
 

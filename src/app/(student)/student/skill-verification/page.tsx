@@ -8,7 +8,7 @@ import { SkillVerification } from "@/components/student/SkillVerification";
 import { ShieldCheck } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Skill Verification | Humi Hub Student",
+  title: "Skill Verification | HUMI Hub Student",
 };
 
 export default async function SkillVerificationPage() {

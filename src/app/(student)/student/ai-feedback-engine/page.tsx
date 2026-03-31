@@ -9,7 +9,7 @@ import { SubscriptionGate } from "@/components/student/SubscriptionGate";
 import { BarChart2 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "AI Feedback Engine | Humi Hub Student",
+  title: "AI Feedback Engine | HUMI Hub Student",
 };
 
 export default async function AIFeedbackEnginePage() {

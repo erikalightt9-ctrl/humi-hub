@@ -5,14 +5,14 @@ import { Mail, Phone, MapPin, Clock } from "lucide-react";
 export const metadata: Metadata = {
   title: "Contact Us",
   description:
-    "Get in touch with Humi Hub. We are here to answer your questions about our training programs.",
+    "Get in touch with HUMI Hub. We are here to answer your questions about our training programs.",
 };
 
 const contactInfo = [
   {
     icon: Mail,
     label: "Email",
-    value: "info@vatrainingcenter.com",
+    value: "info@humihub.com",
   },
   {
     icon: Phone,

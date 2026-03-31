@@ -14,7 +14,7 @@ const WELCOME_MESSAGE: Message = {
   id: "welcome",
   role: "assistant",
   content:
-    "Hi! 👋 I'm your Humi Hub assistant. Ask me anything about our courses, enrollment, pricing, or how to get started!",
+    "Hi! 👋 I'm your HUMI Hub assistant. Ask me anything about our courses, enrollment, pricing, or how to get started!",
 };
 
 export function ChatWidget() {

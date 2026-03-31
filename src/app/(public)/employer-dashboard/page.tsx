@@ -7,7 +7,7 @@ import { HiringPipeline } from "@/components/employer/HiringPipeline";
 import { Briefcase, Plus, Users, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export const metadata: Metadata = { title: "Employer Dashboard — Humi Hub" };
+export const metadata: Metadata = { title: "Employer Dashboard — HUMI Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function EmployerDashboardPage() {

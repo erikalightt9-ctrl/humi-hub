@@ -5,9 +5,9 @@ import { resolveTenantFromSubdomain } from "@/lib/tenant";
 import { SearchableCourseGrid } from "@/components/public/SearchableCourseGrid";
 
 export const metadata: Metadata = {
-  title: "Programs — Humi Hub",
+  title: "Programs — HUMI Hub",
   description:
-    "Explore Humi Hub's professional training programs across multiple industries. Designed by industry experts for global employers.",
+    "Explore HUMI Hub's professional training programs across multiple industries. Designed by industry experts for global employers.",
 };
 
 function resolveHref(slug: string): string {

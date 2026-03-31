@@ -17,7 +17,7 @@ import { getTrainerCourseDetail } from "@/lib/repositories/trainer.repository";
 import { CourseDetailTabs } from "@/components/trainer/CourseDetailTabs";
 
 export const metadata: Metadata = {
-  title: "Course Detail | Humi Hub Trainer Portal",
+  title: "Course Detail | HUMI Hub Trainer Portal",
 };
 export const dynamic = "force-dynamic";
 

@@ -41,12 +41,12 @@ export async function sendCorporateCredentialsEmail(
 <head><meta charset="utf-8"></head>
 <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
   <div style="background: #1d4ed8; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
-    <h1 style="color: #fff; margin: 0; font-size: 24px;">Humi Hub</h1>
+    <h1 style="color: #fff; margin: 0; font-size: 24px;">HUMI Hub</h1>
     <p style="color: #bfdbfe; margin: 8px 0 0;">${portalLabel}</p>
   </div>
   <div style="background: #f9fafb; padding: 32px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
     <h2 style="color: #1d4ed8; margin-top: 0;">Welcome, ${opts.name}!</h2>
-    <p>You have been added as a <strong>${roleLabel}</strong> at <strong>${opts.organizationName}</strong> on the Humi Hub platform. Your account is now ready.</p>
+    <p>You have been added as a <strong>${roleLabel}</strong> at <strong>${opts.organizationName}</strong> on the HUMI Hub platform. Your account is now ready.</p>
     <div style="background: #fff; border: 1px solid #d1d5db; border-radius: 6px; padding: 20px; margin: 24px 0;">
       <p style="margin: 0 0 8px; font-weight: bold; color: #374151;">Your Login Credentials:</p>
       <p style="margin: 4px 0;">Email: <strong>${opts.email}</strong></p>
@@ -63,22 +63,22 @@ export async function sendCorporateCredentialsEmail(
       </ul>
     </div>
     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
-    <p style="color: #6b7280; font-size: 13px; margin: 0;">Humi Hub &bull; This email was sent to ${opts.email}</p>
+    <p style="color: #6b7280; font-size: 13px; margin: 0;">HUMI Hub &bull; This email was sent to ${opts.email}</p>
   </div>
 </body>
 </html>`;
 
-  const fromName = process.env.EMAIL_FROM_NAME ?? "Humi Hub";
+  const fromName = process.env.EMAIL_FROM_NAME ?? "HUMI Hub";
   const fromAddr =
     process.env.EMAIL_FROM_ADDRESS ??
     process.env.GMAIL_USER ??
-    "noreply@vatrainingcenter.com";
+    "noreply@humihub.com";
 
   await sendMailWithRetry(
     {
       from: `"${fromName}" <${fromAddr}>`,
       to: opts.email,
-      subject: `Welcome to ${opts.organizationName} — Your ${portalLabel} Access | Humi Hub`,
+      subject: `Welcome to ${opts.organizationName} — Your ${portalLabel} Access | HUMI Hub`,
       html,
     },
     `Corporate ${roleLabel.toLowerCase()} credentials to ${opts.email}`,

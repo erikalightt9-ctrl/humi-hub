@@ -8,7 +8,7 @@ import { MentorshipHub } from "@/components/student/MentorshipHub";
 import { Users } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Mentorship | Humi Hub Student",
+  title: "Mentorship | HUMI Hub Student",
 };
 
 export default async function MentorshipPage() {

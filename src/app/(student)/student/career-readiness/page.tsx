@@ -8,7 +8,7 @@ import { CareerReadinessCard } from "@/components/student/CareerReadinessCard";
 import { Target } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Career Readiness Score | Humi Hub Student",
+  title: "Career Readiness Score | HUMI Hub Student",
 };
 
 export default async function CareerReadinessPage() {

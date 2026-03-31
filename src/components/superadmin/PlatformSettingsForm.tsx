@@ -129,7 +129,7 @@ const inputCls =
 
 export function PlatformSettingsForm({ env }: { env: EnvData }) {
   const [settings, setSettings] = useState<PlatformSettings>({
-    siteName: "Humi Hub",
+    siteName: "HUMI Hub",
     timezone: "Asia/Manila",
     currency: "PHP",
     language: "en",
@@ -223,7 +223,7 @@ export function PlatformSettingsForm({ env }: { env: EnvData }) {
                       type="text"
                       value={settings.siteName}
                       onChange={(e) => set("siteName", e.target.value)}
-                      placeholder="Humi Hub"
+                      placeholder="HUMI Hub"
                       maxLength={80}
                       required
                       className={inputCls}

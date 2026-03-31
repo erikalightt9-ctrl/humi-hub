@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { MessagingView } from "@/components/shared/MessagingView";
 
-export const metadata: Metadata = { title: "Messages | Humi Hub Trainer" };
+export const metadata: Metadata = { title: "Messages | HUMI Hub Trainer" };
 
 export default async function TrainerMessagesPage() {
   const session = await getServerSession(authOptions);

@@ -64,7 +64,7 @@ export default function TenantDirectAccessPage() {
           </div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Platform Not Found</h1>
           <p className="text-gray-500 text-sm mb-6">{error}</p>
-          <a href="/" className="text-blue-600 text-sm hover:underline">← Back to Humi Hub</a>
+          <a href="/" className="text-blue-600 text-sm hover:underline">← Back to HUMI Hub</a>
         </div>
       </div>
     );

@@ -60,7 +60,7 @@ function LinkColumn({
 /* ------------------------------------------------------------------ */
 
 export function Footer({ siteName }: { siteName?: string | null }) {
-  const displayName = siteName ?? "Humi Hub";
+  const displayName = siteName ?? "HUMI Hub";
   return (
     <footer className="bg-blue-950 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -94,7 +94,7 @@ export function Footer({ siteName }: { siteName?: string | null }) {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-blue-200 mb-6">
             <span className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-blue-400 shrink-0" />
-              info@vatrainingcenter.com
+              info@humihub.com
             </span>
             <span className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-blue-400 shrink-0" />

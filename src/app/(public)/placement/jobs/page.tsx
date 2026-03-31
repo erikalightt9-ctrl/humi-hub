@@ -3,9 +3,9 @@ import { Briefcase } from "lucide-react";
 import { JobMatchBoard } from "@/components/placement/JobMatchBoard";
 
 export const metadata: Metadata = {
-  title: "Job Marketplace — Placement Services | Humi Hub",
+  title: "Job Marketplace — Placement Services | HUMI Hub",
   description:
-    "Browse curated job listings matched to your skills and apply directly through Humi Hub's employer network.",
+    "Browse curated job listings matched to your skills and apply directly through HUMI Hub's employer network.",
 };
 
 export default function JobsPage() {
@@ -22,7 +22,7 @@ export default function JobsPage() {
           <h1 className="text-3xl font-extrabold mb-3 tracking-tight">Job Marketplace</h1>
           <p className="text-blue-100 text-base leading-relaxed">
             Discover remote opportunities with US, Australian, and UK employers. Every listing is
-            curated for Humi Hub graduates with verified skills and training.
+            curated for HUMI Hub graduates with verified skills and training.
           </p>
         </div>
       </section>

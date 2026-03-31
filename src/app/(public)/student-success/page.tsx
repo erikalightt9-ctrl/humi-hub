@@ -15,7 +15,7 @@ import { getPublicPlacementStats } from "@/lib/repositories/placement.repository
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Student Success — Humi Hub",
+  title: "Student Success — HUMI Hub",
   description:
     "See how our graduates transformed their careers. Real stories, real results from AI-powered Virtual Assistant training.",
 };

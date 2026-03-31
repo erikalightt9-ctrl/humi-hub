@@ -68,7 +68,7 @@ export function EmployerAuthForm({ defaultMode = "login" }: { defaultMode?: Mode
           </div>
           <div>
             <h1 className="text-xl font-extrabold text-gray-900">Employer Portal</h1>
-            <p className="text-sm text-gray-500">Humi Hub</p>
+            <p className="text-sm text-gray-500">HUMI Hub</p>
           </div>
         </div>
 

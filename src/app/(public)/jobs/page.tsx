@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Job Board — Humi Hub",
+  title: "Job Board — HUMI Hub",
   description: "Browse job opportunities for Virtual Assistants.",
 };
 

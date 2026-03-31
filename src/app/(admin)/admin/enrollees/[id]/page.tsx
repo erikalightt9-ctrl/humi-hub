@@ -7,7 +7,7 @@ import { EnrolleeProfileSections } from "@/components/admin/EnrolleeProfileSecti
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 
-export const metadata: Metadata = { title: "Enrollee Profile | Humi Hub Admin" };
+export const metadata: Metadata = { title: "Enrollee Profile | HUMI Hub Admin" };
 
 export default async function EnrolleeDetailPage({
   params,

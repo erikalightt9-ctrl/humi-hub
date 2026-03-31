@@ -31,8 +31,8 @@ export async function generateMetadata(): Promise<Metadata> {
   } catch {
     return {
       title: {
-        default: "Humi Hub — Professional Training Programs",
-        template: "%s | Humi Hub",
+        default: "HUMI Hub — Professional Training Programs",
+        template: "%s | HUMI Hub",
       },
       description: "Professional training programs across multiple industries.",
       metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),

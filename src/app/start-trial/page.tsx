@@ -122,7 +122,7 @@ export default function StartTrialPage() {
           <div className="bg-blue-600 rounded-lg p-1.5">
             <BookOpen className="h-5 w-5 text-white" />
           </div>
-          <span className="font-bold text-gray-900">VA Training Center</span>
+          <span className="font-bold text-gray-900">HUMI Hub</span>
         </div>
         <Link href="/portal" className="text-sm text-blue-600 hover:underline">
           Already have an account? Log in
@@ -178,7 +178,7 @@ export default function StartTrialPage() {
                 <Label htmlFor="subdomain">
                   Subdomain *
                   <span className="ml-1 text-xs text-gray-400 font-normal">
-                    ({subdomain || "your-org"}.vatrainingcenter.com)
+                    ({subdomain || "your-org"}.humihub.com)
                   </span>
                 </Label>
                 <Input

@@ -179,7 +179,7 @@ export function NotificationsSettingsForm({ initialValues }: NotificationsSettin
               id="fromName"
               value={fromName}
               onChange={(e) => setFromName(e.target.value)}
-              placeholder="Humi Hub"
+              placeholder="HUMI Hub"
             />
           </div>
           <div>

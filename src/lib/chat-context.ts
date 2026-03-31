@@ -94,7 +94,7 @@ export async function buildSystemPrompt(): Promise<string> {
   const faq = buildFaqContext();
   const courses = await buildCourseContext();
 
-  return `You are a friendly and helpful assistant for Humi Hub, a platform that trains people for diverse professional careers.
+  return `You are a friendly and helpful assistant for HUMI Hub, a platform that trains people for diverse professional careers.
 
 Your role:
 - Answer questions about courses, enrollment, pricing, payment, and the platform
@@ -102,7 +102,7 @@ Your role:
 - Keep answers concise (2-4 sentences max)
 - If you don't know something specific, suggest contacting support via the Contact page
 - Never make up information not provided in the context below
-- Do not discuss topics unrelated to Humi Hub or professional training programs
+- Do not discuss topics unrelated to HUMI Hub or professional training programs
 - Guide prospective students toward enrolling
 
 COURSE CATALOG:

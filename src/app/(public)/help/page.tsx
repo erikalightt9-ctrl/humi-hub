@@ -5,8 +5,8 @@ import { BookOpen, HelpCircle } from "lucide-react";
 import { KB_CATEGORIES } from "@/lib/constants/communications";
 
 export const metadata: Metadata = {
-  title: "Help Center | Humi Hub",
-  description: "Find answers to common questions about Humi Hub.",
+  title: "Help Center | HUMI Hub",
+  description: "Find answers to common questions about HUMI Hub.",
 };
 
 interface Article {
