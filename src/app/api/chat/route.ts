@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { chatMessageSchema } from "@/lib/validations/chat.schema";
 import { streamChatResponse, streamChatResponseWithRole } from "@/lib/services/chat.service";
-import { faqFallbackResponse } from "@/lib/services/chat-fallback.service";
+import { faqFallbackResponse, isRelevantQuestion } from "@/lib/services/chat-fallback.service";
 
 // Simple in-memory rate limiter (per IP, 10 requests per minute)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -18,9 +18,7 @@ function isRateLimited(ip: string): boolean {
     return false;
   }
 
-  if (entry.count >= RATE_LIMIT) {
-    return true;
-  }
+  if (entry.count >= RATE_LIMIT) return true;
 
   rateLimitMap.set(ip, { count: entry.count + 1, resetAt: entry.resetAt });
   return false;
@@ -30,21 +28,56 @@ function isRateLimited(ip: string): boolean {
 setInterval(() => {
   const now = Date.now();
   for (const [key, value] of rateLimitMap) {
-    if (now > value.resetAt) {
-      rateLimitMap.delete(key);
-    }
+    if (now > value.resetAt) rateLimitMap.delete(key);
   }
 }, 300_000);
 
+/** Stream a plain text answer word-by-word for a natural typing effect */
+function streamTextAnswer(text: string): Response {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      const words = text.split(" ");
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i < words.length) {
+          const chunk = (i === 0 ? "" : " ") + words[i];
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`)
+          );
+          i++;
+        } else {
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
+          clearInterval(interval);
+        }
+      }, 30);
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-      ?? request.headers.get("x-real-ip")
-      ?? "unknown";
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      request.headers.get("x-real-ip") ??
+      "unknown";
 
     if (isRateLimited(ip)) {
       return NextResponse.json(
-        { success: false, data: null, error: "Too many requests. Please wait a moment before sending another message." },
+        {
+          success: false,
+          data: null,
+          error: "Too many requests. Please wait a moment before sending another message.",
+        },
         { status: 429 }
       );
     }
@@ -54,44 +87,31 @@ export async function POST(request: NextRequest) {
 
     if (!result.success) {
       return NextResponse.json(
-        { success: false, data: null, error: result.error.issues[0]?.message ?? "Invalid input" },
+        {
+          success: false,
+          data: null,
+          error: result.error.issues[0]?.message ?? "Invalid input",
+        },
         { status: 400 }
       );
     }
 
-    // If no OpenAI key, use FAQ fallback (always works, no external API needed)
-    if (!process.env.OPENAI_API_KEY) {
-      const lastMessage = result.data.messages[result.data.messages.length - 1];
-      const answer = faqFallbackResponse(lastMessage?.content ?? "");
-      const encoder = new TextEncoder();
-      const stream = new ReadableStream<Uint8Array>({
-        start(controller) {
-          // Stream word-by-word for a natural typing effect
-          const words = answer.split(" ");
-          let i = 0;
-          const interval = setInterval(() => {
-            if (i < words.length) {
-              const chunk = (i === 0 ? "" : " ") + words[i];
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`));
-              i++;
-            } else {
-              controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-              controller.close();
-              clearInterval(interval);
-            }
-          }, 30);
-        },
-      });
-      return new Response(stream, {
-        headers: {
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache",
-          Connection: "keep-alive",
-        },
-      });
+    const lastMessage = result.data.messages[result.data.messages.length - 1];
+    const userText = lastMessage?.content ?? "";
+
+    // ── Relevance Check ──────────────────────────────────────────────────────
+    // If the question is not about the platform, signal the widget to escalate
+    if (!isRelevantQuestion(userText)) {
+      return NextResponse.json({ escalate: true }, { status: 200 });
     }
 
-    // Check if authenticated — use role-aware prompts if so
+    // ── FAQ Fallback (no OpenAI key) ─────────────────────────────────────────
+    if (!process.env.OPENAI_API_KEY) {
+      const answer = faqFallbackResponse(userText);
+      return streamTextAnswer(answer);
+    }
+
+    // ── OpenAI Streaming ─────────────────────────────────────────────────────
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
     const role = token?.role as string | undefined;
     const currentPage = body.currentPage as string | undefined;
@@ -110,7 +130,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Chat API error:", error);
     return NextResponse.json(
-      { success: false, data: null, error: "Something went wrong. Please try again." },
+      {
+        success: false,
+        data: null,
+        error: "Chat is temporarily unavailable. Please try again shortly.",
+      },
       { status: 500 }
     );
   }
