@@ -407,7 +407,7 @@ Record every patient interaction in the EHR with date, time, who you spoke with,
 - HIPAA Compliance Training Certificate
 - EHR-specific certifications (Epic, athenahealth)
 - Medical Terminology Certificate
-- This HUMI Training Center course completion certificate
+- This Humi Hub course completion certificate
 
 **Where to Find Medical VA Jobs:**
 - Specialized agencies: MedVA, VMeDx, REVA Global
@@ -1117,12 +1117,12 @@ You are now prepared to launch your career as a US Bookkeeping Virtual Assistant
   // ── Settings defaults ──────────────────────────────────────────────
   await prisma.platformSettings.upsert({
     where: { id: "singleton" },
-    create: { id: "singleton", siteName: "HUMI Training Center", timezone: "Asia/Manila", currency: "PHP", language: "en" },
+    create: { id: "singleton", siteName: "Humi Hub", timezone: "Asia/Manila", currency: "PHP", language: "en" },
     update: {},
   });
   await prisma.emailSettings.upsert({
     where: { id: "singleton" },
-    create: { id: "singleton", smtpHost: "smtp.gmail.com", smtpPort: 587, smtpUser: "", smtpPassword: "", fromName: "HUMI Training Center", fromEmail: "", enrollmentEmails: true, lessonEmails: true, announcementEmails: true, certificationEmails: true },
+    create: { id: "singleton", smtpHost: "smtp.gmail.com", smtpPort: 587, smtpUser: "", smtpPassword: "", fromName: "Humi Hub", fromEmail: "", enrollmentEmails: true, lessonEmails: true, announcementEmails: true, certificationEmails: true },
     update: {},
   });
   await prisma.securitySettings.upsert({
@@ -1142,11 +1142,11 @@ You are now prepared to launch your career as a US Bookkeeping Virtual Assistant
     where: { subdomain: "humi" },
     update: {},
     create: {
-      name: "HUMI Training Center",
+      name: "Humi Hub",
       subdomain: "humi",
       isDefault: true,
       plan: "PROFESSIONAL",
-      siteName: "HUMI Training Center",
+      siteName: "Humi Hub",
       tagline: "Your Path to a VA Career",
       primaryColor: "#1d4ed8",
       secondaryColor: "#7c3aed",

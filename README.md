@@ -2,7 +2,7 @@
 
 A full-stack Learning Management System (LMS) built for training professionals across any field or industry. The platform manages the entire student lifecycle — from enrollment and payment to course delivery, AI-powered practice, assessments, certifications, and job placement.
 
-**Live:** [va-training-center.vercel.app](https://va-training-center.vercel.app)
+**Live:** [humi-hub.vercel.app](https://humi-hub.vercel.app)
 
 ---
 
@@ -287,8 +287,8 @@ Courses are fully configurable from the Admin Dashboard. The platform supports a
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/erikalightt9-ctrl/va-training-center.git
-cd va-training-center
+git clone https://github.com/erikalightt9-ctrl/humi-hub.git
+cd humi-hub
 npm install
 ```
 
