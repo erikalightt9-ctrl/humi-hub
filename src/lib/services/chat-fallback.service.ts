@@ -1,7 +1,7 @@
 /**
  * FAQ-based fallback chat service.
  * Used when OPENAI_API_KEY is not configured.
- * Matches user questions to pre-defined answers using keyword matching.
+ * Provides relevance detection + keyword-matched FAQ answers.
  */
 
 type FaqEntry = {
@@ -9,72 +9,123 @@ type FaqEntry = {
   answer: string;
 };
 
+// ─── Relevance Detection ────────────────────────────────────────────────────
+
+const RELEVANT_KEYWORDS = [
+  // Platform & brand
+  "humi", "hub", "platform", "website", "portal",
+  // Courses & programs
+  "course", "courses", "program", "programs", "module", "lesson", "class", "training",
+  // Enrollment & registration
+  "enroll", "enrollment", "register", "registration", "apply", "application", "join", "sign up",
+  // Pricing & payment
+  "price", "pricing", "cost", "fee", "how much", "payment", "pay", "gcash", "paymaya", "refund",
+  // Certificates
+  "certificate", "certification", "diploma", "credential", "completion",
+  // Schedule & duration
+  "schedule", "duration", "how long", "weeks", "months", "start date", "deadline",
+  // Account & access
+  "login", "log in", "account", "password", "access", "credentials", "dashboard",
+  // Support & help
+  "support", "help", "contact", "question", "issue", "problem", "ticket",
+  // Requirements
+  "requirement", "requirements", "need", "qualify", "eligible", "age",
+  // Career
+  "career", "job", "virtual assistant", "va", "work", "freelance",
+  // Misc intent
+  "what is", "how do", "how to", "can i", "do you", "is there", "when", "where",
+];
+
+/**
+ * Returns true if the message is likely about the platform/courses.
+ * Short greetings (< 4 words) are always considered relevant.
+ */
+export function isRelevantQuestion(message: string): boolean {
+  const lower = message.toLowerCase().trim();
+  const wordCount = lower.split(/\s+/).length;
+
+  // Short greetings are always relevant
+  if (wordCount <= 3) return true;
+
+  return RELEVANT_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+// ─── FAQ Answers ─────────────────────────────────────────────────────────────
+
 const FAQ: FaqEntry[] = [
   {
-    keywords: ["course", "courses", "offer", "program", "programs", "available"],
+    keywords: ["course", "courses", "offer", "program", "programs", "available", "training", "module", "class"],
     answer:
-      "We offer specialized training programs designed to prepare you for professional careers. Visit our Courses page at /courses to see the full catalog with pricing and duration details.",
+      "We offer specialized professional training programs designed to launch your career. Visit our Courses page at /courses to see the full catalog with pricing and duration details. 📚",
   },
   {
-    keywords: ["enroll", "enrollment", "register", "sign up", "join", "apply"],
+    keywords: ["enroll", "enrollment", "register", "sign up", "join", "apply", "application"],
     answer:
-      "To enroll, visit our Enroll page at /enroll, fill out the enrollment form, and submit. Our team reviews applications and notifies you via email within 1-3 business days.",
+      "To enroll: visit /enroll, fill out the enrollment form, and submit. Our team reviews applications and notifies you via email within 1-3 business days. Easy! 🎯",
   },
   {
-    keywords: ["price", "cost", "fee", "how much", "pricing", "payment", "pay"],
+    keywords: ["price", "cost", "fee", "how much", "pricing", "gcash", "paymaya", "refund"],
     answer:
-      "Course prices vary by program. Visit /courses to see current pricing. We accept GCash, PayMaya, and credit/debit card payments. After your enrollment is approved, you'll receive a secure payment link.",
+      "Course prices vary by program — visit /courses to see current pricing. We accept GCash, PayMaya, and credit/debit card. After approval, you'll receive a secure payment link via email. 💳",
   },
   {
-    keywords: ["certificate", "certification", "diploma", "credential"],
+    keywords: ["certificate", "certification", "diploma", "credential", "completion"],
     answer:
-      "Yes! Upon completing all lessons in your course, you receive a digital certificate of completion that you can download and share on your professional profiles.",
+      "Yes! 🎓 Upon completing all lessons, you receive a digital certificate you can download and share. Certificates can be verified online at /verify.",
   },
   {
-    keywords: ["duration", "long", "weeks", "months", "time", "how long"],
+    keywords: ["duration", "long", "weeks", "months", "time", "how long", "schedule"],
     answer:
-      "Course duration varies by program — typically between 4-12 weeks depending on the specialization. Check the Courses page at /courses for specific program lengths.",
+      "Course duration varies by program — typically 4-12 weeks. Check /courses for specific program lengths and schedules. ⏱️",
   },
   {
-    keywords: ["requirement", "requirements", "need", "qualifications", "age", "experience"],
+    keywords: ["requirement", "requirements", "need", "qualifications", "age", "eligible", "qualify"],
     answer:
-      "You need to be at least 16 years old, have basic computer skills, and reliable internet access. No prior professional experience is required — our courses are designed for beginners!",
+      "Requirements: 16+ years old, basic computer skills, and reliable internet. No prior experience needed — our courses are built for beginners! 🌱",
   },
   {
-    keywords: ["login", "access", "dashboard", "account", "credentials", "password"],
+    keywords: ["login", "log in", "access", "dashboard", "account", "credentials", "password"],
     answer:
-      "Once your enrollment is approved, you'll receive login credentials via email. Use them at the Student Login page to access your personal dashboard and course materials.",
+      "Once enrolled and approved, you'll receive login credentials via email. Head to the Student Login page to access your personal dashboard and course materials. 🔐",
   },
   {
-    keywords: ["support", "contact", "help", "question", "issue", "problem"],
+    keywords: ["support", "contact", "help", "issue", "problem", "ticket"],
     answer:
-      "You can reach our support team through the Contact page at /contact, or visit the Help Center at /help for articles and FAQs. We're happy to assist!",
+      "Our support team is ready to help! Visit /contact to send a message or browse the Help Center at /help for articles and FAQs. 🙋",
   },
   {
-    keywords: ["certificate", "verify", "verification", "authentic"],
+    keywords: ["verify", "verification", "authentic", "legit"],
     answer:
-      "All HUMI Hub certificates can be verified online. Share your certificate link and anyone can confirm its authenticity through our verification system at /verify.",
+      "All HUMI Hub certificates are verifiable online. Share your certificate link and anyone can confirm its authenticity at /verify. ✅",
   },
   {
-    keywords: ["start", "get started", "begin", "how to start", "first step"],
+    keywords: ["start", "get started", "begin", "first step", "how to start"],
     answer:
-      "Getting started is easy! 1) Browse courses at /courses, 2) Click Enroll on a course you like, 3) Complete the enrollment form, 4) Wait for approval email, 5) Log in and start learning!",
+      "Getting started is simple! 1) Browse courses at /courses → 2) Click Enroll → 3) Complete the form → 4) Wait for approval email → 5) Log in and start learning! 🚀",
   },
   {
-    keywords: ["hi", "hello", "hey", "good morning", "good afternoon", "good evening"],
+    keywords: ["virtual assistant", "va ", " va", "career", "job", "freelance", "work from home"],
     answer:
-      "Hi there! 👋 Welcome to HUMI Hub! I'm here to help you with questions about our courses, enrollment, pricing, or anything else. What would you like to know?",
+      "HUMI Hub trains you for professional remote careers. Our programs are industry-specific and designed to get you job-ready fast. Check /courses to explore your options! 💼",
   },
   {
-    keywords: ["thank", "thanks", "thank you", "appreciate"],
+    keywords: ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "howdy"],
     answer:
-      "You're welcome! 😊 Feel free to ask if you have any other questions. We're here to help you on your learning journey with HUMI Hub!",
+      "Hi there! 👋 Welcome to HUMI Hub! I'm here to help with questions about courses, enrollment, pricing, or anything else. What would you like to know?",
+  },
+  {
+    keywords: ["thank", "thanks", "thank you", "appreciate", "awesome", "great"],
+    answer:
+      "You're welcome! 😊 Don't hesitate to ask if you have more questions. Good luck on your learning journey with HUMI Hub! 🌟",
   },
 ];
 
 const DEFAULT_ANSWER =
-  "Thanks for reaching out! For detailed assistance, please visit our Contact page at /contact or browse the Help Center at /help. Our team is happy to answer all your questions about HUMI Hub courses and enrollment.";
+  "I'm not sure I have the right answer for that. Let me connect you with our team — they'll be happy to help! 😊";
 
+/**
+ * Returns a matched FAQ answer or the default fallback.
+ */
 export function faqFallbackResponse(userMessage: string): string {
   const lower = userMessage.toLowerCase();
 
