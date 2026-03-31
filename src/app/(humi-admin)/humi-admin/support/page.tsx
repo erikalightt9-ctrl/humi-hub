@@ -3,7 +3,6 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { LifeBuoy, CheckCircle2 } from "lucide-react";
 import { getOpenSupportTickets } from "@/lib/repositories/humi-admin.repository";
-import type { HumiAdminPermissions } from "@/types/next-auth";
 
 export const metadata = { title: "Support | HUMI Admin" };
 
@@ -21,11 +20,9 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default async function HumiAdminSupportPage() {
   const session = await getServerSession(authOptions);
-  const permissions = (session?.user as typeof session?.user & {
-    humiAdminPermissions: HumiAdminPermissions | null;
-  })?.humiAdminPermissions;
+  const permissions = session?.user?.humiAdminPermissions;
 
-  if (!session?.user || !(session.user as typeof session.user & { isHumiAdmin?: boolean }).isHumiAdmin) {
+  if (!session?.user || !session.user.isHumiAdmin) {
     redirect("/humi-admin/login");
   }
 

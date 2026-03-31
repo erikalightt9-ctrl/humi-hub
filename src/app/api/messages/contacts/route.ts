@@ -17,6 +17,7 @@ const ALLOWED_TARGETS: Readonly<Record<ActorType, ReadonlyArray<ActorType>>> = {
   TRAINER: ["ADMIN", "STUDENT"],
   STUDENT: ["TRAINER"],
   CORPORATE_MANAGER: ["ADMIN", "TRAINER"],
+  HUMI_ADMIN: [],
 };
 
 export async function GET(request: NextRequest) {

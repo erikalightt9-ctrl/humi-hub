@@ -16,13 +16,11 @@ export const metadata = { title: "Dashboard | HUMI Admin" };
 
 export default async function HumiAdminDashboard() {
   const session = await getServerSession(authOptions);
-  if (!session?.user || !(session.user as typeof session.user & { isHumiAdmin?: boolean }).isHumiAdmin) {
+  if (!session?.user || !session.user.isHumiAdmin) {
     redirect("/humi-admin/login");
   }
 
-  const permissions = (session.user as typeof session.user & {
-    humiAdminPermissions: HumiAdminPermissions | null;
-  }).humiAdminPermissions;
+  const permissions = session.user.humiAdminPermissions;
 
   const stats = await getPlatformStatsForHumiAdmin();
 

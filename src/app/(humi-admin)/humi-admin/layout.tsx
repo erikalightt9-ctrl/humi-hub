@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SessionProvider } from "@/components/admin/SessionProvider";
 import { HumiAdminLayout } from "@/components/humi-admin/HumiAdminLayout";
 
 export const metadata: Metadata = {
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function HumiAdminPagesLayout({ children }: { children: React.ReactNode }) {
-  return <HumiAdminLayout>{children}</HumiAdminLayout>;
+  return (
+    <SessionProvider>
+      <HumiAdminLayout>{children}</HumiAdminLayout>
+    </SessionProvider>
+  );
 }

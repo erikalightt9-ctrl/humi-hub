@@ -2,17 +2,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { FileText } from "lucide-react";
-import type { HumiAdminPermissions } from "@/types/next-auth";
 
 export const metadata = { title: "Content Management | HUMI Admin" };
 
 export default async function HumiAdminContentPage() {
   const session = await getServerSession(authOptions);
-  const permissions = (session?.user as typeof session?.user & {
-    humiAdminPermissions: HumiAdminPermissions | null;
-  })?.humiAdminPermissions;
+  const permissions = session?.user?.humiAdminPermissions;
 
-  if (!session?.user || !(session.user as typeof session.user & { isHumiAdmin?: boolean }).isHumiAdmin) {
+  if (!session?.user || !session.user.isHumiAdmin) {
     redirect("/humi-admin/login");
   }
 

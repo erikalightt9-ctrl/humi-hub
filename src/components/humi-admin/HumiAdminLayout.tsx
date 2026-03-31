@@ -37,9 +37,7 @@ export function HumiAdminLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
   const pathname = usePathname();
 
-  const permissions = (session?.user as typeof session.user & {
-    humiAdminPermissions: HumiAdminPermissions | null;
-  })?.humiAdminPermissions;
+  const permissions = session?.user?.humiAdminPermissions as HumiAdminPermissions | null | undefined;
 
   const visibleItems = NAV_ITEMS.filter(
     (item) => item.permission === null || (permissions?.[item.permission] ?? false)

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signIn, signOut } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Shield, Eye, EyeOff, Loader2 } from "lucide-react";
 
-export default function HumiAdminLoginPage() {
+function HumiAdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/humi-admin";
@@ -134,5 +134,13 @@ export default function HumiAdminLoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function HumiAdminLoginPage() {
+  return (
+    <Suspense>
+      <HumiAdminLoginForm />
+    </Suspense>
   );
 }

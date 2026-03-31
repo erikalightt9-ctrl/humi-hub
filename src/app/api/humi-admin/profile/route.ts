@@ -28,7 +28,7 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const result = changePasswordSchema.safeParse(body);
     if (!result.success) {
-      return NextResponse.json({ success: false, data: null, error: result.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ success: false, data: null, error: result.error.issues[0].message }, { status: 400 });
     }
 
     await resetHumiAdminPassword(guard.adminId, result.data.newPassword);

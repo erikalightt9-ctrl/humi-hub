@@ -502,7 +502,7 @@ export const authOptions: NextAuthOptions = {
         token.isHumiAdmin =
           (user as typeof user & { isHumiAdmin?: boolean }).isHumiAdmin ?? false;
         token.humiAdminPermissions =
-          (user as typeof user & { humiAdminPermissions?: object | null }).humiAdminPermissions ?? null;
+          ((user as typeof user & { humiAdminPermissions?: unknown }).humiAdminPermissions ?? null) as import("@/types/next-auth").HumiAdminPermissions | null;
         // orgSubdomain stored for Edge middleware cross-tenant guard (avoids DB in middleware)
         token.orgSubdomain =
           (user as typeof user & { orgSubdomain?: string | null }).orgSubdomain ?? null;
@@ -529,8 +529,8 @@ export const authOptions: NextAuthOptions = {
         user.isTenantAdmin = (token.isTenantAdmin as boolean) ?? false;
         (user as typeof user & { isHumiAdmin: boolean }).isHumiAdmin =
           (token.isHumiAdmin as boolean) ?? false;
-        (user as typeof user & { humiAdminPermissions: object | null }).humiAdminPermissions =
-          (token.humiAdminPermissions as object | null) ?? null;
+        session.user.humiAdminPermissions =
+          (token.humiAdminPermissions as import("@/types/next-auth").HumiAdminPermissions | null) ?? null;
       }
       return session;
     },

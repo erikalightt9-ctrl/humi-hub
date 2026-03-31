@@ -56,7 +56,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const body = await request.json();
     const result = updateSchema.safeParse(body);
     if (!result.success) {
-      return NextResponse.json({ success: false, data: null, error: result.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ success: false, data: null, error: result.error.issues[0].message }, { status: 400 });
     }
 
     const { resetPassword, resetFailedAttempts: doReset, ...updateData } = result.data;

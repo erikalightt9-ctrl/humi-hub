@@ -3,17 +3,14 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Building2, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { getPendingTenantApplications, getActiveTenants } from "@/lib/repositories/humi-admin.repository";
-import type { HumiAdminPermissions } from "@/types/next-auth";
 
 export const metadata = { title: "Tenant Review | HUMI Admin" };
 
 export default async function HumiAdminTenantsPage() {
   const session = await getServerSession(authOptions);
-  const permissions = (session?.user as typeof session?.user & {
-    humiAdminPermissions: HumiAdminPermissions | null;
-  })?.humiAdminPermissions;
+  const permissions = session?.user?.humiAdminPermissions;
 
-  if (!session?.user || !(session.user as typeof session.user & { isHumiAdmin?: boolean }).isHumiAdmin) {
+  if (!session?.user || !session.user.isHumiAdmin) {
     redirect("/humi-admin/login");
   }
 
