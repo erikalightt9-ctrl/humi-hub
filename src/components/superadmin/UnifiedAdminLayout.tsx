@@ -129,43 +129,18 @@ export function UnifiedAdminLayout({ children }: UnifiedAdminLayoutProps) {
                 const { href, label, icon: Icon } = item;
                 const exact = "exact" in item ? (item as { exact?: boolean }).exact : false;
                 const active = isActive(href, exact);
-                const isTenantsItem = href === "/superadmin/tenants";
                 return (
-                  <div key={href}>
-                    <Link
-                      href={href}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                        active ? activeNavClass : inactiveNavClass
-                      }`}
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      <Icon className="h-4 w-4 flex-shrink-0" />
-                      {label}
-                    </Link>
-
-                    {/* View a Tenant — inline under Tenants item */}
-                    {isTenantsItem && (
-                      <div className="ml-7 mt-1 mb-0.5">
-                        <select
-                          className="w-full bg-slate-800 text-slate-300 text-xs rounded-md px-2.5 py-1.5
-                            border border-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500
-                            cursor-pointer hover:border-slate-500 transition-colors"
-                          defaultValue=""
-                          onChange={(e) => handleTenantSelect(e.target.value)}
-                          title="View a Tenant"
-                        >
-                          <option value="" disabled>
-                            View a tenant…
-                          </option>
-                          {tenants.map((t) => (
-                            <option key={t.id} value={t.id}>
-                              {t.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      active ? activeNavClass : inactiveNavClass
+                    }`}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    {label}
+                  </Link>
                 );
               })
             : navItems.map(({ href, label, icon: Icon, ...rest }) => {

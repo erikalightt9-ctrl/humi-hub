@@ -2,12 +2,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Building2,
   Plus,
   Search,
   UserCheck,
   ExternalLink,
+  Eye,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -65,9 +68,11 @@ function formatDate(iso: string) {
 }
 
 export default function TenantsPage() {
+  const router = useRouter();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [selectedTenantId, setSelectedTenantId] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -143,18 +148,6 @@ export default function TenantsPage() {
         </div>
       )}
 
-      {/* Search — placed above Tenants title for UX hierarchy */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-        <input
-          type="text"
-          placeholder="Search by name or subdomain..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -169,6 +162,74 @@ export default function TenantsPage() {
             New Tenant
           </Link>
         </Button>
+      </div>
+
+      {/* ── Quick Tenant View ── */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Eye className="h-4 w-4 text-indigo-500" />
+          <span className="text-sm font-semibold text-slate-700">Quick Tenant View</span>
+          <span className="text-xs text-slate-400 ml-1">— jump directly into any tenant workspace</span>
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={selectedTenantId}
+            onChange={(e) => setSelectedTenantId(e.target.value)}
+            className="flex-1 text-sm rounded-lg border border-slate-200 bg-slate-50 px-3 py-2
+              focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+              text-slate-700 cursor-pointer"
+          >
+            <option value="" disabled>Select a tenant to view…</option>
+            {tenants.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name} {t.subdomain ? `(${t.subdomain})` : ""}
+              </option>
+            ))}
+          </select>
+          <Button
+            size="sm"
+            disabled={!selectedTenantId}
+            onClick={() => selectedTenantId && router.push(`/superadmin/view/${selectedTenantId}/dashboard`)}
+            className="gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-40"
+          >
+            View
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        {/* Quick-access pills for loaded tenants */}
+        {tenants.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {tenants.slice(0, 6).map((t) => (
+              <Link
+                key={t.id}
+                href={`/superadmin/view/${t.id}/dashboard`}
+                className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full
+                  bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700
+                  border border-slate-200 hover:border-indigo-200 transition-colors"
+              >
+                <Building2 className="h-3 w-3" />
+                {t.name}
+              </Link>
+            ))}
+            {tenants.length > 6 && (
+              <span className="inline-flex items-center text-xs px-2.5 py-1 text-slate-400">
+                +{tenants.length - 6} more
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <input
+          type="text"
+          placeholder="Search by name or subdomain..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
       </div>
 
       {/* Table */}
