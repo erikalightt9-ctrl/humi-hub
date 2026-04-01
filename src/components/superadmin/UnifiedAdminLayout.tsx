@@ -124,28 +124,69 @@ export function UnifiedAdminLayout({ children }: UnifiedAdminLayoutProps) {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {navItems.map(({ href, label, icon: Icon, ...rest }) => {
-            const exact = "exact" in rest ? (rest as { exact: boolean }).exact : false;
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive(href, exact) ? activeNavClass : inactiveNavClass
-                }`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <Icon className="h-4 w-4 flex-shrink-0" />
-                {label}
-              </Link>
-            );
-          })}
+          {!isTenantMode
+            ? PLATFORM_NAV.map(({ href, label, icon: Icon, exact }) => {
+                const active = isActive(href, exact);
+                const isTenantsItem = href === "/superadmin/tenants";
+                return (
+                  <div key={href}>
+                    <Link
+                      href={href}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                        active ? activeNavClass : inactiveNavClass
+                      }`}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      {label}
+                    </Link>
+
+                    {/* View a Tenant — inline under Tenants item */}
+                    {isTenantsItem && (
+                      <div className="ml-7 mt-1 mb-0.5">
+                        <select
+                          className="w-full bg-slate-800 text-slate-300 text-xs rounded-md px-2.5 py-1.5
+                            border border-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500
+                            cursor-pointer hover:border-slate-500 transition-colors"
+                          defaultValue=""
+                          onChange={(e) => handleTenantSelect(e.target.value)}
+                          title="View a Tenant"
+                        >
+                          <option value="" disabled>
+                            View a tenant…
+                          </option>
+                          {tenants.map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            : navItems.map(({ href, label, icon: Icon, ...rest }) => {
+                const exact = "exact" in rest ? (rest as { exact: boolean }).exact : false;
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      isActive(href, exact) ? activeNavClass : inactiveNavClass
+                    }`}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    {label}
+                  </Link>
+                );
+              })}
         </nav>
 
-        {/* Tenant selector */}
-        <div className={`px-3 py-3 border-t ${sidebarBorder}`}>
-          {isTenantMode ? (
-            /* Tenant mode: link back to platform */
+        {/* Tenant mode: exit link */}
+        {isTenantMode && (
+          <div className={`px-3 py-3 border-t ${sidebarBorder}`}>
             <Link
               href="/superadmin"
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium
@@ -154,29 +195,8 @@ export function UnifiedAdminLayout({ children }: UnifiedAdminLayoutProps) {
               <ChevronRight className="h-3.5 w-3.5 rotate-180" />
               Exit to Platform
             </Link>
-          ) : (
-            /* Platform mode: tenant selector */
-            <div>
-              <p className="text-xs text-slate-500 mb-1.5 px-1 font-medium">View a Tenant</p>
-              <select
-                className="w-full bg-slate-800 text-slate-200 text-xs rounded-md px-2 py-1.5
-                  border border-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500
-                  cursor-pointer"
-                defaultValue=""
-                onChange={(e) => handleTenantSelect(e.target.value)}
-              >
-                <option value="" disabled>
-                  Select tenant...
-                </option>
-                {tenants.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Sign out footer */}
         <div className={`px-3 py-3 border-t ${sidebarBorder}`}>
