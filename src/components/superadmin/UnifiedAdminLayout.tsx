@@ -125,7 +125,9 @@ export function UnifiedAdminLayout({ children }: UnifiedAdminLayoutProps) {
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {!isTenantMode
-            ? PLATFORM_NAV.map(({ href, label, icon: Icon, exact }) => {
+            ? PLATFORM_NAV.map((item) => {
+                const { href, label, icon: Icon } = item;
+                const exact = "exact" in item ? (item as { exact?: boolean }).exact : false;
                 const active = isActive(href, exact);
                 const isTenantsItem = href === "/superadmin/tenants";
                 return (
