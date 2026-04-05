@@ -94,21 +94,42 @@ export type AccountingGuardResult =
   | { readonly ok: true; readonly tenantId: string; readonly userId: string; readonly userRole: string }
   | { readonly ok: false; readonly response: NextResponse };
 
+/** Resolve tenantId the same way requireAdmin does, then check role */
+function resolveAccountingTenant(
+  token: JWT | null,
+  allowedRoles: Set<string>
+): AccountingGuardResult {
+  if (!token?.id) return { ok: false, response: unauthorized() };
+  const role = (token.role as string) ?? "";
+
+  // Super admin path — same as requireAdmin
+  if (token.isSuperAdmin && role === "admin") {
+    const defaultTenantId = process.env.DEFAULT_TENANT_ID;
+    if (!defaultTenantId) return { ok: false, response: unauthorized() };
+    return { ok: true, tenantId: defaultTenantId, userId: token.id as string, userRole: role };
+  }
+
+  // Tenant admin / accountant / auditor path
+  if (!allowedRoles.has(role)) return { ok: false, response: unauthorized() };
+
+  // tenantId may live in token.tenantId or token.organizationId depending on session strategy
+  const tenantId =
+    (token.tenantId as string | undefined) ??
+    (token.organizationId as string | undefined);
+
+  if (!tenantId) return { ok: false, response: unauthorized() };
+  return { ok: true, tenantId, userId: token.id as string, userRole: role };
+}
+
 const ACCOUNTING_WRITE_ROLES = new Set(["admin", "tenant_admin", "accountant"]);
 const ACCOUNTING_READ_ROLES  = new Set(["admin", "tenant_admin", "accountant", "auditor"]);
 
 /** Write access: admin, tenant_admin, accountant */
 export function requireAccountingWrite(token: JWT | null): AccountingGuardResult {
-  if (!token?.id || !token.tenantId) return { ok: false, response: unauthorized() };
-  const role = (token.role as string) ?? "";
-  if (!ACCOUNTING_WRITE_ROLES.has(role)) return { ok: false, response: unauthorized() };
-  return { ok: true, tenantId: token.tenantId as string, userId: token.id as string, userRole: role };
+  return resolveAccountingTenant(token, ACCOUNTING_WRITE_ROLES);
 }
 
 /** Read access: admin, tenant_admin, accountant, auditor */
 export function requireAccountingRead(token: JWT | null): AccountingGuardResult {
-  if (!token?.id || !token.tenantId) return { ok: false, response: unauthorized() };
-  const role = (token.role as string) ?? "";
-  if (!ACCOUNTING_READ_ROLES.has(role)) return { ok: false, response: unauthorized() };
-  return { ok: true, tenantId: token.tenantId as string, userId: token.id as string, userRole: role };
+  return resolveAccountingTenant(token, ACCOUNTING_READ_ROLES);
 }
