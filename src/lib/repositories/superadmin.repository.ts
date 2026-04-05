@@ -135,6 +135,156 @@ export async function getPlatformAnalytics() {
 /*  Revenue Analytics                                                  */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/*  Financial Control — tenant subscription management                 */
+/* ------------------------------------------------------------------ */
+
+export type FinancialFilter = "all" | "pending" | "approved" | "rejected";
+
+export interface TenantSubscriptionRecord {
+  id: string;
+  tenantId: string;
+  tenantName: string;
+  tenantEmail: string;
+  plan: string;
+  status: string;
+  normalizedStatus: "pending" | "approved" | "rejected";
+  amountCents: number;
+  currency: string;
+  periodStart: string;
+  periodEnd: string;
+  paymentMethod: string | null;
+  paymentRef: string | null;
+  paidAt: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FinancialStats {
+  pendingCount: number;
+  approvedThisMonth: number;
+  rejectedThisMonth: number;
+  totalRevenueThisMonth: number;
+}
+
+function normalizeStatus(status: string): "pending" | "approved" | "rejected" {
+  if (status === "ACTIVE") return "approved";
+  if (status === "CANCELLED") return "rejected";
+  return "pending";
+}
+
+export async function getFinancialStats(): Promise<FinancialStats> {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [pending, approvedThisMonth, rejectedThisMonth, revenueThisMonth] = await Promise.all([
+    prisma.tenantSubscription.count({ where: { status: "PENDING" } }),
+    prisma.tenantSubscription.count({
+      where: { status: "ACTIVE", paidAt: { gte: startOfMonth } },
+    }),
+    prisma.tenantSubscription.count({
+      where: { status: "CANCELLED", cancelledAt: { gte: startOfMonth } },
+    }),
+    prisma.tenantSubscription.aggregate({
+      where: { status: "ACTIVE", paidAt: { gte: startOfMonth } },
+      _sum: { amountCents: true },
+    }),
+  ]);
+
+  return {
+    pendingCount: pending,
+    approvedThisMonth,
+    rejectedThisMonth,
+    totalRevenueThisMonth: revenueThisMonth._sum.amountCents ?? 0,
+  };
+}
+
+export async function getTenantSubscriptions(opts: {
+  filter: FinancialFilter;
+  page: number;
+  limit: number;
+}): Promise<{ subscriptions: TenantSubscriptionRecord[]; total: number }> {
+  const { filter, page, limit } = opts;
+  const skip = (page - 1) * limit;
+
+  const where =
+    filter === "pending"
+      ? { status: "PENDING" as const }
+      : filter === "approved"
+        ? { status: "ACTIVE" as const }
+        : filter === "rejected"
+          ? { status: "CANCELLED" as const }
+          : {};
+
+  const [rows, total] = await Promise.all([
+    prisma.tenantSubscription.findMany({
+      where,
+      include: { tenant: { select: { name: true, email: true } } },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.tenantSubscription.count({ where }),
+  ]);
+
+  const subscriptions = rows.map(
+    (s): TenantSubscriptionRecord => ({
+      id: s.id,
+      tenantId: s.tenantId,
+      tenantName: s.tenant.name,
+      tenantEmail: s.tenant.email,
+      plan: s.plan,
+      status: s.status,
+      normalizedStatus: normalizeStatus(s.status),
+      amountCents: s.amountCents,
+      currency: s.currency,
+      periodStart: s.periodStart.toISOString(),
+      periodEnd: s.periodEnd.toISOString(),
+      paymentMethod: s.paymentMethod,
+      paymentRef: s.paymentRef,
+      paidAt: s.paidAt?.toISOString() ?? null,
+      cancelledAt: s.cancelledAt?.toISOString() ?? null,
+      createdAt: s.createdAt.toISOString(),
+      updatedAt: s.updatedAt.toISOString(),
+    })
+  );
+
+  return { subscriptions, total };
+}
+
+export async function approveTenantSubscription(subscriptionId: string): Promise<void> {
+  await prisma.tenantSubscription.update({
+    where: { id: subscriptionId },
+    data: { status: "ACTIVE", paidAt: new Date() },
+  });
+}
+
+export async function rejectTenantSubscription(subscriptionId: string): Promise<void> {
+  await prisma.tenantSubscription.update({
+    where: { id: subscriptionId },
+    data: { status: "CANCELLED", cancelledAt: new Date() },
+  });
+}
+
+export async function editTenantSubscription(
+  subscriptionId: string,
+  data: {
+    plan?: "TRIAL" | "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
+    amountCents?: number;
+    currency?: string;
+    periodStart?: Date;
+    periodEnd?: Date;
+    paymentMethod?: string | null;
+    paymentRef?: string | null;
+  }
+): Promise<void> {
+  await prisma.tenantSubscription.update({
+    where: { id: subscriptionId },
+    data,
+  });
+}
+
 export async function getRevenueAnalytics() {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);

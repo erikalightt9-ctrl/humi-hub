@@ -18,6 +18,8 @@ import {
   DollarSign,
   Zap,
   ChevronRight,
+  Landmark,
+  Layers,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +39,8 @@ const PLATFORM_NAV = [
   { href: "/superadmin/tenants", label: "Tenants", icon: Building2 },
   { href: "/superadmin/humi-admins", label: "HUMI Admins", icon: Shield },
   { href: "/superadmin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/superadmin/financial", label: "Financial Control", icon: Landmark },
+  { href: "/superadmin/modules", label: "Modules", icon: Layers },
   { href: "/superadmin/settings", label: "Platform Settings", icon: Settings },
 ] as const;
 

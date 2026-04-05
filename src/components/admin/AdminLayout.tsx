@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   GraduationCap,
   LayoutDashboard,
@@ -17,6 +17,11 @@ import {
   Shield,
   ExternalLink,
   DollarSign,
+  Landmark,
+  Megaphone,
+  Package,
+  TrendingUp,
+  Monitor,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/shared/NotificationBell";
@@ -24,9 +29,10 @@ import { ChatWidgetEnhanced } from "@/components/shared/ChatWidgetEnhanced";
 import { AdminProfileDropdown } from "@/components/admin/AdminProfileDropdown";
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 import { signOut, useSession } from "next-auth/react";
+import type { ModuleKey } from "@/lib/modules";
 
 /* ------------------------------------------------------------------ */
-/*  Navigation — 6 core items, flat                                    */
+/*  Navigation — always-visible + module-gated items                   */
 /* ------------------------------------------------------------------ */
 
 interface NavItem {
@@ -34,16 +40,31 @@ interface NavItem {
   readonly label: string;
   readonly icon: React.ComponentType<{ className?: string }>;
   readonly exact?: boolean;
+  readonly moduleKey?: ModuleKey;
 }
 
-const NAV_ITEMS: ReadonlyArray<NavItem> = [
-  { href: "/admin",           label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/courses",   label: "Courses",   icon: BookOpen },
-  { href: "/admin/students",  label: "Students",  icon: Users },
-  { href: "/admin/trainers",  label: "Trainers",  icon: UserCog },
-  { href: "/admin/enrollees", label: "Tasks",     icon: CheckSquare },
-  { href: "/admin/revenue",   label: "Revenue",   icon: DollarSign },
-  { href: "/admin/settings",  label: "Settings",  icon: Settings },
+/** Items always visible regardless of enabled modules */
+const STATIC_NAV: ReadonlyArray<NavItem> = [
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+];
+
+/** Module-gated nav items — shown only when the module is enabled */
+const MODULE_NAV: ReadonlyArray<NavItem> = [
+  { href: "/admin/courses",    label: "Courses",    icon: BookOpen,      moduleKey: "module_lms" },
+  { href: "/admin/students",   label: "Students",   icon: Users,         moduleKey: "module_lms" },
+  { href: "/admin/trainers",   label: "Trainers",   icon: UserCog,       moduleKey: "module_lms" },
+  { href: "/admin/enrollees",  label: "Tasks",      icon: CheckSquare,   moduleKey: "module_lms" },
+  { href: "/admin/revenue",    label: "Revenue",    icon: DollarSign,    moduleKey: "module_lms" },
+  { href: "/admin/hr",         label: "HR",         icon: Users,         moduleKey: "module_hr" },
+  { href: "/admin/accounting", label: "Accounting", icon: Landmark,      moduleKey: "module_accounting" },
+  { href: "/admin/marketing",  label: "Marketing",  icon: Megaphone,     moduleKey: "module_marketing" },
+  { href: "/admin/inventory",  label: "Inventory",  icon: Package,       moduleKey: "module_inventory" },
+  { href: "/admin/sales",      label: "Sales",      icon: TrendingUp,    moduleKey: "module_sales" },
+  { href: "/admin/it",         label: "IT",         icon: Monitor,       moduleKey: "module_it" },
+];
+
+const SETTINGS_NAV: ReadonlyArray<NavItem> = [
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -55,6 +76,24 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: session } = useSession();
   const isSuperAdmin = (session?.user as { isSuperAdmin?: boolean })?.isSuperAdmin === true;
+  const [enabledModules, setEnabledModules] = useState<Partial<Record<ModuleKey, boolean>>>({
+    module_lms: true, // optimistic default for LMS
+  });
+
+  useEffect(() => {
+    fetch("/api/admin/tenant-modules")
+      .then((r) => r.json())
+      .then((d: { success: boolean; data: { modules: Record<ModuleKey, boolean> } }) => {
+        if (d.success) setEnabledModules(d.data.modules);
+      })
+      .catch(() => {});
+  }, []);
+
+  const visibleNav: NavItem[] = [
+    ...STATIC_NAV,
+    ...MODULE_NAV.filter((item) => item.moduleKey && enabledModules[item.moduleKey]),
+    ...SETTINGS_NAV,
+  ];
 
   function isActive({ href, exact }: NavItem) {
     return exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
@@ -101,7 +140,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
+          {visibleNav.map((item) => {
             const active = isActive(item);
             return (
               <Link
