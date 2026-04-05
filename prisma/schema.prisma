@@ -1280,10 +1280,17 @@ model Organization {
   subscriptions  TenantSubscription[]
   tasks          OrganizationTask[]
   files          OrganizationFile[]
-  featureFlags   TenantFeatureFlag[]
-  pages          TenantPage[]
-  theme          TenantTheme?
-  invites        TenantInvite[]
+  featureFlags      TenantFeatureFlag[]
+  pages             TenantPage[]
+  theme             TenantTheme?
+  invites           TenantInvite[]
+  accAccounts       AccAccount[]
+  accTransactions   AccTransaction[]
+  accInvoices       AccInvoice[]
+  accExpenses       AccExpense[]
+  accBankAccounts   AccBankAccount[]
+  accAuditLogs      AccAuditLog[]
+  accForensicFlags  AccForensicFlag[]
 
   @@map("organizations")
 }
@@ -2044,4 +2051,332 @@ model TenantInvite {
   @@index([tenantId])
   @@index([code])
   @@map("tenant_invites")
+}
+
+/* ================================================================== */
+/*  ACCOUNTING MODULE                                                  */
+/* ================================================================== */
+
+enum AccAccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum AccNormalBalance {
+  DEBIT
+  CREDIT
+}
+
+enum AccTransactionStatus {
+  DRAFT
+  POSTED
+  VOIDED
+}
+
+enum AccInvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+  VOIDED
+}
+
+enum AccExpenseStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  PAID
+  VOIDED
+}
+
+enum AccReconciliationStatus {
+  PENDING
+  MATCHED
+  UNMATCHED
+  ADJUSTED
+}
+
+enum AccForensicSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+/* ------------------------------------------------------------------ */
+/*  Chart of Accounts                                                  */
+/* ------------------------------------------------------------------ */
+
+model AccAccount {
+  id              String           @id @default(cuid())
+  organizationId  String
+  code            String           @db.VarChar(20)
+  name            String           @db.VarChar(150)
+  type            AccAccountType
+  normalBalance   AccNormalBalance
+  parentId        String?
+  description     String?          @db.Text
+  isActive        Boolean          @default(true)
+  isSystemAccount Boolean          @default(false)
+  currency        String           @default("PHP") @db.VarChar(3)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  organization     Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parent           AccAccount?         @relation("AccAccountParent", fields: [parentId], references: [id])
+  children         AccAccount[]        @relation("AccAccountParent")
+  transactionLines AccTransactionLine[]
+  invoiceLines     AccInvoiceLine[]
+  expenses         AccExpense[]        @relation("ExpenseAccount")
+  paymentExpenses  AccExpense[]        @relation("ExpensePaymentAccount")
+  bankAccounts     AccBankAccount[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, type])
+  @@index([organizationId, isActive])
+  @@map("acc_accounts")
+}
+
+/* ------------------------------------------------------------------ */
+/*  Journal Transactions                                               */
+/* ------------------------------------------------------------------ */
+
+model AccTransaction {
+  id                String               @id @default(cuid())
+  organizationId    String
+  transactionNumber String               @db.VarChar(30)
+  date              DateTime             @db.Date
+  description       String               @db.VarChar(500)
+  status            AccTransactionStatus @default(DRAFT)
+  reference         String?              @db.VarChar(100)
+  sourceType        String?              @db.VarChar(30)
+  sourceId          String?
+  postedAt          DateTime?
+  voidedAt          DateTime?
+  voidReason        String?              @db.VarChar(300)
+  createdById       String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lines        AccTransactionLine[]
+
+  @@unique([organizationId, transactionNumber])
+  @@index([organizationId, date])
+  @@index([organizationId, status])
+  @@index([organizationId, sourceType, sourceId])
+  @@map("acc_transactions")
+}
+
+model AccTransactionLine {
+  id            String     @id @default(cuid())
+  transactionId String
+  accountId     String
+  description   String?    @db.VarChar(300)
+  debitAmount   Decimal    @default(0) @db.Decimal(15, 2)
+  creditAmount  Decimal    @default(0) @db.Decimal(15, 2)
+  currency      String     @default("PHP") @db.VarChar(3)
+  createdAt     DateTime   @default(now())
+
+  transaction AccTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  account     AccAccount     @relation(fields: [accountId], references: [id])
+
+  @@index([transactionId])
+  @@index([accountId])
+  @@map("acc_transaction_lines")
+}
+
+/* ------------------------------------------------------------------ */
+/*  Invoices                                                           */
+/* ------------------------------------------------------------------ */
+
+model AccInvoice {
+  id              String           @id @default(cuid())
+  organizationId  String
+  invoiceNumber   String           @db.VarChar(30)
+  customerName    String           @db.VarChar(200)
+  customerEmail   String?          @db.VarChar(200)
+  customerAddress String?          @db.Text
+  issueDate       DateTime         @db.Date
+  dueDate         DateTime         @db.Date
+  status          AccInvoiceStatus @default(DRAFT)
+  subtotalAmount  Decimal          @default(0) @db.Decimal(15, 2)
+  taxAmount       Decimal          @default(0) @db.Decimal(15, 2)
+  totalAmount     Decimal          @default(0) @db.Decimal(15, 2)
+  paidAmount      Decimal          @default(0) @db.Decimal(15, 2)
+  currency        String           @default("PHP") @db.VarChar(3)
+  notes           String?          @db.Text
+  paidAt          DateTime?
+  transactionId   String?
+  createdById     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lines        AccInvoiceLine[]
+
+  @@unique([organizationId, invoiceNumber])
+  @@index([organizationId, status])
+  @@index([organizationId, dueDate])
+  @@index([organizationId, customerName])
+  @@map("acc_invoices")
+}
+
+model AccInvoiceLine {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  description String   @db.VarChar(300)
+  quantity    Decimal  @default(1) @db.Decimal(10, 4)
+  unitPrice   Decimal  @default(0) @db.Decimal(15, 2)
+  amount      Decimal  @default(0) @db.Decimal(15, 2)
+  taxRate     Decimal  @default(0) @db.Decimal(5, 2)
+  accountId   String?
+  createdAt   DateTime @default(now())
+
+  invoice AccInvoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  account AccAccount? @relation(fields: [accountId], references: [id])
+
+  @@index([invoiceId])
+  @@map("acc_invoice_lines")
+}
+
+/* ------------------------------------------------------------------ */
+/*  Expenses                                                           */
+/* ------------------------------------------------------------------ */
+
+model AccExpense {
+  id               String           @id @default(cuid())
+  organizationId   String
+  expenseNumber    String           @db.VarChar(30)
+  vendor           String           @db.VarChar(200)
+  description      String           @db.VarChar(500)
+  category         String           @db.VarChar(100)
+  amount           Decimal          @default(0) @db.Decimal(15, 2)
+  taxAmount        Decimal          @default(0) @db.Decimal(15, 2)
+  totalAmount      Decimal          @default(0) @db.Decimal(15, 2)
+  currency         String           @default("PHP") @db.VarChar(3)
+  expenseDate      DateTime         @db.Date
+  status           AccExpenseStatus @default(DRAFT)
+  receiptUrl       String?
+  accountId        String?
+  paymentAccountId String?
+  transactionId    String?
+  submittedById    String?
+  approvedById     String?
+  approvedAt       DateTime?
+  rejectedReason   String?          @db.VarChar(300)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  account         AccAccount?  @relation("ExpenseAccount", fields: [accountId], references: [id])
+  paymentAccount  AccAccount?  @relation("ExpensePaymentAccount", fields: [paymentAccountId], references: [id])
+
+  @@unique([organizationId, expenseNumber])
+  @@index([organizationId, status])
+  @@index([organizationId, expenseDate])
+  @@index([organizationId, category])
+  @@map("acc_expenses")
+}
+
+/* ------------------------------------------------------------------ */
+/*  Bank Reconciliation                                                */
+/* ------------------------------------------------------------------ */
+
+model AccBankAccount {
+  id               String   @id @default(cuid())
+  organizationId   String
+  name             String   @db.VarChar(150)
+  bankName         String   @db.VarChar(150)
+  accountNumber    String   @db.VarChar(30)
+  currency         String   @default("PHP") @db.VarChar(3)
+  accountId        String?
+  currentBalance   Decimal  @default(0) @db.Decimal(15, 2)
+  lastReconciledAt DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  account      AccAccount?        @relation(fields: [accountId], references: [id])
+  transactions AccBankTransaction[]
+
+  @@unique([organizationId, accountNumber])
+  @@index([organizationId])
+  @@map("acc_bank_accounts")
+}
+
+model AccBankTransaction {
+  id                     String                  @id @default(cuid())
+  bankAccountId          String
+  date                   DateTime                @db.Date
+  description            String                  @db.VarChar(400)
+  amount                 Decimal                 @db.Decimal(15, 2)
+  referenceNumber        String?                 @db.VarChar(100)
+  status                 AccReconciliationStatus @default(PENDING)
+  matchedTransactionLineId String?
+  reconciledAt           DateTime?
+  createdAt              DateTime                @default(now())
+
+  bankAccount AccBankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+
+  @@index([bankAccountId, date])
+  @@index([bankAccountId, status])
+  @@map("acc_bank_transactions")
+}
+
+/* ------------------------------------------------------------------ */
+/*  Audit Logs                                                         */
+/* ------------------------------------------------------------------ */
+
+model AccAuditLog {
+  id              String   @id @default(cuid())
+  organizationId  String
+  entityType      String   @db.VarChar(50)
+  entityId        String
+  action          String   @db.VarChar(30)
+  changes         Json?
+  performedById   String?
+  performedByName String?  @db.VarChar(150)
+  performedByRole String?  @db.VarChar(50)
+  ipAddress       String?  @db.VarChar(50)
+  createdAt       DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, entityType, entityId])
+  @@index([organizationId, createdAt])
+  @@map("acc_audit_logs")
+}
+
+/* ------------------------------------------------------------------ */
+/*  Forensic Flags                                                     */
+/* ------------------------------------------------------------------ */
+
+model AccForensicFlag {
+  id             String              @id @default(cuid())
+  organizationId String
+  ruleCode       String              @db.VarChar(60)
+  severity       AccForensicSeverity
+  entityType     String              @db.VarChar(50)
+  entityId       String
+  description    String              @db.VarChar(500)
+  details        Json?
+  isResolved     Boolean             @default(false)
+  resolvedById   String?
+  resolvedAt     DateTime?
+  resolvedNote   String?             @db.VarChar(500)
+  createdAt      DateTime            @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, isResolved])
+  @@index([organizationId, ruleCode])
+  @@index([organizationId, entityType, entityId])
+  @@map("acc_forensic_flags")
 }

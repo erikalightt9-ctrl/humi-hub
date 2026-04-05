@@ -73,7 +73,16 @@ export const MODULES: Record<ModuleKey, ModuleDefinition> = {
     color: "emerald",
     badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
     defaultEnabled: false,
-    navItems: [{ href: "/admin/accounting", label: "Accounting" }],
+    navItems: [
+      { href: "/admin/accounting",              label: "Dashboard"       },
+      { href: "/admin/accounting/accounts",     label: "Chart of Accounts" },
+      { href: "/admin/accounting/transactions", label: "Journal Entries" },
+      { href: "/admin/accounting/invoices",     label: "Invoices"        },
+      { href: "/admin/accounting/expenses",     label: "Expenses"        },
+      { href: "/admin/accounting/bank",         label: "Bank"            },
+      { href: "/admin/accounting/reports",      label: "Reports"         },
+      { href: "/admin/accounting/audit",        label: "Audit & Forensic"},
+    ],
   },
   module_marketing: {
     key: "module_marketing",

@@ -85,3 +85,30 @@ export function requireTenantAdmin(token: JWT | null): GuardResult {
   }
   return { ok: false, response: unauthorized() };
 }
+
+/* ------------------------------------------------------------------ */
+/*  Accounting Guards                                                   */
+/* ------------------------------------------------------------------ */
+
+export type AccountingGuardResult =
+  | { readonly ok: true; readonly tenantId: string; readonly userId: string; readonly userRole: string }
+  | { readonly ok: false; readonly response: NextResponse };
+
+const ACCOUNTING_WRITE_ROLES = new Set(["admin", "tenant_admin", "accountant"]);
+const ACCOUNTING_READ_ROLES  = new Set(["admin", "tenant_admin", "accountant", "auditor"]);
+
+/** Write access: admin, tenant_admin, accountant */
+export function requireAccountingWrite(token: JWT | null): AccountingGuardResult {
+  if (!token?.id || !token.tenantId) return { ok: false, response: unauthorized() };
+  const role = (token.role as string) ?? "";
+  if (!ACCOUNTING_WRITE_ROLES.has(role)) return { ok: false, response: unauthorized() };
+  return { ok: true, tenantId: token.tenantId as string, userId: token.id as string, userRole: role };
+}
+
+/** Read access: admin, tenant_admin, accountant, auditor */
+export function requireAccountingRead(token: JWT | null): AccountingGuardResult {
+  if (!token?.id || !token.tenantId) return { ok: false, response: unauthorized() };
+  const role = (token.role as string) ?? "";
+  if (!ACCOUNTING_READ_ROLES.has(role)) return { ok: false, response: unauthorized() };
+  return { ok: true, tenantId: token.tenantId as string, userId: token.id as string, userRole: role };
+}
