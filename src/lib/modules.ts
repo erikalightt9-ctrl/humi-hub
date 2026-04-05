@@ -1,7 +1,44 @@
 /**
  * Central module definitions for the multi-tenant SaaS platform.
  * Each module maps to a TenantFeatureFlag key (`module_*`).
+ *
+ * Industries map to a preset module bundle for faster onboarding.
+ * Super admin can override any module toggle after auto-assignment.
  */
+
+/* ------------------------------------------------------------------ */
+/*  Industries                                                          */
+/* ------------------------------------------------------------------ */
+
+export const INDUSTRY_KEYS = [
+  "training_center",
+  "corporate",
+  "agency",
+  "retail_sales",
+  "others",
+] as const;
+
+export type IndustryKey = (typeof INDUSTRY_KEYS)[number];
+
+export interface IndustryDefinition {
+  key: IndustryKey;
+  label: string;
+  description: string;
+  iconName: string;
+  color: string;
+  /** Modules auto-enabled for this industry */
+  defaultModules: ModuleKey[];
+}
+
+// Forward-declare ModuleKey so it can be referenced below
+type ModuleKey =
+  | "module_lms"
+  | "module_hr"
+  | "module_accounting"
+  | "module_marketing"
+  | "module_inventory"
+  | "module_sales"
+  | "module_it";
 
 export const MODULE_KEYS = [
   "module_lms",
@@ -152,4 +189,64 @@ export function getEnabledNavHrefs(enabledMap: Record<ModuleKey, boolean>): stri
   return MODULE_KEYS.filter((k) => enabledMap[k]).flatMap((k) =>
     MODULES[k].navItems.map((n) => n.href)
   );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Industry definitions                                                */
+/* ------------------------------------------------------------------ */
+
+export const INDUSTRIES: Record<IndustryKey, IndustryDefinition> = {
+  training_center: {
+    key: "training_center",
+    label: "Training Center",
+    description: "Online/offline courses, certifications, and student management.",
+    iconName: "GraduationCap",
+    color: "blue",
+    defaultModules: ["module_lms"],
+  },
+  corporate: {
+    key: "corporate",
+    label: "Corporate / Office",
+    description: "Internal training, HR workflows, and financial management.",
+    iconName: "Building2",
+    color: "indigo",
+    defaultModules: ["module_lms", "module_hr", "module_accounting"],
+  },
+  agency: {
+    key: "agency",
+    label: "Agency",
+    description: "Client-facing training, lead management, and sales pipelines.",
+    iconName: "Megaphone",
+    color: "pink",
+    defaultModules: ["module_lms", "module_marketing", "module_sales"],
+  },
+  retail_sales: {
+    key: "retail_sales",
+    label: "Retail / Sales",
+    description: "Inventory control, sales tracking, and financial oversight.",
+    iconName: "ShoppingBag",
+    color: "amber",
+    defaultModules: ["module_inventory", "module_sales", "module_accounting"],
+  },
+  others: {
+    key: "others",
+    label: "Others",
+    description: "General purpose — start with LMS and add modules as needed.",
+    iconName: "LayoutGrid",
+    color: "slate",
+    defaultModules: ["module_lms"],
+  },
+};
+
+export const INDUSTRY_LIST = INDUSTRY_KEYS.map((k) => INDUSTRIES[k]);
+
+/**
+ * Returns the initial module enable map for a given industry.
+ * All unassigned modules default to false.
+ */
+export function getModulesByIndustry(industry: IndustryKey): Record<ModuleKey, boolean> {
+  const preset = INDUSTRIES[industry]?.defaultModules ?? ["module_lms"];
+  return Object.fromEntries(
+    MODULE_KEYS.map((k) => [k, preset.includes(k)])
+  ) as Record<ModuleKey, boolean>;
 }

@@ -8,6 +8,8 @@ import {
   createTenant,
 } from "@/lib/repositories/superadmin.repository";
 import { sendTenantWelcomeEmail } from "@/lib/email/send-tenant-welcome";
+import { prisma } from "@/lib/prisma";
+import { MODULE_KEYS } from "@/lib/modules";
 
 const createTenantSchema = z.object({
   name: z.string().min(1).max(100),
@@ -24,6 +26,7 @@ const createTenantSchema = z.object({
   adminName: z.string().min(1),
   adminEmail: z.string().email(),
   adminPassword: z.string().min(8),
+  enabledModules: z.array(z.string()).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -58,10 +61,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { adminPassword, ...rest } = result.data;
+    const { adminPassword, enabledModules, ...rest } = result.data;
     const adminPasswordHash = await bcrypt.hash(adminPassword, 12);
 
     const { org, manager } = await createTenant({ ...rest, adminPasswordHash });
+
+    // Seed module feature flags for all known modules
+    const enabledSet = new Set(enabledModules ?? []);
+    await prisma.tenantFeatureFlag.createMany({
+      data: MODULE_KEYS.map((key) => ({
+        tenantId: org.id,
+        feature: key,
+        enabled: enabledSet.has(key),
+      })),
+      skipDuplicates: true,
+    });
 
     // Fire welcome email — non-blocking so a mail failure doesn't block the response
     sendTenantWelcomeEmail({
