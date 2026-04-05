@@ -209,10 +209,18 @@ export default function NewTenantPage() {
           <CheckCircle2 className="h-10 w-10 text-emerald-600" />
         </div>
         <h1 className="text-2xl font-bold text-slate-900 mb-2">Tenant Created!</h1>
-        <p className="text-slate-500 text-sm mb-8">
+        <p className="text-slate-500 text-sm mb-2">
           <span className="font-semibold text-slate-700">{success.name}</span> has been onboarded
           successfully. A welcome email has been sent to the admin.
         </p>
+        <a
+          href={`/t/${success.orgId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:underline mb-6 font-mono bg-indigo-50 px-3 py-1.5 rounded-lg"
+        >
+          /t/{success.orgId}
+        </a>
         <div className="flex flex-col gap-3 max-w-xs mx-auto">
           <Button
             className="bg-indigo-600 hover:bg-indigo-700 text-white w-full"
