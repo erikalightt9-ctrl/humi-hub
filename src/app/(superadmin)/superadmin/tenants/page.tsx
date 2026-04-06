@@ -11,6 +11,8 @@ import {
   ExternalLink,
   Eye,
   ChevronRight,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -75,6 +77,7 @@ export default function TenantsPage() {
   const [selectedTenantId, setSelectedTenantId] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Tenant | null>(null);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -126,6 +129,27 @@ export default function TenantsPage() {
     }
   };
 
+  const handleDelete = async (tenant: Tenant) => {
+    setActionLoading(tenant.id + "-delete");
+    setConfirmDelete(null);
+    try {
+      const res = await fetch(`/api/superadmin/tenants/${tenant.id}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setTenants((prev) => prev.filter((t) => t.id !== tenant.id));
+        showToast(`"${tenant.name}" has been permanently deleted.`);
+      } else {
+        showToast(json.error ?? "Failed to delete tenant.");
+      }
+    } catch {
+      showToast("Network error. Please try again.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleImpersonate = (tenant: Tenant) => {
     showToast(`Full impersonation coming soon — managing tenant ${tenant.name}`);
     window.open(`/superadmin/tenants/${tenant.id}`, "_blank");
@@ -145,6 +169,42 @@ export default function TenantsPage() {
       {toast && (
         <div className="fixed top-4 right-4 z-50 bg-slate-900 text-white text-sm px-4 py-3 rounded-xl shadow-lg">
           {toast}
+        </div>
+      )}
+
+      {/* Delete Confirm Dialog */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Delete Tenant</h3>
+                <p className="text-xs text-slate-500">This action cannot be undone.</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-700 mb-5">
+              Are you sure you want to permanently delete{" "}
+              <span className="font-semibold text-red-600">{confirmDelete.name}</span>?
+              All associated data including users, courses, and records will be removed.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 px-4 py-2 text-sm font-medium rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(confirmDelete)}
+                className="flex-1 px-4 py-2 text-sm font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -344,6 +404,20 @@ export default function TenantsPage() {
                           ? "Suspend"
                           : "Activate"}
                       </button>
+
+                      {/* Delete */}
+                      {!tenant.isDefault && (
+                        <button
+                          disabled={actionLoading === tenant.id + "-delete"}
+                          onClick={() => setConfirmDelete(tenant)}
+                          className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                          title="Delete tenant"
+                        >
+                          {actionLoading === tenant.id + "-delete"
+                            ? "..."
+                            : <Trash2 className="h-3.5 w-3.5" />}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

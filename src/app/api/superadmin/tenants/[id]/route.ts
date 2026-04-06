@@ -6,6 +6,7 @@ import {
   getTenantById,
   updateTenant,
 } from "@/lib/repositories/superadmin.repository";
+import { prisma } from "@/lib/prisma";
 
 const updateTenantSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -81,6 +82,42 @@ export async function PATCH(
     return NextResponse.json({ success: true, data: updated, error: null });
   } catch (err) {
     console.error("[PATCH /api/superadmin/tenants/[id]]", err);
+    return NextResponse.json(
+      { success: false, data: null, error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const guard = requireSuperAdmin(token);
+    if (!guard.ok) return guard.response;
+
+    const { id } = await params;
+
+    const tenant = await prisma.organization.findUnique({ where: { id } });
+    if (!tenant) {
+      return NextResponse.json({ success: false, data: null, error: "Tenant not found" }, { status: 404 });
+    }
+
+    // Prevent deleting the default/platform tenant
+    if (tenant.isDefault) {
+      return NextResponse.json(
+        { success: false, data: null, error: "Cannot delete the default platform tenant." },
+        { status: 403 },
+      );
+    }
+
+    await prisma.organization.delete({ where: { id } });
+
+    return NextResponse.json({ success: true, data: { id }, error: null });
+  } catch (err) {
+    console.error("[DELETE /api/superadmin/tenants/[id]]", err);
     return NextResponse.json(
       { success: false, data: null, error: "Internal server error" },
       { status: 500 },
