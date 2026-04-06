@@ -12,7 +12,7 @@ interface Testimonial {
 const testimonials: readonly Testimonial[] = [
   {
     quote: "HUMI Hub replaced 5 separate tools we were running. HR, training, finance, and messaging — everything is now centralized. Our team spends more time on actual work, not admin.",
-    name: "Maria Santos",
+    name: "Francess Ann Flosa",
     role: "Operations Director",
     company: "PhilTrain Academy",
     industry: "Training & Education",
@@ -20,7 +20,7 @@ const testimonials: readonly Testimonial[] = [
   },
   {
     quote: "We used HUMI Hub to manage our entire HR and sales pipeline. Onboarding new staff, tracking performance, and generating reports used to take days — now it takes minutes.",
-    name: "James Reyes",
+    name: "Prinze Lee",
     role: "CEO",
     company: "Nexus Business Solutions",
     industry: "Business Consulting",
@@ -28,7 +28,7 @@ const testimonials: readonly Testimonial[] = [
   },
   {
     quote: "Managing IT assets, helpdesk tickets, and staff training from one dashboard is a game changer. The multi-tenant setup lets us oversee 3 offices with full data isolation.",
-    name: "Angela Cruz",
+    name: "Berly Abaigar",
     role: "IT & Operations Manager",
     company: "TechReady Solutions",
     industry: "IT Services",

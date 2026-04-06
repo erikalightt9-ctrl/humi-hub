@@ -3,114 +3,11 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
   Play,
-  BarChart3,
-  Users,
-  TrendingUp,
-  DollarSign,
   Shield,
   Clock,
   MessageSquare,
   BookOpen,
 } from "lucide-react";
-
-/* ------------------------------------------------------------------ */
-/*  Dashboard Preview Card                                             */
-/* ------------------------------------------------------------------ */
-
-function DashboardPreview() {
-  return (
-    <div className="relative">
-      {/* Floating stat cards */}
-      <div className="absolute -top-4 -left-4 bg-white rounded-xl shadow-lg p-3 z-10 animate-pulse">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-            <Users className="h-4 w-4 text-emerald-600" />
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Active Employees</p>
-            <p className="text-sm font-bold text-gray-900">1,240</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="absolute -bottom-4 -right-4 bg-white rounded-xl shadow-lg p-3 z-10">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-900/40 flex items-center justify-center">
-            <TrendingUp className="h-4 w-4 text-blue-400" />
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Revenue Growth</p>
-            <p className="text-sm font-bold text-gray-900">+28%</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Main dashboard mockup */}
-      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-        {/* Title bar */}
-        <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-2">
-          <div className="flex gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-red-400" />
-            <div className="w-3 h-3 rounded-full bg-amber-400" />
-            <div className="w-3 h-3 rounded-full bg-green-400" />
-          </div>
-          <div className="flex-1 text-center">
-            <div className="bg-white rounded-md px-3 py-1 text-xs text-gray-400 inline-block border border-gray-200">
-              app.humihub.com/dashboard
-            </div>
-          </div>
-        </div>
-
-        {/* Dashboard content */}
-        <div className="p-4">
-          {/* Stats row */}
-          <div className="grid grid-cols-4 gap-3 mb-4">
-            {[
-              { label: "Revenue",   value: "₱4.8M", color: "bg-emerald-500" },
-              { label: "Employees", value: "1,240",  color: "bg-blue-500" },
-              { label: "Students",  value: "847",    color: "bg-purple-500" },
-              { label: "Leads",     value: "312",    color: "bg-amber-500" },
-            ].map((stat) => (
-              <div key={stat.label} className="bg-gray-50 rounded-lg p-2.5">
-                <div className={`w-1.5 h-1.5 rounded-full ${stat.color} mb-1.5`} />
-                <p className="text-[10px] text-gray-500">{stat.label}</p>
-                <p className="text-sm font-bold text-gray-900">{stat.value}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Chart placeholder */}
-          <div className="bg-gray-50 rounded-lg p-3 mb-3">
-            <p className="text-[10px] text-gray-500 mb-2">Business Performance</p>
-            <div className="flex items-end gap-1 h-12">
-              {[35, 50, 42, 60, 48, 68, 58, 72, 82, 78, 88, 95].map((h, i) => (
-                <div
-                  key={i}
-                  className="flex-1 bg-blue-400 rounded-sm opacity-80"
-                  style={{ height: `${h}%` }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Recent activity */}
-          <div className="space-y-1.5">
-            {[
-              { text: "Payroll processed: 48 employees",   color: "bg-emerald-400" },
-              { text: "New sales lead: Acme Corp",          color: "bg-amber-400"  },
-              { text: "IT ticket resolved: Server upgrade", color: "bg-blue-400"   },
-            ].map((item) => (
-              <div key={item.text} className="flex items-center gap-2 p-1.5 bg-gray-50 rounded-md">
-                <div className={`w-1.5 h-1.5 rounded-full ${item.color}`} />
-                <p className="text-[10px] text-gray-600 truncate">{item.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  Trust Badges                                                       */
@@ -136,68 +33,57 @@ export function SaasHeroSection() {
         <div className="absolute bottom-10 right-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 text-center">
+        <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-blue-200 text-sm font-medium px-4 py-1.5 rounded-full mb-8 border border-white/15">
+          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          All-in-One Business Operations Platform
+        </div>
 
-          {/* Left — Copy */}
-          <div>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-blue-200 text-sm font-medium px-4 py-1.5 rounded-full mb-8 border border-white/15">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              All-in-One Business Operations Platform
-            </div>
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.08] mb-6 tracking-tight">
+          Run Your Entire{" "}
+          <span className="bg-gradient-to-r from-amber-300 to-orange-300 bg-clip-text text-transparent">
+            Business
+          </span>{" "}
+          in One Platform
+        </h1>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.08] mb-6 tracking-tight">
-              Run Your Entire{" "}
-              <span className="bg-gradient-to-r from-amber-300 to-orange-300 bg-clip-text text-transparent">
-                Business
-              </span>{" "}
-              in One Platform
-            </h1>
+        <p className="text-blue-100/90 text-lg sm:text-xl leading-relaxed mb-8 max-w-2xl mx-auto">
+          Manage operations, people, and performance with a centralized
+          system built for growing businesses across industries. Training
+          management, HR, admin, IT, sales, and finance — all in one place.
+        </p>
 
-            <p className="text-blue-100/90 text-lg sm:text-xl leading-relaxed mb-8 max-w-xl">
-              Manage operations, people, and performance with a centralized
-              system built for growing businesses across industries. Training
-              management, HR, admin, IT, sales, and finance — all in one place.
-            </p>
+        {/* CTAs */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
+          <Button
+            asChild
+            size="lg"
+            className="bg-white text-slate-900 hover:bg-blue-50 font-bold text-base px-8 py-6 shadow-lg shadow-blue-950/40"
+          >
+            <Link href="/contact">
+              Get Started <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+          <Link
+            href="/contact"
+            className="inline-flex items-center justify-center gap-2 border border-white/40 text-white hover:bg-white/10 font-semibold text-base px-8 py-4 rounded-lg transition-colors"
+          >
+            <Play className="h-4 w-4" />
+            Book a Demo
+          </Link>
+        </div>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-10">
-              <Button
-                asChild
-                size="lg"
-                className="bg-white text-slate-900 hover:bg-blue-50 font-bold text-base px-8 py-6 shadow-lg shadow-blue-950/40"
-              >
-                <Link href="/contact">
-                  Get Started <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Link
-                href="/contact"
-                className="inline-flex items-center justify-center gap-2 border border-white/40 text-white hover:bg-white/10 font-semibold text-base px-8 py-4 rounded-lg transition-colors"
-              >
-                <Play className="h-4 w-4" />
-                Book a Demo
-              </Link>
-            </div>
-
-            {/* Trust badges */}
-            <div className="flex flex-wrap gap-4">
-              {trustBadges.map((badge) => (
-                <span
-                  key={badge.label}
-                  className="flex items-center gap-1.5 text-blue-200/80 text-sm"
-                >
-                  <badge.icon className="h-3.5 w-3.5 text-blue-300" />
-                  {badge.label}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Right — Dashboard Preview */}
-          <div className="hidden lg:block">
-            <DashboardPreview />
-          </div>
+        {/* Trust badges */}
+        <div className="flex flex-wrap gap-4 justify-center">
+          {trustBadges.map((badge) => (
+            <span
+              key={badge.label}
+              className="flex items-center gap-1.5 text-blue-200/80 text-sm"
+            >
+              <badge.icon className="h-3.5 w-3.5 text-blue-300" />
+              {badge.label}
+            </span>
+          ))}
         </div>
       </div>
     </section>
