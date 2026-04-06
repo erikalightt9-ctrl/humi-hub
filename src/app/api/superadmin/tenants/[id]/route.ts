@@ -113,22 +113,22 @@ export async function DELETE(
       );
     }
 
-    // Step 1: Null-out optional FKs outside transaction (safe, non-blocking)
+    // Step 1: Null-out all optional FKs pointing to this org
+    // Course uses `tenantId`, all others use `organizationId`
+    await prisma.course.updateMany({ where: { tenantId: id }, data: { tenantId: null } });
     await prisma.student.updateMany({ where: { organizationId: id }, data: { organizationId: null } });
-    await prisma.course.updateMany({ where: { organizationId: id }, data: { organizationId: null } });
     await prisma.enrollment.updateMany({ where: { organizationId: id }, data: { organizationId: null } });
     await prisma.conversation.updateMany({ where: { tenantId: id }, data: { tenantId: null } });
     await prisma.notification.updateMany({ where: { tenantId: id }, data: { tenantId: null } });
 
-    // Step 2: Delete only the 3 required relations that have NO onDelete: Cascade
+    // Step 2: Delete required relations with NO onDelete: Cascade
     await prisma.tenantTrainer.deleteMany({ where: { tenantId: id } });
     await prisma.tenantSubscription.deleteMany({ where: { tenantId: id } });
     await prisma.corporateManager.deleteMany({ where: { organizationId: id } });
 
     // Step 3: Delete the organization.
-    // All Acc*, OrganizationTask, OrganizationFile, TenantPage, TenantTheme,
-    // TenantInvite, TenantFeatureFlag already have onDelete: Cascade in the schema
-    // so Postgres will remove them automatically.
+    // Acc*, OrganizationTask, OrganizationFile, TenantPage, TenantTheme,
+    // TenantInvite, TenantFeatureFlag all have onDelete: Cascade — auto-removed.
     await prisma.organization.delete({ where: { id } });
 
     return NextResponse.json({ success: true, data: { id }, error: null });
