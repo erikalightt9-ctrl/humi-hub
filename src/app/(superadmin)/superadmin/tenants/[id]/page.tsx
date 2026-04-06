@@ -11,10 +11,82 @@ import {
   CreditCard,
   CheckCircle2,
   XCircle,
-
+  Briefcase,
+  HeartPulse,
+  ShoppingCart,
+  Monitor,
+  TrendingUp,
+  Layers,
+  ClipboardList,
+  FileText,
+  BarChart3,
 } from "lucide-react";
 import { getTenantById } from "@/lib/repositories/superadmin.repository";
 import { Button } from "@/components/ui/button";
+
+/** Returns the 4 stat cards appropriate for a given industry. */
+function getIndustryStats(
+  industry: string | null | undefined,
+  counts: { students: number; courses: number; managers: number; enrollments: number },
+) {
+  const ind = (industry ?? "").toUpperCase();
+
+  if (ind.includes("TRAINING") || ind.includes("LMS") || ind.includes("EDUCATION")) {
+    return [
+      { label: "Students",    value: counts.students,    icon: Users },
+      { label: "Courses",     value: counts.courses,     icon: BookOpen },
+      { label: "Managers",    value: counts.managers,    icon: UserCog },
+      { label: "Enrollments", value: counts.enrollments, icon: ClipboardList },
+    ];
+  }
+  if (ind.includes("HEALTH") || ind.includes("MEDICAL") || ind.includes("CLINIC")) {
+    return [
+      { label: "Staff",        value: counts.students,    icon: HeartPulse },
+      { label: "Departments",  value: counts.courses,     icon: Layers },
+      { label: "Managers",     value: counts.managers,    icon: UserCog },
+      { label: "Appointments", value: counts.enrollments, icon: ClipboardList },
+    ];
+  }
+  if (ind.includes("RETAIL") || ind.includes("SALES") || ind.includes("DISTRIBUTION")) {
+    return [
+      { label: "Staff",    value: counts.students,    icon: Users },
+      { label: "Products", value: counts.courses,     icon: ShoppingCart },
+      { label: "Managers", value: counts.managers,    icon: UserCog },
+      { label: "Orders",   value: counts.enrollments, icon: BarChart3 },
+    ];
+  }
+  if (ind.includes("IT") || ind.includes("TECH") || ind.includes("SOFTWARE")) {
+    return [
+      { label: "Staff",    value: counts.students,    icon: Monitor },
+      { label: "Projects", value: counts.courses,     icon: FileText },
+      { label: "Managers", value: counts.managers,    icon: UserCog },
+      { label: "Tickets",  value: counts.enrollments, icon: ClipboardList },
+    ];
+  }
+  if (ind.includes("CONSULT")) {
+    return [
+      { label: "Clients",      value: counts.students,    icon: Briefcase },
+      { label: "Projects",     value: counts.courses,     icon: FileText },
+      { label: "Managers",     value: counts.managers,    icon: UserCog },
+      { label: "Engagements",  value: counts.enrollments, icon: TrendingUp },
+    ];
+  }
+  if (ind.includes("FINANCE") || ind.includes("ACCOUNTING") || ind.includes("BANK")) {
+    return [
+      { label: "Staff",     value: counts.students,    icon: Users },
+      { label: "Accounts",  value: counts.courses,     icon: BarChart3 },
+      { label: "Managers",  value: counts.managers,    icon: UserCog },
+      { label: "Reports",   value: counts.enrollments, icon: FileText },
+    ];
+  }
+  // Default / Holding / General
+  return [
+    { label: "Staff",      value: counts.students,    icon: Users },
+    { label: "Departments",value: counts.courses,     icon: Building2 },
+    { label: "Managers",   value: counts.managers,    icon: UserCog },
+    { label: "Activities", value: counts.enrollments, icon: Layers },
+  ];
+}
 
 const PLAN_BADGE: Record<string, string> = {
   TRIAL:        "bg-amber-50 text-amber-700",
@@ -81,14 +153,9 @@ export default async function TenantDetailPage({
         </div>
       </div>
 
-      {/* ── Stats ── */}
+      {/* ── Stats — labels adapt to tenant industry ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: "Students",    value: tenant._count.students,    icon: Users },
-          { label: "Courses",     value: tenant._count.courses,     icon: BookOpen },
-          { label: "Managers",    value: tenant._count.managers,    icon: UserCog },
-          { label: "Enrollments", value: tenant._count.enrollments, icon: Building2 },
-        ].map(({ label, value, icon: Icon }) => (
+        {getIndustryStats(tenant.industry, tenant._count).map(({ label, value, icon: Icon }) => (
           <div key={label} className="bg-ds-card border border-ds-border rounded-xl p-4 text-center">
             <Icon className="h-4 w-4 text-ds-muted mx-auto mb-1" />
             <p className="text-xl font-bold text-ds-text">{value}</p>
@@ -179,8 +246,7 @@ export default async function TenantDetailPage({
       )}
 
       <p className="text-xs text-ds-muted italic">
-        Tenant content (courses, students, submissions) is not accessible from the Super Admin
-        portal to protect data privacy.
+        Tenant workspace data is not accessible from the Super Admin portal to protect data privacy.
       </p>
     </div>
   );
