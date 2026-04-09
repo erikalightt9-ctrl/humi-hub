@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { UserCog, Plus, Trash2, KeyRound, Loader2, CheckCircle, ShieldAlert } from "lucide-react";
+import { UserCog, Plus, Trash2, KeyRound, Loader2, CheckCircle, ShieldAlert, LockOpen } from "lucide-react";
 
 interface TenantAdmin {
   id: string;
@@ -34,6 +34,11 @@ export function AdminsPanel({ tenantId }: { tenantId: string }) {
 
   // Delete
   const [deleting, setDeleting]   = useState<string | null>(null);
+
+  // Unlock account
+  const [unlockEmail, setUnlockEmail] = useState("");
+  const [unlocking, setUnlocking]     = useState(false);
+  const [unlockResult, setUnlockResult] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -104,6 +109,29 @@ export function AdminsPanel({ tenantId }: { tenantId: string }) {
       setError(e instanceof Error ? e.message : "Failed to reset password");
     } finally {
       setResetting(false);
+    }
+  };
+
+  const handleUnlock = async () => {
+    if (!unlockEmail) return;
+    setUnlocking(true);
+    setUnlockResult(null);
+    setError(null);
+    try {
+      const res  = await fetch("/api/superadmin/unlock-account", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email: unlockEmail }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setUnlockResult(`Unlocked ${json.data.email}: ${json.data.unlockedIn.join(", ")}`);
+      setUnlockEmail("");
+      load(); // refresh admin list in case isActive changed
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unlock failed");
+    } finally {
+      setUnlocking(false);
     }
   };
 
@@ -282,6 +310,39 @@ export function AdminsPanel({ tenantId }: { tenantId: string }) {
           </div>
         </div>
       )}
+
+      {/* ── Unlock locked account ── */}
+      <div className="border-t border-ds-border pt-4 space-y-2">
+        <p className="text-xs font-semibold text-ds-muted flex items-center gap-1.5">
+          <LockOpen className="h-3.5 w-3.5" />
+          Unlock Locked Account
+        </p>
+        <p className="text-xs text-ds-muted">
+          Resets failed login attempts for any email (student, trainer, corporate manager).
+        </p>
+        {unlockResult && (
+          <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 flex items-center gap-1.5">
+            <CheckCircle className="h-3.5 w-3.5 flex-shrink-0" /> {unlockResult}
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <input
+            type="email"
+            placeholder="Email address to unlock"
+            value={unlockEmail}
+            onChange={(e) => setUnlockEmail(e.target.value)}
+            className="flex-1 text-sm border border-ds-border rounded-lg px-3 py-1.5 bg-ds-bg focus:outline-none focus:ring-1 focus:ring-indigo-400"
+          />
+          <button
+            onClick={handleUnlock}
+            disabled={unlocking || !unlockEmail}
+            className="flex items-center gap-1.5 text-sm bg-amber-500 text-white rounded-lg px-3 py-1.5 hover:bg-amber-600 disabled:opacity-50 whitespace-nowrap"
+          >
+            {unlocking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LockOpen className="h-3.5 w-3.5" />}
+            Unlock
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
