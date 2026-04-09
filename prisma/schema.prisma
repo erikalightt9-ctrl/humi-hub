@@ -1296,6 +1296,10 @@ model Organization {
   hrEmployees          HrEmployee[]
   hrGovContribRules    HrGovContribRule[]
   hrPayrollRuns        HrPayrollRun[]
+  crmContacts   CrmContact[]
+  crmDeals      CrmDeal[]
+  crmActivities CrmActivity[]
+  crmTasks      CrmTask[]
 
   @@map("organizations")
 }
@@ -2238,6 +2242,7 @@ model AccInvoice {
   organization     Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   lines            AccInvoiceLine[]
   officialReceipts AccOfficialReceipt[]
+  crmDeal          CrmDeal?
 
   @@unique([organizationId, invoiceNumber])
   @@index([organizationId, status])
@@ -2506,6 +2511,29 @@ enum HrAttendanceStatus {
   ON_LEAVE
 }
 
+enum CrmContactType {
+  LEAD
+  PROSPECT
+  CUSTOMER
+  PARTNER
+}
+
+enum CrmDealStage {
+  NEW_LEAD
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum CrmActivityType {
+  NOTE
+  CALL
+  EMAIL
+  MEETING
+}
+
 /* ------------------------------------------------------------------ */
 /*  Employee 201 File                                                   */
 /* ------------------------------------------------------------------ */
@@ -2722,4 +2750,102 @@ model HrLeaveRequest {
   @@index([employeeId, status])
   @@index([employeeId, startDate])
   @@map("hr_leave_requests")
+}
+
+/* ------------------------------------------------------------------ */
+/*  CRM — Sales Module                                                  */
+/* ------------------------------------------------------------------ */
+
+model CrmContact {
+  id             String         @id @default(cuid())
+  organizationId String
+  name           String         @db.VarChar(200)
+  email          String?        @db.VarChar(200)
+  phone          String?        @db.VarChar(50)
+  company        String?        @db.VarChar(200)
+  position       String?        @db.VarChar(200)
+  contactType    CrmContactType @default(LEAD)
+  notes          String?        @db.Text
+  createdById    String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deals        CrmDeal[]
+  activities   CrmActivity[]
+
+  @@index([organizationId, contactType])
+  @@index([organizationId, name])
+  @@map("crm_contacts")
+}
+
+model CrmDeal {
+  id                String       @id @default(cuid())
+  organizationId    String
+  title             String       @db.VarChar(300)
+  value             Decimal      @default(0) @db.Decimal(15, 2)
+  currency          String       @default("PHP") @db.VarChar(3)
+  stage             CrmDealStage @default(NEW_LEAD)
+  probability       Int          @default(0)
+  expectedCloseDate DateTime?    @db.Date
+  contactId         String?
+  invoiceId         String?      @unique
+  notes             String?      @db.Text
+  closedAt          DateTime?
+  createdById       String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contact      CrmContact?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  invoice      AccInvoice?   @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  activities   CrmActivity[]
+  tasks        CrmTask[]
+
+  @@index([organizationId, stage])
+  @@index([organizationId, contactId])
+  @@index([organizationId, expectedCloseDate])
+  @@map("crm_deals")
+}
+
+model CrmActivity {
+  id             String          @id @default(cuid())
+  organizationId String
+  activityType   CrmActivityType
+  subject        String          @db.VarChar(300)
+  body           String?         @db.Text
+  dealId         String?
+  contactId      String?
+  createdById    String?
+  createdAt      DateTime        @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deal         CrmDeal?     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  contact      CrmContact?  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([dealId])
+  @@index([contactId])
+  @@map("crm_activities")
+}
+
+model CrmTask {
+  id             String    @id @default(cuid())
+  organizationId String
+  title          String    @db.VarChar(300)
+  description    String?   @db.Text
+  dueDate        DateTime? @db.Date
+  isDone         Boolean   @default(false)
+  dealId         String?
+  assignedToId   String?
+  createdById    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deal         CrmDeal?     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, isDone, dueDate])
+  @@index([dealId])
+  @@map("crm_tasks")
 }

@@ -143,6 +143,45 @@ export async function POST(
   );
 }
 
+/** PATCH /api/superadmin/tenants/[id]/admins — reset a tenant admin's password */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const token = await getToken({ req: request });
+  const guard = requireSuperAdmin(token);
+  if (!guard.ok) return guard.response;
+
+  const { id: tenantId } = await params;
+  const body = await request.json();
+  const { adminId, newPassword } = body ?? {};
+
+  if (!adminId || !newPassword || newPassword.length < 8) {
+    return NextResponse.json(
+      { success: false, data: null, error: "adminId and newPassword (min 8 chars) are required." },
+      { status: 400 },
+    );
+  }
+
+  const admin = await prisma.corporateManager.findFirst({
+    where: { id: adminId, organizationId: tenantId },
+  });
+  if (!admin) {
+    return NextResponse.json(
+      { success: false, data: null, error: "Admin not found for this tenant." },
+      { status: 404 },
+    );
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  await prisma.corporateManager.update({
+    where: { id: adminId },
+    data:  { passwordHash, mustChangePassword: true },
+  });
+
+  return NextResponse.json({ success: true, data: null, error: null });
+}
+
 /** DELETE /api/superadmin/tenants/[id]/admins?adminId=xxx — remove a tenant admin */
 export async function DELETE(
   request: NextRequest,

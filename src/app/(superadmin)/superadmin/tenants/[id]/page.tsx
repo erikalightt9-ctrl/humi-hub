@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { getTenantById } from "@/lib/repositories/superadmin.repository";
 import { Button } from "@/components/ui/button";
+import { AdminsPanel } from "./_components/AdminsPanel";
 
 /** Returns the 4 stat cards appropriate for a given industry. */
 function getIndustryStats(
@@ -244,6 +245,9 @@ export default async function TenantDetailPage({
           </div>
         </div>
       )}
+
+      {/* ── Admin Accounts ── */}
+      <AdminsPanel tenantId={id} />
 
       <p className="text-xs text-ds-muted italic">
         Tenant workspace data is not accessible from the Super Admin portal to protect data privacy.
