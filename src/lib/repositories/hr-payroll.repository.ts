@@ -188,6 +188,16 @@ export interface PayrollLineInput {
   pagibigEmployeeOverride?: number;
   /** Override Pag-IBIG employer share (default ₱200). Use to declare custom amount. */
   pagibigEmployerOverride?: number;
+  /** Override SSS employee share. Use to declare custom contribution amount. */
+  sssEmployeeOverride?: number;
+  /** Override SSS employer share. Use to declare custom contribution amount. */
+  sssEmployerOverride?: number;
+  /** Override PhilHealth employee share. Use to declare custom contribution amount. */
+  philhealthEmployeeOverride?: number;
+  /** Override PhilHealth employer share. Use to declare custom contribution amount. */
+  philhealthEmployerOverride?: number;
+  /** Override BIR withholding tax. Use to declare custom tax amount. */
+  withholdingTaxOverride?: number;
 }
 
 /**
@@ -205,25 +215,83 @@ export interface PayrollLineInput {
  * - Gov contributions computed on basic monthly salary
  * - BIR withholding tax on taxable income after mandatory deductions
  */
+export async function saveEmployeePayrollDefaults(
+  organizationId: string,
+  employeeId: string,
+  defaults: {
+    sssEmployee?: number;
+    sssEmployer?: number;
+    philhealthEmployee?: number;
+    philhealthEmployer?: number;
+    pagibigEmployee?: number;
+    pagibigEmployer?: number;
+    wtaxOverride?: number;
+  }
+) {
+  const employee = await prisma.hrEmployee.findFirst({
+    where: { id: employeeId, organizationId },
+  });
+  if (!employee) throw new Error("Employee not found");
+
+  return prisma.hrEmployee.update({
+    where: { id: employeeId },
+    data: {
+      payrollSssEmployee:        defaults.sssEmployee        != null ? new Prisma.Decimal(defaults.sssEmployee)        : undefined,
+      payrollSssEmployer:        defaults.sssEmployer        != null ? new Prisma.Decimal(defaults.sssEmployer)        : undefined,
+      payrollPhilhealthEmployee: defaults.philhealthEmployee != null ? new Prisma.Decimal(defaults.philhealthEmployee) : undefined,
+      payrollPhilhealthEmployer: defaults.philhealthEmployer != null ? new Prisma.Decimal(defaults.philhealthEmployer) : undefined,
+      payrollPagibigEmployee:    defaults.pagibigEmployee    != null ? new Prisma.Decimal(defaults.pagibigEmployee)    : undefined,
+      payrollPagibigEmployer:    defaults.pagibigEmployer    != null ? new Prisma.Decimal(defaults.pagibigEmployer)    : undefined,
+      payrollWtaxOverride:       defaults.wtaxOverride       != null ? new Prisma.Decimal(defaults.wtaxOverride)       : undefined,
+    },
+  });
+}
+
 export async function computePayrollLine(
   organizationId: string,
   input: PayrollLineInput
 ) {
-  const rules = await listGovContribRules(organizationId);
+  const [rules, employee] = await Promise.all([
+    listGovContribRules(organizationId),
+    prisma.hrEmployee.findFirst({
+      where: { id: input.employeeId, organizationId },
+      select: {
+        payrollSssEmployee:        true,
+        payrollSssEmployer:        true,
+        payrollPhilhealthEmployee: true,
+        payrollPhilhealthEmployer: true,
+        payrollPagibigEmployee:    true,
+        payrollPagibigEmployer:    true,
+        payrollWtaxOverride:       true,
+      },
+    }),
+  ]);
 
-  const totalWorkingDays = input.totalWorkingDays ?? 22;
-  const absentDays       = input.absentDays  ?? 0;
-  const lateMins         = input.lateMins    ?? 0;
-  const regHolidayDays   = input.regHolidayDays  ?? 0;
-  const specHolidayDays  = input.specHolidayDays ?? 0;
-  const overtimeHours    = input.overtimeHours   ?? 0;
-  const nightDiffHours   = input.nightDiffHours  ?? 0;
+  // Merge: explicit per-run override > employee saved default > auto-computed
+  const mergedInput: PayrollLineInput = {
+    ...input,
+    sssEmployeeOverride:        input.sssEmployeeOverride        ?? (employee?.payrollSssEmployee        != null ? Number(employee.payrollSssEmployee)        : undefined),
+    sssEmployerOverride:        input.sssEmployerOverride        ?? (employee?.payrollSssEmployer        != null ? Number(employee.payrollSssEmployer)        : undefined),
+    philhealthEmployeeOverride: input.philhealthEmployeeOverride ?? (employee?.payrollPhilhealthEmployee != null ? Number(employee.payrollPhilhealthEmployee) : undefined),
+    philhealthEmployerOverride: input.philhealthEmployerOverride ?? (employee?.payrollPhilhealthEmployer != null ? Number(employee.payrollPhilhealthEmployer) : undefined),
+    pagibigEmployeeOverride:    input.pagibigEmployeeOverride    ?? (employee?.payrollPagibigEmployee    != null ? Number(employee.payrollPagibigEmployee)    : undefined),
+    pagibigEmployerOverride:    input.pagibigEmployerOverride    ?? (employee?.payrollPagibigEmployer    != null ? Number(employee.payrollPagibigEmployer)    : undefined),
+    withholdingTaxOverride:     input.withholdingTaxOverride     ?? (employee?.payrollWtaxOverride       != null ? Number(employee.payrollWtaxOverride)       : undefined),
+  };
 
-  const dailyRate  = input.basicSalary / totalWorkingDays;
+  const totalWorkingDays = mergedInput.totalWorkingDays ?? 22;
+  const absentDays       = mergedInput.absentDays  ?? 0;
+  const lateMins         = mergedInput.lateMins    ?? 0;
+  const regHolidayDays   = mergedInput.regHolidayDays  ?? 0;
+  const specHolidayDays  = mergedInput.specHolidayDays ?? 0;
+  const overtimeHours    = mergedInput.overtimeHours   ?? 0;
+  const nightDiffHours   = mergedInput.nightDiffHours  ?? 0;
+
+  const dailyRate  = mergedInput.basicSalary / totalWorkingDays;
   const hourlyRate = dailyRate / 8;
 
   // Days actually worked (capped at scheduled days)
-  const daysWorked = input.daysWorked
+  const daysWorked = mergedInput.daysWorked
     ?? Math.max(0, totalWorkingDays - absentDays - regHolidayDays);
 
   // Earned basic pay (present days only; holidays handled separately)
@@ -237,7 +305,7 @@ export async function computePayrollLine(
   // Regular holiday worked: employee gets 200% → premium above base = +100%
   const regHolidayPremium  = dailyRate * 1.00 * regHolidayDays;
   // Reg holiday BASE (even if worked, 100% is already in basicSalary; we add the premium day)
-  const regHolidayBase     = dailyRate * 1.00 * regHolidayDays; // base for days worked on reg holiday
+  const regHolidayBase     = dailyRate * 1.00 * regHolidayDays;
   // Special non-working holiday worked: 130% → premium above base = +30%
   const specHolidayPremium = dailyRate * 0.30 * specHolidayDays;
   const specHolidayBase    = dailyRate * 1.00 * specHolidayDays;
@@ -250,19 +318,27 @@ export async function computePayrollLine(
   // Night differential (+10% per ND hour)
   const nightDiffPay = hourlyRate * 0.10 * nightDiffHours;
 
-  const allowances = input.allowances ?? 0;
+  const allowances = mergedInput.allowances ?? 0;
 
   // Gross pay = earned basic + holiday pay + OT premium + night diff + allowances
-  // (absence & late deductions reduce net, not gross — they're listed separately per DOLE)
   const grossPay = earnedBasic + holidayPay + overtimePay + nightDiffPay + allowances;
 
   // Gov contributions on monthly basic salary (not reduced by absences)
-  const sss        = computeContribution(rules, "SSS",        input.basicSalary);
-  const philhealth = computeContribution(rules, "PHILHEALTH", input.basicSalary);
-  const pagibigComputed = computeContribution(rules, "PAGIBIG", input.basicSalary);
+  const sssComputed        = computeContribution(rules, "SSS",        mergedInput.basicSalary);
+  const philhealthComputed = computeContribution(rules, "PHILHEALTH", mergedInput.basicSalary);
+  const pagibigComputed    = computeContribution(rules, "PAGIBIG",    mergedInput.basicSalary);
+
+  const sss = {
+    employee: mergedInput.sssEmployeeOverride ?? sssComputed.employee,
+    employer: mergedInput.sssEmployerOverride ?? sssComputed.employer,
+  };
+  const philhealth = {
+    employee: mergedInput.philhealthEmployeeOverride ?? philhealthComputed.employee,
+    employer: mergedInput.philhealthEmployerOverride ?? philhealthComputed.employer,
+  };
   const pagibig = {
-    employee: input.pagibigEmployeeOverride ?? pagibigComputed.employee,
-    employer: input.pagibigEmployerOverride ?? pagibigComputed.employer,
+    employee: mergedInput.pagibigEmployeeOverride ?? pagibigComputed.employee,
+    employer: mergedInput.pagibigEmployerOverride ?? pagibigComputed.employer,
   };
 
   // Taxable income = gross - mandatory deductions - absence - late
@@ -272,7 +348,7 @@ export async function computePayrollLine(
     - sss.employee
     - philhealth.employee
     - pagibig.employee;
-  const withholdingTax = computeWithholdingTax(Math.max(0, taxableIncome));
+  const withholdingTax = mergedInput.withholdingTaxOverride ?? computeWithholdingTax(Math.max(0, taxableIncome));
 
   const totalDeductions =
     absenceDeduction +
@@ -281,13 +357,13 @@ export async function computePayrollLine(
     philhealth.employee +
     pagibig.employee +
     withholdingTax +
-    (input.otherDeductions ?? 0);
+    (mergedInput.otherDeductions ?? 0);
 
   const netPay = Math.max(0, grossPay - totalDeductions);
 
   return {
-    employeeId:          input.employeeId,
-    basicSalary:         input.basicSalary,
+    employeeId:          mergedInput.employeeId,
+    basicSalary:         mergedInput.basicSalary,
     daysWorked,
     absentDays,
     lateMins,
@@ -309,10 +385,10 @@ export async function computePayrollLine(
     pagibigEmployee:     pagibig.employee,
     pagibigEmployer:     pagibig.employer,
     withholdingTax,
-    otherDeductions:     input.otherDeductions ?? 0,
+    otherDeductions:     mergedInput.otherDeductions ?? 0,
     totalDeductions,
     netPay,
-    remarks:             input.remarks ?? null,
+    remarks:             mergedInput.remarks ?? null,
   };
 }
 

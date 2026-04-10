@@ -22,8 +22,13 @@ const schema = z.object({
   allowances:              z.number().nonnegative().optional(),
   otherDeductions:         z.number().nonnegative().optional(),
   remarks:                 z.string().max(300).optional(),
-  pagibigEmployeeOverride: z.number().nonnegative().optional(),
-  pagibigEmployerOverride: z.number().nonnegative().optional(),
+  pagibigEmployeeOverride:     z.number().nonnegative().optional(),
+  pagibigEmployerOverride:     z.number().nonnegative().optional(),
+  sssEmployeeOverride:         z.number().nonnegative().optional(),
+  sssEmployerOverride:         z.number().nonnegative().optional(),
+  philhealthEmployeeOverride:  z.number().nonnegative().optional(),
+  philhealthEmployerOverride:  z.number().nonnegative().optional(),
+  withholdingTaxOverride:      z.number().nonnegative().optional(),
 });
 
 export async function PATCH(

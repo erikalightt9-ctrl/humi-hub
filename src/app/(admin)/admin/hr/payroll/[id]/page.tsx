@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   Loader2, AlertCircle, ArrowLeft, Download, FileDown,
-  CheckCircle, DollarSign, Users, Edit2, X, Save, Info,
+  CheckCircle, DollarSign, Users, Edit2, X, Save, Info, BookmarkCheck,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -31,8 +31,11 @@ interface PayrollLine {
   absenceDeduction: number;
   lateDeduction: number;
   sssEmployee: number;
+  sssEmployer: number;
   philhealthEmployee: number;
+  philhealthEmployer: number;
   pagibigEmployee: number;
+  pagibigEmployer: number;
   withholdingTax: number;
   otherDeductions: number;
   totalDeductions: number;
@@ -78,23 +81,33 @@ interface EditForm {
   remarks: string;
   pagibigEmployee: string;
   pagibigEmployer: string;
+  sssEmployee: string;
+  sssEmployer: string;
+  philhealthEmployee: string;
+  philhealthEmployer: string;
+  withholdingTax: string;
 }
 
 function toEditForm(line: PayrollLine): EditForm {
   return {
-    basicSalary:      String(Number(line.basicSalary)),
-    totalWorkingDays: "22",
-    absentDays:       String(Number(line.absentDays)),
-    lateMins:         String(Number(line.lateMins)),
-    regHolidayDays:   String(Number(line.regHolidayDays)),
-    specHolidayDays:  String(Number(line.specHolidayDays)),
-    overtimeHours:    String(Number(line.overtimeHours)),
-    nightDiffHours:   String(Number(line.nightDiffHours)),
-    allowances:       String(Number(line.allowances)),
-    otherDeductions:  String(Number(line.otherDeductions)),
-    remarks:          line.remarks ?? "",
-    pagibigEmployee:  String(Number(line.pagibigEmployee) || 200),
-    pagibigEmployer:  String(Number(line.pagibigEmployee) || 200),
+    basicSalary:        String(Number(line.basicSalary)),
+    totalWorkingDays:   "22",
+    absentDays:         String(Number(line.absentDays)),
+    lateMins:           String(Number(line.lateMins)),
+    regHolidayDays:     String(Number(line.regHolidayDays)),
+    specHolidayDays:    String(Number(line.specHolidayDays)),
+    overtimeHours:      String(Number(line.overtimeHours)),
+    nightDiffHours:     String(Number(line.nightDiffHours)),
+    allowances:         String(Number(line.allowances)),
+    otherDeductions:    String(Number(line.otherDeductions)),
+    remarks:            line.remarks ?? "",
+    pagibigEmployee:    String(Number(line.pagibigEmployee) || 200),
+    pagibigEmployer:    String(Number(line.pagibigEmployee) || 200),
+    sssEmployee:        String(Number(line.sssEmployee)),
+    sssEmployer:        String(Number(line.sssEmployer)),
+    philhealthEmployee: String(Number(line.philhealthEmployee)),
+    philhealthEmployer: String(Number(line.philhealthEmployer)),
+    withholdingTax:     String(Number(line.withholdingTax)),
   };
 }
 
@@ -109,9 +122,11 @@ function EditLineModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [form, setForm]     = useState<EditForm>(toEditForm(line));
-  const [saving, setSaving] = useState(false);
-  const [error, setError]   = useState<string | null>(null);
+  const [form, setForm]         = useState<EditForm>(toEditForm(line));
+  const [saving, setSaving]     = useState(false);
+  const [savingDef, setSavingDef] = useState(false);
+  const [error, setError]       = useState<string | null>(null);
+  const [savedMsg, setSavedMsg] = useState<string | null>(null);
 
   function set(key: keyof EditForm, val: string) {
     setForm((prev) => ({ ...prev, [key]: val }));
@@ -136,9 +151,14 @@ function EditLineModal({
           nightDiffHours:          parseFloat(form.nightDiffHours)   || 0,
           allowances:              parseFloat(form.allowances)       || 0,
           otherDeductions:         parseFloat(form.otherDeductions)  || 0,
-          remarks:                 form.remarks || undefined,
-          pagibigEmployeeOverride: parseFloat(form.pagibigEmployee)  || 200,
-          pagibigEmployerOverride: parseFloat(form.pagibigEmployer)  || 200,
+          remarks:                    form.remarks || undefined,
+          pagibigEmployeeOverride:    parseFloat(form.pagibigEmployee)    || 200,
+          pagibigEmployerOverride:    parseFloat(form.pagibigEmployer)    || 200,
+          sssEmployeeOverride:        parseFloat(form.sssEmployee)        || undefined,
+          sssEmployerOverride:        parseFloat(form.sssEmployer)        || undefined,
+          philhealthEmployeeOverride: parseFloat(form.philhealthEmployee) || undefined,
+          philhealthEmployerOverride: parseFloat(form.philhealthEmployer) || undefined,
+          withholdingTaxOverride:     form.withholdingTax !== "" ? parseFloat(form.withholdingTax) : undefined,
         }),
       });
       const json = await res.json();
@@ -148,6 +168,34 @@ function EditLineModal({
       setError(e instanceof Error ? e.message : "Save failed");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSaveDefaults() {
+    setSavingDef(true);
+    setError(null);
+    setSavedMsg(null);
+    try {
+      const res = await fetch(`/api/admin/hr/employees/${line.employeeId}/payroll-defaults`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sssEmployee:        parseFloat(form.sssEmployee)        || undefined,
+          sssEmployer:        parseFloat(form.sssEmployer)        || undefined,
+          philhealthEmployee: parseFloat(form.philhealthEmployee) || undefined,
+          philhealthEmployer: parseFloat(form.philhealthEmployer) || undefined,
+          pagibigEmployee:    parseFloat(form.pagibigEmployee)    || 200,
+          pagibigEmployer:    parseFloat(form.pagibigEmployer)    || 200,
+          wtaxOverride:       form.withholdingTax !== "" ? parseFloat(form.withholdingTax) || undefined : undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error ?? "Failed to save defaults");
+      setSavedMsg("Defaults saved! These will auto-apply to all future payroll runs for this employee.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save defaults");
+    } finally {
+      setSavingDef(false);
     }
   }
 
@@ -184,6 +232,11 @@ function EditLineModal({
           {error && (
             <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">
               <AlertCircle className="h-4 w-4 shrink-0" />{error}
+            </div>
+          )}
+          {savedMsg && (
+            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg p-3 text-sm">
+              <BookmarkCheck className="h-4 w-4 shrink-0" />{savedMsg}
             </div>
           )}
 
@@ -245,6 +298,52 @@ function EditLineModal({
                 onChange={(e) => set("otherDeductions", e.target.value)} className={inputCls} />
             </div>
 
+            {/* SSS declared shares */}
+            <div className="col-span-2 border border-blue-200 rounded-xl p-3 bg-blue-50 space-y-2">
+              <p className="text-xs font-semibold text-blue-700">SSS Declared Shares</p>
+              <p className="text-[10px] text-blue-600">Auto-computed from 2025 table (4.5% / 9.5% of MSC). Override to declare a custom amount.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Employee Share (₱)</label>
+                  <input type="number" min={0} step="50" value={form.sssEmployee}
+                    onChange={(e) => set("sssEmployee", e.target.value)}
+                    className={inputCls + " border-blue-300 focus:ring-blue-400"} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Employer Share (₱)</label>
+                  <input type="number" min={0} step="50" value={form.sssEmployer}
+                    onChange={(e) => set("sssEmployer", e.target.value)}
+                    className={inputCls + " border-blue-300 focus:ring-blue-400"} />
+                </div>
+              </div>
+              <p className="text-xs text-blue-700 font-medium">
+                Total: ₱{(parseFloat(form.sssEmployee || "0") + parseFloat(form.sssEmployer || "0")).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+
+            {/* PhilHealth declared shares */}
+            <div className="col-span-2 border border-green-200 rounded-xl p-3 bg-green-50 space-y-2">
+              <p className="text-xs font-semibold text-green-700">PhilHealth Declared Shares</p>
+              <p className="text-[10px] text-green-600">Auto-computed at 2.5% each (floor ₱500, cap ₱2,500). Override to declare a custom amount.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Employee Share (₱)</label>
+                  <input type="number" min={0} step="50" value={form.philhealthEmployee}
+                    onChange={(e) => set("philhealthEmployee", e.target.value)}
+                    className={inputCls + " border-green-300 focus:ring-green-400"} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Employer Share (₱)</label>
+                  <input type="number" min={0} step="50" value={form.philhealthEmployer}
+                    onChange={(e) => set("philhealthEmployer", e.target.value)}
+                    className={inputCls + " border-green-300 focus:ring-green-400"} />
+                </div>
+              </div>
+              <p className="text-xs text-green-700 font-medium">
+                Total: ₱{(parseFloat(form.philhealthEmployee || "0") + parseFloat(form.philhealthEmployer || "0")).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+
             {/* Pag-IBIG declared shares */}
             <div className="col-span-2 border border-amber-200 rounded-xl p-3 bg-amber-50 space-y-2">
               <p className="text-xs font-semibold text-amber-700">Pag-IBIG Declared Shares</p>
@@ -268,6 +367,18 @@ function EditLineModal({
               </p>
             </div>
 
+            {/* Withholding Tax override */}
+            <div className="col-span-2 border border-red-200 rounded-xl p-3 bg-red-50 space-y-2">
+              <p className="text-xs font-semibold text-red-700">BIR Withholding Tax (Declared)</p>
+              <p className="text-[10px] text-red-600">Auto-computed using TRAIN Law graduated rates. Override to declare a custom tax amount.</p>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Withholding Tax (₱)</label>
+                <input type="number" min={0} step="100" value={form.withholdingTax}
+                  onChange={(e) => set("withholdingTax", e.target.value)}
+                  className={inputCls + " border-red-300 focus:ring-red-400"} />
+              </div>
+            </div>
+
             <div className="col-span-2">
               <label className="block text-xs font-medium text-slate-500 mb-1">Remarks</label>
               <input type="text" maxLength={300} value={form.remarks}
@@ -279,26 +390,42 @@ function EditLineModal({
 
           {/* 2025 contribution reference */}
           <div className="text-xs text-slate-400 bg-slate-50 rounded-lg p-3 space-y-0.5">
-            <p className="font-medium text-slate-500 mb-1">2025/2026 Gov't Contribution Rates</p>
-            <p>• SSS: 4.5% employee / 9.5% employer (max MSC ₱30,000 → max emp ₱1,350)</p>
-            <p>• PhilHealth: 2.5% employee / 2.5% employer (floor ₱500, cap ₱2,500)</p>
-            <p>• Pag-IBIG: ₱200 employee + ₱200 employer = ₱400 total (customizable above)</p>
-            <p>• BIR: TRAIN Law graduated rates (0–35%)</p>
+            <p className="font-medium text-slate-500 mb-1">2025/2026 Gov't Contribution Rates (auto-computed, all customizable above)</p>
+            <p>• <span className="text-blue-600 font-medium">SSS</span>: 4.5% emp / 9.5% er · MSC ₱4k–₱30k → max emp ₱1,350</p>
+            <p>• <span className="text-green-600 font-medium">PhilHealth</span>: 2.5% emp / 2.5% er · floor ₱500, cap ₱2,500</p>
+            <p>• <span className="text-amber-600 font-medium">Pag-IBIG</span>: ₱200 emp + ₱200 er = ₱400 total</p>
+            <p>• <span className="text-red-600 font-medium">BIR</span>: TRAIN Law graduated rates (0–35%)</p>
+            <p className="mt-1 pt-1 border-t border-slate-200 text-emerald-600 font-medium">
+              💾 Use &quot;Save as Default&quot; to store these amounts — they will auto-apply every payroll run so you never need to re-enter them.
+            </p>
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3">
-          <button onClick={onClose}
-            className="px-4 py-2 border border-slate-200 text-slate-600 text-sm rounded-lg hover:bg-slate-50">
-            Cancel
-          </button>
-          <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-60">
-            {saving
-              ? <><Loader2 className="h-4 w-4 animate-spin" />Recomputing…</>
-              : <><Save className="h-4 w-4" />Save & Recompute</>
+        <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between gap-3">
+          <button
+            onClick={handleSaveDefaults}
+            disabled={savingDef || saving}
+            title="Save declared shares as defaults — they will auto-apply to all future payroll runs for this employee"
+            className="flex items-center gap-2 px-4 py-2 border border-emerald-300 text-emerald-700 bg-emerald-50 text-sm rounded-lg hover:bg-emerald-100 disabled:opacity-60"
+          >
+            {savingDef
+              ? <><Loader2 className="h-4 w-4 animate-spin" />Saving…</>
+              : <><BookmarkCheck className="h-4 w-4" />Save as Default</>
             }
           </button>
+          <div className="flex items-center gap-3">
+            <button onClick={onClose}
+              className="px-4 py-2 border border-slate-200 text-slate-600 text-sm rounded-lg hover:bg-slate-50">
+              Cancel
+            </button>
+            <button onClick={handleSave} disabled={saving}
+              className="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-60">
+              {saving
+                ? <><Loader2 className="h-4 w-4 animate-spin" />Recomputing…</>
+                : <><Save className="h-4 w-4" />Save & Recompute</>
+              }
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -577,19 +704,19 @@ export default function PayrollRunDetailPage() {
               {
                 label: "SSS",
                 emp:   run.lines.reduce((s, l) => s + Number(l.sssEmployee), 0),
-                er:    run.lines.reduce((s, l) => s + Number((l as unknown as Record<string,number>).sssEmployer ?? 0), 0),
+                er:    run.lines.reduce((s, l) => s + Number(l.sssEmployer), 0),
                 color: "text-blue-600",
               },
               {
                 label: "PhilHealth",
                 emp:   run.lines.reduce((s, l) => s + Number(l.philhealthEmployee), 0),
-                er:    run.lines.reduce((s, l) => s + Number((l as unknown as Record<string,number>).philhealthEmployer ?? 0), 0),
+                er:    run.lines.reduce((s, l) => s + Number(l.philhealthEmployer), 0),
                 color: "text-green-600",
               },
               {
                 label: "Pag-IBIG",
                 emp:   run.lines.reduce((s, l) => s + Number(l.pagibigEmployee), 0),
-                er:    run.lines.reduce((s, l) => s + Number((l as unknown as Record<string,number>).pagibigEmployer ?? 0), 0),
+                er:    run.lines.reduce((s, l) => s + Number(l.pagibigEmployer), 0),
                 color: "text-amber-600",
               },
               {

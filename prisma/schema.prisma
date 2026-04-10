@@ -2560,6 +2560,14 @@ model HrEmployee {
   philhealthNumber String?           @db.VarChar(20)
   pagibigNumber    String?           @db.VarChar(20)
   tinNumber        String?           @db.VarChar(20)
+  // Payroll declared share defaults (saved per-employee to avoid re-entry each run)
+  payrollSssEmployee        Decimal? @db.Decimal(10,2)
+  payrollSssEmployer        Decimal? @db.Decimal(10,2)
+  payrollPhilhealthEmployee Decimal? @db.Decimal(10,2)
+  payrollPhilhealthEmployer Decimal? @db.Decimal(10,2)
+  payrollPagibigEmployee    Decimal? @db.Decimal(10,2)
+  payrollPagibigEmployer    Decimal? @db.Decimal(10,2)
+  payrollWtaxOverride       Decimal? @db.Decimal(10,2)
   // Personal info
   birthDate        DateTime?         @db.Date
   gender           String?           @db.VarChar(10)
