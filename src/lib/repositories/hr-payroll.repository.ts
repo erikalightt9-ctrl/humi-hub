@@ -141,10 +141,10 @@ function computeContribution(
     employer = Number(match.employerShare);
   }
 
-  // Pag-IBIG cap: employee and employer contribution each capped at ₱100/month
+  // Pag-IBIG: employee and employer contribution each fixed at ₱200/month
   if (type === "PAGIBIG") {
-    employee = Math.min(employee, 100);
-    employer = Math.min(employer, 100);
+    employee = Math.min(employee, 200);
+    employer = Math.min(employer, 200);
   }
 
   return { employee: Math.round(employee * 100) / 100, employer: Math.round(employer * 100) / 100 };

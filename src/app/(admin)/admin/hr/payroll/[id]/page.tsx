@@ -252,7 +252,7 @@ function EditLineModal({
             <p className="font-medium text-slate-500 mb-1">2025/2026 Gov't Contribution Rates</p>
             <p>• SSS: 4.5% employee / 9.5% employer (max MSC ₱30,000 → max emp ₱1,350)</p>
             <p>• PhilHealth: 2.5% employee / 2.5% employer (floor ₱500, cap ₱2,500)</p>
-            <p>• Pag-IBIG: 2% employee CAPPED ₱100 / 2% employer CAPPED ₱100</p>
+            <p>• Pag-IBIG: ₱200 employee / ₱200 employer (fixed)</p>
             <p>• BIR: TRAIN Law graduated rates (0–35%)</p>
           </div>
         </div>
