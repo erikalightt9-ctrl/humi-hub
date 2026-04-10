@@ -15,9 +15,11 @@ const lineSchema = z.object({
   specHolidayDays:  z.number().nonnegative().optional(),
   overtimeHours:    z.number().nonnegative().optional(),
   nightDiffHours:   z.number().nonnegative().optional(),
-  allowances:       z.number().nonnegative().optional(),
-  otherDeductions:  z.number().nonnegative().optional(),
-  remarks:          z.string().max(300).optional(),
+  allowances:              z.number().nonnegative().optional(),
+  otherDeductions:         z.number().nonnegative().optional(),
+  remarks:                 z.string().max(300).optional(),
+  pagibigEmployeeOverride: z.number().nonnegative().optional(),
+  pagibigEmployerOverride: z.number().nonnegative().optional(),
 });
 
 const createSchema = z.object({

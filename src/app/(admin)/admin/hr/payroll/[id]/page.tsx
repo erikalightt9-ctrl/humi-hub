@@ -76,6 +76,8 @@ interface EditForm {
   allowances: string;
   otherDeductions: string;
   remarks: string;
+  pagibigEmployee: string;
+  pagibigEmployer: string;
 }
 
 function toEditForm(line: PayrollLine): EditForm {
@@ -91,6 +93,8 @@ function toEditForm(line: PayrollLine): EditForm {
     allowances:       String(Number(line.allowances)),
     otherDeductions:  String(Number(line.otherDeductions)),
     remarks:          line.remarks ?? "",
+    pagibigEmployee:  String(Number(line.pagibigEmployee) || 200),
+    pagibigEmployer:  String(Number(line.pagibigEmployee) || 200),
   };
 }
 
@@ -121,18 +125,20 @@ function EditLineModal({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          employeeId:       line.employeeId,
-          basicSalary:      parseFloat(form.basicSalary)      || 0,
-          totalWorkingDays: parseFloat(form.totalWorkingDays) || 22,
-          absentDays:       parseFloat(form.absentDays)       || 0,
-          lateMins:         parseFloat(form.lateMins)         || 0,
-          regHolidayDays:   parseFloat(form.regHolidayDays)   || 0,
-          specHolidayDays:  parseFloat(form.specHolidayDays)  || 0,
-          overtimeHours:    parseFloat(form.overtimeHours)    || 0,
-          nightDiffHours:   parseFloat(form.nightDiffHours)   || 0,
-          allowances:       parseFloat(form.allowances)       || 0,
-          otherDeductions:  parseFloat(form.otherDeductions)  || 0,
-          remarks:          form.remarks || undefined,
+          employeeId:              line.employeeId,
+          basicSalary:             parseFloat(form.basicSalary)      || 0,
+          totalWorkingDays:        parseFloat(form.totalWorkingDays) || 22,
+          absentDays:              parseFloat(form.absentDays)       || 0,
+          lateMins:                parseFloat(form.lateMins)         || 0,
+          regHolidayDays:          parseFloat(form.regHolidayDays)   || 0,
+          specHolidayDays:         parseFloat(form.specHolidayDays)  || 0,
+          overtimeHours:           parseFloat(form.overtimeHours)    || 0,
+          nightDiffHours:          parseFloat(form.nightDiffHours)   || 0,
+          allowances:              parseFloat(form.allowances)       || 0,
+          otherDeductions:         parseFloat(form.otherDeductions)  || 0,
+          remarks:                 form.remarks || undefined,
+          pagibigEmployeeOverride: parseFloat(form.pagibigEmployee)  || 200,
+          pagibigEmployerOverride: parseFloat(form.pagibigEmployer)  || 200,
         }),
       });
       const json = await res.json();
@@ -238,6 +244,30 @@ function EditLineModal({
               <input type="number" min={0} step="100" value={form.otherDeductions}
                 onChange={(e) => set("otherDeductions", e.target.value)} className={inputCls} />
             </div>
+
+            {/* Pag-IBIG declared shares */}
+            <div className="col-span-2 border border-amber-200 rounded-xl p-3 bg-amber-50 space-y-2">
+              <p className="text-xs font-semibold text-amber-700">Pag-IBIG Declared Shares</p>
+              <p className="text-[10px] text-amber-600">Default ₱200 each. Adjust to declare a custom contribution amount.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Employee Share (₱)</label>
+                  <input type="number" min={0} step="50" value={form.pagibigEmployee}
+                    onChange={(e) => set("pagibigEmployee", e.target.value)}
+                    className={inputCls + " border-amber-300 focus:ring-amber-400"} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Employer Share (₱)</label>
+                  <input type="number" min={0} step="50" value={form.pagibigEmployer}
+                    onChange={(e) => set("pagibigEmployer", e.target.value)}
+                    className={inputCls + " border-amber-300 focus:ring-amber-400"} />
+                </div>
+              </div>
+              <p className="text-xs text-amber-700 font-medium">
+                Total: ₱{(parseFloat(form.pagibigEmployee || "0") + parseFloat(form.pagibigEmployer || "0")).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+
             <div className="col-span-2">
               <label className="block text-xs font-medium text-slate-500 mb-1">Remarks</label>
               <input type="text" maxLength={300} value={form.remarks}
@@ -252,7 +282,7 @@ function EditLineModal({
             <p className="font-medium text-slate-500 mb-1">2025/2026 Gov't Contribution Rates</p>
             <p>• SSS: 4.5% employee / 9.5% employer (max MSC ₱30,000 → max emp ₱1,350)</p>
             <p>• PhilHealth: 2.5% employee / 2.5% employer (floor ₱500, cap ₱2,500)</p>
-            <p>• Pag-IBIG: ₱200 employee / ₱200 employer (fixed)</p>
+            <p>• Pag-IBIG: ₱200 employee + ₱200 employer = ₱400 total (customizable above)</p>
             <p>• BIR: TRAIN Law graduated rates (0–35%)</p>
           </div>
         </div>

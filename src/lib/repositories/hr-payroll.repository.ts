@@ -184,6 +184,10 @@ export interface PayrollLineInput {
   allowances?: number;
   otherDeductions?: number;
   remarks?: string;
+  /** Override Pag-IBIG employee share (default ₱200). Use to declare custom amount. */
+  pagibigEmployeeOverride?: number;
+  /** Override Pag-IBIG employer share (default ₱200). Use to declare custom amount. */
+  pagibigEmployerOverride?: number;
 }
 
 /**
@@ -255,7 +259,11 @@ export async function computePayrollLine(
   // Gov contributions on monthly basic salary (not reduced by absences)
   const sss        = computeContribution(rules, "SSS",        input.basicSalary);
   const philhealth = computeContribution(rules, "PHILHEALTH", input.basicSalary);
-  const pagibig    = computeContribution(rules, "PAGIBIG",    input.basicSalary);
+  const pagibigComputed = computeContribution(rules, "PAGIBIG", input.basicSalary);
+  const pagibig = {
+    employee: input.pagibigEmployeeOverride ?? pagibigComputed.employee,
+    employer: input.pagibigEmployerOverride ?? pagibigComputed.employer,
+  };
 
   // Taxable income = gross - mandatory deductions - absence - late
   const taxableIncome = grossPay
