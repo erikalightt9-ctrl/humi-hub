@@ -42,55 +42,49 @@ export async function createGovContribRule(
 
 export async function seedDefaultPhGovRules(organizationId: string) {
   type RuleInput = Omit<GovContribRuleInput, "effectiveDate"> & { effectiveDate: Date };
-  const effective = new Date("2024-01-01");
+  const effective = new Date("2025-01-01");
 
-  // SSS — 2024 contribution table (simplified fixed amounts)
-  const sssRules: RuleInput[] = [
-    { contributionType: "SSS", salaryFrom: 0,      salaryTo: 4249.99,  employeeShare: 180,  employerShare: 380,  ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 4250,   salaryTo: 4749.99,  employeeShare: 202.5, employerShare: 427.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 4750,   salaryTo: 5249.99,  employeeShare: 225,  employerShare: 472.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 5250,   salaryTo: 5749.99,  employeeShare: 247.5, employerShare: 517.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 5750,   salaryTo: 6249.99,  employeeShare: 270,  employerShare: 562.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 6250,   salaryTo: 6749.99,  employeeShare: 292.5, employerShare: 607.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 6750,   salaryTo: 7249.99,  employeeShare: 315,  employerShare: 652.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 7250,   salaryTo: 7749.99,  employeeShare: 337.5, employerShare: 697.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 7750,   salaryTo: 8249.99,  employeeShare: 360,  employerShare: 742.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 8250,   salaryTo: 8749.99,  employeeShare: 382.5, employerShare: 787.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 8750,   salaryTo: 9249.99,  employeeShare: 405,  employerShare: 832.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 9250,   salaryTo: 9749.99,  employeeShare: 427.5, employerShare: 877.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 9750,   salaryTo: 10249.99, employeeShare: 450,  employerShare: 922.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 10250,  salaryTo: 10749.99, employeeShare: 472.5, employerShare: 967.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 10750,  salaryTo: 11249.99, employeeShare: 495,  employerShare: 1012.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 11250,  salaryTo: 11749.99, employeeShare: 517.5, employerShare: 1057.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 11750,  salaryTo: 12249.99, employeeShare: 540,  employerShare: 1102.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 12250,  salaryTo: 12749.99, employeeShare: 562.5, employerShare: 1147.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 12750,  salaryTo: 13249.99, employeeShare: 585,  employerShare: 1192.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 13250,  salaryTo: 13749.99, employeeShare: 607.5, employerShare: 1237.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 13750,  salaryTo: 14249.99, employeeShare: 630,  employerShare: 1282.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 14250,  salaryTo: 14749.99, employeeShare: 652.5, employerShare: 1327.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 14750,  salaryTo: 15249.99, employeeShare: 675,  employerShare: 1372.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 15250,  salaryTo: 15749.99, employeeShare: 697.5, employerShare: 1417.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 15750,  salaryTo: 16249.99, employeeShare: 720,  employerShare: 1462.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 16250,  salaryTo: 16749.99, employeeShare: 742.5, employerShare: 1507.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 16750,  salaryTo: 17249.99, employeeShare: 765,  employerShare: 1552.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 17250,  salaryTo: 17749.99, employeeShare: 787.5, employerShare: 1597.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 17750,  salaryTo: 18249.99, employeeShare: 810,  employerShare: 1642.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 18250,  salaryTo: 18749.99, employeeShare: 832.5, employerShare: 1687.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 18750,  salaryTo: 19249.99, employeeShare: 855,  employerShare: 1732.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 19250,  salaryTo: 19749.99, employeeShare: 877.5, employerShare: 1777.5, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "SSS", salaryFrom: 19750,  salaryTo: undefined, employeeShare: 900,  employerShare: 1800,  ruleKind: "FIXED", effectiveDate: effective },
-  ];
+  /**
+   * SSS 2025 — 15% total rate (employee 4.5%, employer 9.5%)
+   * MSC brackets: min ₱4,000, max ₱30,000 (₱500 increments)
+   * Source: SSS Circular No. 2024-003 effective Jan 2025
+   */
+  const sssRules: RuleInput[] = [];
+  for (let msc = 4000; msc <= 30000; msc += 500) {
+    const empShare  = Math.round(msc * 0.045 * 100) / 100;
+    const erShare   = Math.round(msc * 0.095 * 100) / 100;
+    const salFrom   = msc === 4000 ? 0 : msc - 249.99;
+    const salTo     = msc === 30000 ? undefined : msc + 249.99;
+    sssRules.push({
+      contributionType: "SSS",
+      salaryFrom: salFrom,
+      salaryTo:   salTo,
+      employeeShare: empShare,
+      employerShare: erShare,
+      ruleKind: "FIXED",
+      effectiveDate: effective,
+    });
+  }
 
-  // PhilHealth — 5% of basic salary (equal split), max ₱100,000 basis (2024)
+  /**
+   * PhilHealth 2025 — 5% of Basic Monthly Salary (equal 2.5% split)
+   * Floor: ₱10,000 basis (min ₱500 employee)
+   * Ceiling: ₱100,000 basis (max ₱2,500 employee)
+   */
   const philhealthRules: RuleInput[] = [
-    { contributionType: "PHILHEALTH", salaryFrom: 0, salaryTo: 10000, employeeShare: 500, employerShare: 500, ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "PHILHEALTH", salaryFrom: 10000.01, salaryTo: 99999.99, employeeShare: 2.5, employerShare: 2.5, ruleKind: "RATE", effectiveDate: effective },
-    { contributionType: "PHILHEALTH", salaryFrom: 100000, salaryTo: undefined, employeeShare: 2500, employerShare: 2500, ruleKind: "FIXED", effectiveDate: effective },
+    { contributionType: "PHILHEALTH", salaryFrom: 0,         salaryTo: 10000,     employeeShare: 500,  employerShare: 500,  ruleKind: "FIXED", effectiveDate: effective },
+    { contributionType: "PHILHEALTH", salaryFrom: 10000.01,  salaryTo: 99999.99,  employeeShare: 2.5,  employerShare: 2.5,  ruleKind: "RATE",  effectiveDate: effective },
+    { contributionType: "PHILHEALTH", salaryFrom: 100000,    salaryTo: undefined, employeeShare: 2500, employerShare: 2500, ruleKind: "FIXED", effectiveDate: effective },
   ];
 
-  // Pag-IBIG — ₱100 employee / ₱200 employer (simplified — max salary basis ₱5,000)
+  /**
+   * Pag-IBIG 2025
+   * Employee: 1% (≤₱1,500) or 2% (>₱1,500), CAPPED at ₱100/month
+   * Employer: 2%, CAPPED at ₱100/month
+   * Note: cap enforced in computePayrollLine, not here in the rule table
+   */
   const pagibigRules: RuleInput[] = [
-    { contributionType: "PAGIBIG", salaryFrom: 0, salaryTo: 1500, employeeShare: 1, employerShare: 2, ruleKind: "RATE", effectiveDate: effective },
+    { contributionType: "PAGIBIG", salaryFrom: 0,       salaryTo: 1500,     employeeShare: 1, employerShare: 2, ruleKind: "RATE", effectiveDate: effective },
     { contributionType: "PAGIBIG", salaryFrom: 1500.01, salaryTo: undefined, employeeShare: 2, employerShare: 2, ruleKind: "RATE", effectiveDate: effective },
   ];
 
@@ -136,22 +130,37 @@ function computeContribution(
 
   if (!match) return { employee: 0, employer: 0 };
 
+  let employee: number;
+  let employer: number;
+
   if (match.ruleKind === "RATE") {
-    const rate = Number(match.employeeShare) / 100;
-    const eRate = Number(match.employerShare) / 100;
-    return { employee: salary * rate, employer: salary * eRate };
+    employee = salary * (Number(match.employeeShare) / 100);
+    employer = salary * (Number(match.employerShare) / 100);
+  } else {
+    employee = Number(match.employeeShare);
+    employer = Number(match.employerShare);
   }
-  return { employee: Number(match.employeeShare), employer: Number(match.employerShare) };
+
+  // Pag-IBIG cap: employee and employer contribution each capped at ₱100/month
+  if (type === "PAGIBIG") {
+    employee = Math.min(employee, 100);
+    employer = Math.min(employer, 100);
+  }
+
+  return { employee: Math.round(employee * 100) / 100, employer: Math.round(employer * 100) / 100 };
 }
 
+/**
+ * BIR Withholding Tax — TRAIN Law graduated rates (monthly), effective 2023+
+ * Annual brackets converted to monthly (÷12).
+ */
 function computeWithholdingTax(monthlyTaxableIncome: number): number {
-  // BIR 2024 graduated rates (monthly)
-  if (monthlyTaxableIncome <= 20833) return 0;
-  if (monthlyTaxableIncome <= 33332) return (monthlyTaxableIncome - 20833) * 0.15;
-  if (monthlyTaxableIncome <= 66666) return 1875 + (monthlyTaxableIncome - 33333) * 0.20;
-  if (monthlyTaxableIncome <= 166666) return 8541.80 + (monthlyTaxableIncome - 66667) * 0.25;
-  if (monthlyTaxableIncome <= 666666) return 33541.80 + (monthlyTaxableIncome - 166667) * 0.30;
-  return 183541.80 + (monthlyTaxableIncome - 666667) * 0.35;
+  if (monthlyTaxableIncome <= 20833)  return 0;
+  if (monthlyTaxableIncome <= 33332)  return Math.round((monthlyTaxableIncome - 20833) * 0.15 * 100) / 100;
+  if (monthlyTaxableIncome <= 66666)  return Math.round((1875 + (monthlyTaxableIncome - 33333) * 0.20) * 100) / 100;
+  if (monthlyTaxableIncome <= 166666) return Math.round((8541.80 + (monthlyTaxableIncome - 66667) * 0.25) * 100) / 100;
+  if (monthlyTaxableIncome <= 666666) return Math.round((33541.80 + (monthlyTaxableIncome - 166667) * 0.30) * 100) / 100;
+  return Math.round((183541.80 + (monthlyTaxableIncome - 666667) * 0.35) * 100) / 100;
 }
 
 export interface PayrollLineInput {
@@ -475,5 +484,71 @@ export async function markPayrollPaid(
   return prisma.hrPayrollRun.update({
     where: { id },
     data: { status: "PAID", paidById, paidAt: new Date(), payDate },
+  });
+}
+
+/**
+ * Recompute and update a single payroll line (e.g. after editing declared salary).
+ * Re-runs the full DOLE computation and updates the run totals.
+ */
+export async function updatePayrollLine(
+  organizationId: string,
+  runId: string,
+  lineId: string,
+  input: PayrollLineInput
+) {
+  // Verify line belongs to org
+  const existing = await prisma.hrPayrollLine.findFirst({
+    where: { id: lineId, payrollRunId: runId, payrollRun: { organizationId } },
+  });
+  if (!existing) throw new Error("Payroll line not found");
+
+  const computed = await computePayrollLine(organizationId, input);
+
+  await prisma.hrPayrollLine.update({
+    where: { id: lineId },
+    data: {
+      basicSalary:         new Prisma.Decimal(computed.basicSalary),
+      daysWorked:          new Prisma.Decimal(computed.daysWorked),
+      absentDays:          new Prisma.Decimal(computed.absentDays),
+      lateMins:            new Prisma.Decimal(computed.lateMins),
+      regHolidayDays:      new Prisma.Decimal(computed.regHolidayDays),
+      specHolidayDays:     new Prisma.Decimal(computed.specHolidayDays),
+      holidayPay:          new Prisma.Decimal(computed.holidayPay),
+      overtimeHours:       new Prisma.Decimal(computed.overtimeHours),
+      overtimePay:         new Prisma.Decimal(computed.overtimePay),
+      nightDiffHours:      new Prisma.Decimal(computed.nightDiffHours),
+      nightDiffPay:        new Prisma.Decimal(computed.nightDiffPay),
+      allowances:          new Prisma.Decimal(computed.allowances),
+      grossPay:            new Prisma.Decimal(computed.grossPay),
+      absenceDeduction:    new Prisma.Decimal(computed.absenceDeduction),
+      lateDeduction:       new Prisma.Decimal(computed.lateDeduction),
+      sssEmployee:         new Prisma.Decimal(computed.sssEmployee),
+      sssEmployer:         new Prisma.Decimal(computed.sssEmployer),
+      philhealthEmployee:  new Prisma.Decimal(computed.philhealthEmployee),
+      philhealthEmployer:  new Prisma.Decimal(computed.philhealthEmployer),
+      pagibigEmployee:     new Prisma.Decimal(computed.pagibigEmployee),
+      pagibigEmployer:     new Prisma.Decimal(computed.pagibigEmployer),
+      withholdingTax:      new Prisma.Decimal(computed.withholdingTax),
+      otherDeductions:     new Prisma.Decimal(computed.otherDeductions),
+      totalDeductions:     new Prisma.Decimal(computed.totalDeductions),
+      netPay:              new Prisma.Decimal(computed.netPay),
+      remarks:             computed.remarks,
+    },
+  });
+
+  // Recompute run totals
+  const lines = await prisma.hrPayrollLine.findMany({ where: { payrollRunId: runId } });
+  const totalGross      = lines.reduce((s, l) => s + Number(l.grossPay),       0);
+  const totalDeductions = lines.reduce((s, l) => s + Number(l.totalDeductions), 0);
+  const totalNet        = lines.reduce((s, l) => s + Number(l.netPay),          0);
+
+  return prisma.hrPayrollRun.update({
+    where: { id: runId },
+    data: {
+      totalGross:      new Prisma.Decimal(totalGross),
+      totalDeductions: new Prisma.Decimal(totalDeductions),
+      totalNet:        new Prisma.Decimal(totalNet),
+    },
   });
 }
