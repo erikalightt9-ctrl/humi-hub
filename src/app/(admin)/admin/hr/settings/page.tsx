@@ -3,18 +3,31 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Building2, Upload, Loader2, CheckCircle, AlertCircle,
-  ImageIcon, X, Save,
+  ImageIcon, X, Save, MapPin,
 } from "lucide-react";
 import Image from "next/image";
 
 interface OrgSettings {
   name: string;
   logoUrl: string | null;
+  officeAddress: string | null;
+  officeLatitude: number | null;
+  officeLongitude: number | null;
+  geofenceRadiusMeters: number;
 }
 
 export default function HrSettingsPage() {
   const [settings, setSettings] = useState<OrgSettings | null>(null);
   const [name, setName]         = useState("");
+  // Geofence state
+  const [officeAddress, setOfficeAddress]               = useState("");
+  const [officeLatitude, setOfficeLatitude]             = useState("");
+  const [officeLongitude, setOfficeLongitude]           = useState("");
+  const [geofenceRadius, setGeofenceRadius]             = useState("100");
+  const [savingGeo, setSavingGeo]                       = useState(false);
+  const [geoSuccess, setGeoSuccess]                     = useState(false);
+  const [geoError, setGeoError]                         = useState<string | null>(null);
+  const [gpsLoading, setGpsLoading]                     = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoBase64, setLogoBase64]   = useState<string | null>(null);
   const [loading, setLoading]   = useState(true);
@@ -32,6 +45,10 @@ export default function HrSettingsPage() {
           setSettings(json.data);
           setName(json.data.name ?? "");
           setLogoPreview(json.data.logoUrl ?? null);
+          setOfficeAddress(json.data.officeAddress ?? "");
+          setOfficeLatitude(json.data.officeLatitude?.toString() ?? "");
+          setOfficeLongitude(json.data.officeLongitude?.toString() ?? "");
+          setGeofenceRadius(json.data.geofenceRadiusMeters?.toString() ?? "100");
         }
       })
       .finally(() => setLoading(false));
@@ -94,6 +111,54 @@ export default function HrSettingsPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleSaveGeofence() {
+    setSavingGeo(true);
+    setGeoSuccess(false);
+    setGeoError(null);
+    try {
+      const lat = officeLatitude  ? parseFloat(officeLatitude)  : null;
+      const lng = officeLongitude ? parseFloat(officeLongitude) : null;
+      const radius = parseInt(geofenceRadius, 10) || 100;
+
+      const res  = await fetch("/api/admin/hr/settings", {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          officeAddress:        officeAddress.trim() || null,
+          officeLatitude:       lat,
+          officeLongitude:      lng,
+          geofenceRadiusMeters: radius,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error ?? "Save failed");
+      setSettings((prev) => prev ? { ...prev, ...json.data } : json.data);
+      setGeoSuccess(true);
+      setTimeout(() => setGeoSuccess(false), 3000);
+    } catch (e) {
+      setGeoError(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSavingGeo(false);
+    }
+  }
+
+  function detectCurrentLocation() {
+    setGpsLoading(true);
+    setGeoError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setOfficeLatitude(pos.coords.latitude.toFixed(7));
+        setOfficeLongitude(pos.coords.longitude.toFixed(7));
+        setGpsLoading(false);
+      },
+      () => {
+        setGeoError("Could not get location. Please enter coordinates manually.");
+        setGpsLoading(false);
+      },
+      { enableHighAccuracy: true }
+    );
   }
 
   if (loading) {
@@ -261,6 +326,104 @@ export default function HrSettingsPage() {
               ? <><Loader2 className="h-4 w-4 animate-spin" />Saving…</>
               : <><Save className="h-4 w-4" />Save Settings</>
             }
+          </button>
+        </div>
+      </div>
+      {/* ── Geofencing ── */}
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-indigo-500" />
+          <div>
+            <h2 className="text-sm font-semibold text-slate-700">Attendance Geofencing</h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Employees must be within the geofence radius to clock in or out.
+            </p>
+          </div>
+        </div>
+
+        <div className="px-6 py-6 space-y-5">
+          {geoError && (
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">
+              <AlertCircle className="h-4 w-4 shrink-0" /> {geoError}
+            </div>
+          )}
+          {geoSuccess && (
+            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg p-3 text-sm">
+              <CheckCircle className="h-4 w-4 shrink-0" /> Geofence settings saved.
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Office Address</label>
+            <input
+              type="text"
+              value={officeAddress}
+              onChange={(e) => setOfficeAddress(e.target.value)}
+              placeholder="e.g. 123 Ayala Ave, Makati City"
+              maxLength={300}
+              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-800"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Latitude</label>
+              <input
+                type="number"
+                step="any"
+                value={officeLatitude}
+                onChange={(e) => setOfficeLatitude(e.target.value)}
+                placeholder="e.g. 14.5547"
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-800"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Longitude</label>
+              <input
+                type="number"
+                step="any"
+                value={officeLongitude}
+                onChange={(e) => setOfficeLongitude(e.target.value)}
+                placeholder="e.g. 121.0244"
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-800"
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={detectCurrentLocation}
+            disabled={gpsLoading}
+            className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium disabled:opacity-50"
+          >
+            {gpsLoading
+              ? <><Loader2 className="h-4 w-4 animate-spin" />Detecting…</>
+              : <><MapPin className="h-4 w-4" />Use My Current Location</>}
+          </button>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              Geofence Radius (meters)
+            </label>
+            <input
+              type="number"
+              min={10}
+              max={50000}
+              value={geofenceRadius}
+              onChange={(e) => setGeofenceRadius(e.target.value)}
+              className="w-40 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-800"
+            />
+            <p className="text-xs text-slate-400 mt-1">Minimum 10m · Recommended: 100–500m for an office building.</p>
+          </div>
+
+          <button
+            onClick={handleSaveGeofence}
+            disabled={savingGeo}
+            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 disabled:opacity-60 shadow-sm"
+          >
+            {savingGeo
+              ? <><Loader2 className="h-4 w-4 animate-spin" />Saving…</>
+              : <><Save className="h-4 w-4" />Save Geofence</>}
           </button>
         </div>
       </div>

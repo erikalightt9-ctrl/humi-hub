@@ -399,6 +399,68 @@ export const authOptions: NextAuthOptions = {
       },
     }),
 
+    /* ── EMPLOYEE (HR Portal) ──────────────────────────────────── */
+    CredentialsProvider({
+      id: "employee",
+      name: "Employee Credentials",
+      credentials: {
+        email:    { label: "Email",    type: "email"    },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
+        }
+
+        const employee = await prisma.hrEmployee.findFirst({
+          where: { email: credentials.email.toLowerCase() },
+          include: { organization: { select: { id: true, isActive: true } } },
+        });
+
+        if (!employee || !employee.passwordHash) {
+          throw new Error("Invalid credentials");
+        }
+
+        if (!employee.isPortalEnabled) {
+          throw new Error("Portal access has not been enabled for your account. Contact your admin.");
+        }
+
+        if (employee.failedAttempts >= MAX_FAILED_ATTEMPTS) {
+          throw new Error("Account locked after too many failed attempts. Contact your admin.");
+        }
+
+        const isValid = await bcrypt.compare(credentials.password, employee.passwordHash);
+        if (!isValid) {
+          await prisma.hrEmployee.update({
+            where: { id: employee.id },
+            data: { failedAttempts: { increment: 1 } },
+          });
+          throw new Error("Invalid credentials");
+        }
+
+        if (!employee.organization.isActive) {
+          throw new Error("Your organization account has been suspended.");
+        }
+
+        await prisma.hrEmployee.update({
+          where: { id: employee.id },
+          data: { failedAttempts: 0 },
+        });
+
+        return {
+          id: employee.id,
+          email: employee.email,
+          name: `${employee.firstName} ${employee.lastName}`,
+          role: "employee" as const,
+          organizationId: employee.organizationId,
+          tenantId: employee.organizationId,
+          mustChangePassword: employee.mustChangePassword,
+          isSuperAdmin: false,
+          isTenantAdmin: false,
+        };
+      },
+    }),
+
     /* ── CORPORATE ─────────────────────────────────────────────── */
     CredentialsProvider({
       id: "corporate",

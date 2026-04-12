@@ -1267,6 +1267,11 @@ model Organization {
   adminRoleLabel String?     @db.VarChar(50)
   mission        String?     @db.Text
   vision         String?     @db.Text
+  // Geofencing / attendance
+  officeAddress        String?
+  officeLatitude       Float?
+  officeLongitude      Float?
+  geofenceRadiusMeters Int     @default(100)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -2576,6 +2581,11 @@ model HrEmployee {
   emergencyContact String?           @db.VarChar(150)
   emergencyPhone   String?           @db.VarChar(30)
   avatarUrl        String?
+  // Employee portal auth
+  passwordHash        String?
+  mustChangePassword  Boolean  @default(true)
+  failedAttempts      Int      @default(0)
+  isPortalEnabled     Boolean  @default(false)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
@@ -2737,6 +2747,13 @@ model HrAttendanceLog {
   overtimeHours Decimal?          @db.Decimal(5, 2)
   status       HrAttendanceStatus @default(PRESENT)
   notes        String?            @db.VarChar(300)
+  // GPS + photo verification
+  clockInLatitude    Float?
+  clockInLongitude   Float?
+  clockInPhotoUrl    String?
+  clockOutLatitude   Float?
+  clockOutLongitude  Float?
+  clockOutPhotoUrl   String?
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
 

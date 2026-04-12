@@ -15,7 +15,7 @@ declare module "next-auth" {
       id: string;
       email: string;
       name: string;
-      role: string;
+      role: "admin" | "student" | "trainer" | "corporate" | "tenant_admin" | "employee" | "humi_admin" | string;
       isSuperAdmin: boolean;
       isTenantAdmin: boolean;
       isHumiAdmin: boolean;

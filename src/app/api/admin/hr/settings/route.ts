@@ -9,8 +9,12 @@ import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 
 const patchSchema = z.object({
-  companyName: z.string().min(1).max(200).optional(),
-  logoUrl:     z.string().max(2_000_000).optional(), // supports base64 data URLs
+  companyName:          z.string().min(1).max(200).optional(),
+  logoUrl:              z.string().max(2_000_000).optional(),
+  officeAddress:        z.string().max(300).nullable().optional(),
+  officeLatitude:       z.number().min(-90).max(90).nullable().optional(),
+  officeLongitude:      z.number().min(-180).max(180).nullable().optional(),
+  geofenceRadiusMeters: z.number().int().min(10).max(50000).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -21,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     const org = await prisma.organization.findUnique({
       where:  { id: guard.tenantId },
-      select: { name: true, logoUrl: true },
+      select: { name: true, logoUrl: true, officeAddress: true, officeLatitude: true, officeLongitude: true, geofenceRadiusMeters: true },
     });
 
     return NextResponse.json({ success: true, data: org, error: null });
@@ -46,13 +50,18 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, data: null, error: parsed.error.message }, { status: 400 });
     }
 
+    const d = parsed.data;
     const updated = await prisma.organization.update({
       where: { id: guard.tenantId },
       data:  {
-        ...(parsed.data.companyName !== undefined && { name:    parsed.data.companyName }),
-        ...(parsed.data.logoUrl     !== undefined && { logoUrl: parsed.data.logoUrl }),
+        ...(d.companyName          !== undefined && { name:                 d.companyName }),
+        ...(d.logoUrl              !== undefined && { logoUrl:              d.logoUrl }),
+        ...(d.officeAddress        !== undefined && { officeAddress:        d.officeAddress }),
+        ...(d.officeLatitude       !== undefined && { officeLatitude:       d.officeLatitude }),
+        ...(d.officeLongitude      !== undefined && { officeLongitude:      d.officeLongitude }),
+        ...(d.geofenceRadiusMeters !== undefined && { geofenceRadiusMeters: d.geofenceRadiusMeters }),
       },
-      select: { name: true, logoUrl: true },
+      select: { name: true, logoUrl: true, officeAddress: true, officeLatitude: true, officeLongitude: true, geofenceRadiusMeters: true },
     });
 
     return NextResponse.json({ success: true, data: updated, error: null });
