@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { GraduationCap, Loader2, Building2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AccountLockedBanner } from "@/components/auth/AccountLockedBanner";
 
 export default function CorporateLoginPage() {
   const router = useRouter();
@@ -15,13 +16,42 @@ export default function CorporateLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError]               = useState<string | null>(null);
   const [loading, setLoading]           = useState(false);
+  const [lockUntil, setLockUntil]       = useState<string | null>(null);
+
+  const handleUnlocked = useCallback(() => {
+    setLockUntil(null);
+    setError(null);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setLockUntil(null);
 
     try {
+      // Pre-flight check for lock status
+      const checkRes = await fetch("/api/auth/validate-credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: "corporate", email: email.trim().toLowerCase() }),
+      });
+      const checkData = (await checkRes.json()) as {
+        ok: boolean | null;
+        error?: string;
+        lockUntil?: string;
+      };
+
+      if (checkData.ok === false) {
+        if (checkData.lockUntil) {
+          setLockUntil(checkData.lockUntil);
+        } else {
+          setError(checkData.error ?? "Access denied. Please contact admin.");
+        }
+        setLoading(false);
+        return;
+      }
+
       const result = await signIn("corporate", {
         email: email.trim().toLowerCase(),
         password,
@@ -29,7 +59,12 @@ export default function CorporateLoginPage() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password. Please try again.");
+        if (result.error.startsWith("LOCKED:")) {
+          setLockUntil(result.error.slice("LOCKED:".length));
+        } else {
+          setError("Invalid email or password. Please try again.");
+        }
+        setLoading(false);
         return;
       }
 
@@ -55,6 +90,8 @@ export default function CorporateLoginPage() {
     }
   }
 
+  const isLocked = lockUntil !== null;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -75,7 +112,7 @@ export default function CorporateLoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
+            {error && !isLocked && (
               <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 {error}
@@ -93,7 +130,7 @@ export default function CorporateLoginPage() {
                 required
                 autoComplete="email"
                 autoFocus
-                disabled={loading}
+                disabled={loading || isLocked}
               />
             </div>
 
@@ -108,7 +145,7 @@ export default function CorporateLoginPage() {
                   placeholder="••••••••"
                   required
                   autoComplete="current-password"
-                  disabled={loading}
+                  disabled={loading || isLocked}
                   className="pr-10"
                 />
                 <button
@@ -123,7 +160,16 @@ export default function CorporateLoginPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            {isLocked && (
+              <AccountLockedBanner
+                lockUntil={lockUntil!}
+                email={email}
+                provider="corporate"
+                onUnlocked={handleUnlocked}
+              />
+            )}
+
+            <Button type="submit" className="w-full gap-2" disabled={loading || isLocked}>
               {loading ? (
                 <><Loader2 className="h-4 w-4 animate-spin mr-2" />Signing in…</>
               ) : (

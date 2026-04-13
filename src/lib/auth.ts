@@ -4,6 +4,11 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
 const MAX_FAILED_ATTEMPTS = 5;
+const LOCK_DURATION_MINUTES = 30;
+
+function lockUntilDate(): Date {
+  return new Date(Date.now() + LOCK_DURATION_MINUTES * 60 * 1000);
+}
 
 /* ------------------------------------------------------------------ */
 /*  auth.ts                                                            */
@@ -13,7 +18,8 @@ const MAX_FAILED_ATTEMPTS = 5;
 /*  All providers:                                                     */
 /*  • Throw specific errors so PortalTabs can surface them             */
 /*  • Track failedAttempts; lock after MAX_FAILED_ATTEMPTS             */
-/*  • Reset failedAttempts on successful login                         */
+/*  • Auto-unlock after LOCK_DURATION_MINUTES (30 min) via lockUntil  */
+/*  • Reset failedAttempts + lockUntil on successful login             */
 /*  • Debug-log every failed attempt (server-side only)               */
 /* ------------------------------------------------------------------ */
 
@@ -45,25 +51,33 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Account deactivated. Contact the Super Admin.");
         }
 
-        if (humiAdmin.failedAttempts >= MAX_FAILED_ATTEMPTS) {
-          throw new Error("Account locked after too many failed attempts. Contact the Super Admin.");
+        // Time-based lock check — auto-unlock when lockUntil has passed
+        const now = new Date();
+        if (humiAdmin.lockUntil && humiAdmin.lockUntil > now) {
+          throw new Error(`LOCKED:${humiAdmin.lockUntil.toISOString()}`);
         }
 
         const isValid = await bcrypt.compare(credentials.password, humiAdmin.passwordHash);
 
         if (!isValid) {
-          await prisma.humiAdmin.update({
+          // Atomic increment prevents race condition under concurrent requests
+          const { failedAttempts: newAttempts } = await prisma.humiAdmin.update({
             where: { id: humiAdmin.id },
             data: { failedAttempts: { increment: 1 } },
+            select: { failedAttempts: true },
           });
-          console.error("[auth][humi-admin] Login failed — password mismatch for:", credentials.email);
+          if (newAttempts >= MAX_FAILED_ATTEMPTS) {
+            const lockedUntil = lockUntilDate();
+            await prisma.humiAdmin.update({ where: { id: humiAdmin.id }, data: { lockUntil: lockedUntil } });
+            throw new Error(`LOCKED:${lockedUntil.toISOString()}`);
+          }
           throw new Error("Invalid credentials");
         }
 
-        // Reset failed attempts on success
+        // Reset on success
         await prisma.humiAdmin.update({
           where: { id: humiAdmin.id },
-          data: { failedAttempts: 0 },
+          data: { failedAttempts: 0, lockUntil: null },
         });
 
         return {
@@ -103,18 +117,49 @@ export const authOptions: NextAuthOptions = {
 
         const admin = await prisma.admin.findUnique({
           where: { email: credentials.email.toLowerCase() },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            passwordHash: true,
+            isSuperAdmin: true,
+            failedAttempts: true,
+            lockUntil: true,
+          },
         });
 
         if (!admin) {
-          console.error("[auth][admin] Login failed — email not found:", credentials.email);
           throw new Error("Invalid credentials");
+        }
+
+        // Time-based lock check — auto-unlock when lockUntil has passed
+        const now = new Date();
+        if (admin.lockUntil && admin.lockUntil > now) {
+          throw new Error(`LOCKED:${admin.lockUntil.toISOString()}`);
         }
 
         const isValid = await bcrypt.compare(credentials.password, admin.passwordHash);
 
         if (!isValid) {
-          console.error("[auth][admin] Login failed — password mismatch for:", credentials.email);
+          const { failedAttempts: newAttempts } = await prisma.admin.update({
+            where: { id: admin.id },
+            data: { failedAttempts: { increment: 1 } },
+            select: { failedAttempts: true },
+          });
+          if (newAttempts >= MAX_FAILED_ATTEMPTS) {
+            const lockedUntil = lockUntilDate();
+            await prisma.admin.update({ where: { id: admin.id }, data: { lockUntil: lockedUntil } });
+            throw new Error(`LOCKED:${lockedUntil.toISOString()}`);
+          }
           throw new Error("Invalid credentials");
+        }
+
+        // Reset on success
+        if (admin.failedAttempts > 0 || admin.lockUntil) {
+          await prisma.admin.update({
+            where: { id: admin.id },
+            data: { failedAttempts: 0, lockUntil: null },
+          });
         }
 
         return {
@@ -153,6 +198,7 @@ export const authOptions: NextAuthOptions = {
             accessExpiry: true,
             mustChangePassword: true,
             failedAttempts: true,
+            lockUntil: true,
             organizationId: true,
             createdAt: true,
           },
@@ -163,30 +209,26 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        // Lock check — before bcrypt to avoid timing attacks revealing lock status
-        if (student.failedAttempts >= MAX_FAILED_ATTEMPTS) {
-          console.error(
-            "[auth][student] Account locked — too many failed attempts:",
-            credentials.email,
-          );
-          throw new Error(
-            "Account locked after too many failed attempts. Please contact admin.",
-          );
+        // Time-based lock check — auto-unlock when lockUntil has passed
+        const now = new Date();
+        if (student.lockUntil && student.lockUntil > now) {
+          throw new Error(`LOCKED:${student.lockUntil.toISOString()}`);
         }
 
         const isValid = await bcrypt.compare(credentials.password, student.passwordHash);
 
         if (!isValid) {
-          const attempts = student.failedAttempts + 1;
-          console.error(
-            "[auth][student] Password mismatch for:",
-            credentials.email,
-            `(attempt ${attempts}/${MAX_FAILED_ATTEMPTS})`,
-          );
-          await prisma.student.update({
+          // Atomic increment prevents race condition under concurrent requests
+          const { failedAttempts: newAttempts } = await prisma.student.update({
             where: { id: student.id },
-            data: { failedAttempts: attempts },
+            data: { failedAttempts: { increment: 1 } },
+            select: { failedAttempts: true },
           });
+          if (newAttempts >= MAX_FAILED_ATTEMPTS) {
+            const lockedUntil = lockUntilDate();
+            await prisma.student.update({ where: { id: student.id }, data: { lockUntil: lockedUntil } });
+            throw new Error(`LOCKED:${lockedUntil.toISOString()}`);
+          }
           throw new Error("Invalid credentials");
         }
 
@@ -197,17 +239,17 @@ export const authOptions: NextAuthOptions = {
           );
         }
 
-        if (student.accessExpiry && new Date(student.accessExpiry) < new Date()) {
+        if (student.accessExpiry && new Date(student.accessExpiry) < now) {
           throw new Error(
             "Your access has expired. Please contact admin to renew.",
           );
         }
 
         // Reset failed counter on successful login
-        if (student.failedAttempts > 0) {
+        if (student.failedAttempts > 0 || student.lockUntil) {
           await prisma.student.update({
             where: { id: student.id },
-            data: { failedAttempts: 0 },
+            data: { failedAttempts: 0, lockUntil: null },
           });
         }
 
@@ -234,7 +276,7 @@ export const authOptions: NextAuthOptions = {
             );
           }
 
-          if (org.planExpiresAt && new Date(org.planExpiresAt) < new Date()) {
+          if (org.planExpiresAt && new Date(org.planExpiresAt) < now) {
             throw new Error(
               "Your organization's subscription has expired. Please contact your administrator.",
             );
@@ -303,30 +345,26 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        // Lock check
-        if (trainer.failedAttempts >= MAX_FAILED_ATTEMPTS) {
-          console.error(
-            "[auth][trainer] Account locked — too many failed attempts:",
-            credentials.email,
-          );
-          throw new Error(
-            "Account locked after too many failed attempts. Please contact admin.",
-          );
+        // Time-based lock check — auto-unlock when lockUntil has passed
+        const now = new Date();
+        if (trainer.lockUntil && trainer.lockUntil > now) {
+          throw new Error(`LOCKED:${trainer.lockUntil.toISOString()}`);
         }
 
         const isValid = await bcrypt.compare(credentials.password, trainer.passwordHash);
 
         if (!isValid) {
-          const attempts = trainer.failedAttempts + 1;
-          console.error(
-            "[auth][trainer] Password mismatch for:",
-            credentials.email,
-            `(attempt ${attempts}/${MAX_FAILED_ATTEMPTS})`,
-          );
-          await prisma.trainer.update({
+          // Atomic increment prevents race condition under concurrent requests
+          const { failedAttempts: newAttempts } = await prisma.trainer.update({
             where: { id: trainer.id },
-            data: { failedAttempts: attempts },
+            data: { failedAttempts: { increment: 1 } },
+            select: { failedAttempts: true },
           });
+          if (newAttempts >= MAX_FAILED_ATTEMPTS) {
+            const lockedUntil = lockUntilDate();
+            await prisma.trainer.update({ where: { id: trainer.id }, data: { lockUntil: lockedUntil } });
+            throw new Error(`LOCKED:${lockedUntil.toISOString()}`);
+          }
           throw new Error("Invalid credentials");
         }
 
@@ -344,10 +382,10 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Reset failed counter on successful login
-        if (trainer.failedAttempts > 0) {
+        if (trainer.failedAttempts > 0 || trainer.lockUntil) {
           await prisma.trainer.update({
             where: { id: trainer.id },
-            data: { failedAttempts: 0 },
+            data: { failedAttempts: 0, lockUntil: null },
           });
         }
 
@@ -486,10 +524,26 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
+        // Time-based lock check — auto-unlock when lockUntil has passed
+        const now = new Date();
+        if (manager.lockUntil && manager.lockUntil > now) {
+          throw new Error(`LOCKED:${manager.lockUntil.toISOString()}`);
+        }
+
         const isValid = await bcrypt.compare(credentials.password, manager.passwordHash);
 
         if (!isValid) {
-          console.error("[auth][corporate] Password mismatch for:", credentials.email);
+          // Atomic increment prevents race condition under concurrent requests
+          const { failedAttempts: newAttempts } = await prisma.corporateManager.update({
+            where: { id: manager.id },
+            data: { failedAttempts: { increment: 1 } },
+            select: { failedAttempts: true },
+          });
+          if (newAttempts >= MAX_FAILED_ATTEMPTS) {
+            const lockedUntil = lockUntilDate();
+            await prisma.corporateManager.update({ where: { id: manager.id }, data: { lockUntil: lockedUntil } });
+            throw new Error(`LOCKED:${lockedUntil.toISOString()}`);
+          }
           throw new Error("Invalid credentials");
         }
 
@@ -517,6 +571,14 @@ export const authOptions: NextAuthOptions = {
               "This account does not belong to this organization. Please use the correct login portal.",
             );
           }
+        }
+
+        // Reset on success
+        if (manager.failedAttempts > 0 || manager.lockUntil) {
+          await prisma.corporateManager.update({
+            where: { id: manager.id },
+            data: { failedAttempts: 0, lockUntil: null },
+          });
         }
 
         return {

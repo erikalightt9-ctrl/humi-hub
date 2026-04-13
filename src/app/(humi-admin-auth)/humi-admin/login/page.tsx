@@ -1,26 +1,58 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useCallback } from "react";
 import { signIn, signOut } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Shield, Eye, EyeOff, Loader2 } from "lucide-react";
+import { AccountLockedBanner } from "@/components/auth/AccountLockedBanner";
 
 function HumiAdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/humi-admin";
+  // Only allow relative paths to prevent open redirect attacks
+  const rawCallback = searchParams.get("callbackUrl") ?? "";
+  const callbackUrl = rawCallback.startsWith("/") ? rawCallback : "/humi-admin";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lockUntil, setLockUntil] = useState<string | null>(null);
+
+  const handleUnlocked = useCallback(() => {
+    setLockUntil(null);
+    setError(null);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setLockUntil(null);
 
     try {
+      // Pre-flight check for lock status
+      const checkRes = await fetch("/api/auth/validate-credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: "humi-admin", email: email.trim().toLowerCase() }),
+      });
+      const checkData = (await checkRes.json()) as {
+        ok: boolean | null;
+        error?: string;
+        lockUntil?: string;
+      };
+
+      if (checkData.ok === false) {
+        if (checkData.lockUntil) {
+          setLockUntil(checkData.lockUntil);
+        } else {
+          setError(checkData.error ?? "Access denied.");
+        }
+        setLoading(false);
+        return;
+      }
+
       const result = await signIn("humi-admin", {
         email: email.trim().toLowerCase(),
         password,
@@ -28,7 +60,11 @@ function HumiAdminLoginForm() {
       });
 
       if (!result?.ok || result.error) {
-        setError(result?.error ?? "Invalid credentials. Please try again.");
+        if (result?.error?.startsWith("LOCKED:")) {
+          setLockUntil(result.error.slice("LOCKED:".length));
+        } else {
+          setError(result?.error ?? "Invalid credentials. Please try again.");
+        }
         return;
       }
 
@@ -50,6 +86,8 @@ function HumiAdminLoginForm() {
     }
   }
 
+  const isLocked = lockUntil !== null;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -69,7 +107,7 @@ function HumiAdminLoginForm() {
             Internal staff access only. Contact Super Admin if you need an account.
           </p>
 
-          {error && (
+          {error && !isLocked && (
             <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
               {error}
             </div>
@@ -86,7 +124,8 @@ function HumiAdminLoginForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isLocked}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
                 placeholder="admin@humihub.com"
               />
             </div>
@@ -99,7 +138,8 @@ function HumiAdminLoginForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isLocked}
+                  className="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
                   placeholder="••••••••"
                 />
                 <button
@@ -112,10 +152,19 @@ function HumiAdminLoginForm() {
               </div>
             </div>
 
+            {isLocked && (
+              <AccountLockedBanner
+                lockUntil={lockUntil!}
+                email={email}
+                provider="humi-admin"
+                onUnlocked={handleUnlocked}
+              />
+            )}
+
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+              disabled={loading || isLocked}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

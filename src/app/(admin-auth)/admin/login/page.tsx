@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { GraduationCap, Loader2 } from "lucide-react";
+import { AccountLockedBanner } from "@/components/auth/AccountLockedBanner";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -11,10 +12,17 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lockUntil, setLockUntil] = useState<string | null>(null);
+
+  const handleUnlocked = useCallback(() => {
+    setLockUntil(null);
+    setError(null);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setLockUntil(null);
     setLoading(true);
 
     const result = await signIn("admin", {
@@ -26,12 +34,18 @@ export default function AdminLoginPage() {
     setLoading(false);
 
     if (result?.error) {
+      if (result.error.startsWith("LOCKED:")) {
+        setLockUntil(result.error.slice("LOCKED:".length));
+        return;
+      }
       setError("Invalid email or password. Please try again.");
       return;
     }
 
     router.push("/admin");
   }
+
+  const isLocked = lockUntil !== null;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 px-4">
@@ -49,7 +63,7 @@ export default function AdminLoginPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
-          {error && (
+          {error && !isLocked && (
             <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
               {error}
             </div>
@@ -65,7 +79,8 @@ export default function AdminLoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@example.com"
-              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLocked}
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -79,14 +94,24 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLocked}
+              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
             />
           </div>
 
+          {isLocked && (
+            <AccountLockedBanner
+              lockUntil={lockUntil!}
+              email={email}
+              provider="admin"
+              onUnlocked={handleUnlocked}
+            />
+          )}
+
           <button
             type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white bg-[#1E3A8A] hover:bg-[#1e40af] transition-colors disabled:opacity-70"
+            disabled={loading || isLocked}
+            className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white bg-[#1E3A8A] hover:bg-[#1e40af] transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
             Sign in to Admin Portal

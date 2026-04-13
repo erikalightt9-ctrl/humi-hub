@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AccountLockedBanner } from "@/components/auth/AccountLockedBanner";
 
 /* ------------------------------------------------------------------ */
 /*  Feature highlights shown on the left branding panel               */
@@ -41,10 +42,18 @@ export default function TenantPortalLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lockUntil, setLockUntil] = useState<string | null>(null);
+  const [lockedProvider, setLockedProvider] = useState<"student" | "trainer" | "corporate">("student");
+
+  const handleUnlocked = useCallback(() => {
+    setLockUntil(null);
+    setError("");
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setLockUntil(null);
     setLoading(true);
 
     try {
@@ -57,12 +66,18 @@ export default function TenantPortalLoginPage() {
       const checkData = (await checkRes.json()) as {
         ok: boolean | null;
         error?: string;
+        lockUntil?: string;
         provider?: "student" | "corporate" | "trainer";
         mustChangePassword?: boolean;
       };
 
       if (checkData.ok === false) {
-        setError(checkData.error ?? "Access denied. Please contact your administrator.");
+        if (checkData.lockUntil) {
+          setLockedProvider(checkData.provider ?? "student");
+          setLockUntil(checkData.lockUntil);
+        } else {
+          setError(checkData.error ?? "Access denied. Please contact your administrator.");
+        }
         setLoading(false);
         return;
       }
@@ -86,6 +101,12 @@ export default function TenantPortalLoginPage() {
       setLoading(false);
 
       if (result?.error) {
+        // Surface lock error from NextAuth if validate-credentials was bypassed
+        if (result.error.startsWith("LOCKED:")) {
+          setLockedProvider(detectedProvider as "student" | "trainer" | "corporate");
+          setLockUntil(result.error.slice("LOCKED:".length));
+          return;
+        }
         if (detectedProvider === "corporate") {
           setError("Incorrect password. If you just received a temporary password, enter it exactly as provided. Contact your Super Admin to reset it.");
         } else {
@@ -118,6 +139,8 @@ export default function TenantPortalLoginPage() {
       setError("Network error. Please try again.");
     }
   }
+
+  const isLocked = lockUntil !== null;
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
@@ -200,6 +223,7 @@ export default function TenantPortalLoginPage() {
                   required
                   autoComplete="email"
                   autoFocus
+                  disabled={isLocked}
                 />
               </div>
 
@@ -222,6 +246,7 @@ export default function TenantPortalLoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     autoComplete="current-password"
+                    disabled={isLocked}
                     className="pr-10"
                   />
                   <button
@@ -238,16 +263,25 @@ export default function TenantPortalLoginPage() {
                 </div>
               </div>
 
-              {error && (
+              {error && !isLocked && (
                 <div className="flex items-center gap-2 text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 text-sm">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   {error}
                 </div>
               )}
 
+              {isLocked && (
+                <AccountLockedBanner
+                  lockUntil={lockUntil!}
+                  email={email}
+                  provider={lockedProvider}
+                  onUnlocked={handleUnlocked}
+                />
+              )}
+
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || isLocked}
                 className="w-full bg-blue-700 hover:bg-blue-800 h-11"
               >
                 {loading ? (

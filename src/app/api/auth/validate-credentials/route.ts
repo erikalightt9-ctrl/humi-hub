@@ -5,11 +5,11 @@
  * Checks only operational access-control gates so the portal UI
  * can show a specific, actionable error message before calling signIn().
  *
- * Request body: { provider: "student" | "trainer", email: string }
+ * Request body: { provider: "student" | "trainer" | "humi-admin" | "auto", email: string }
  *
  * Responses:
  *   200 ok            { ok: true,  mustChangePassword: boolean }
- *   200 blocked       { ok: false, error: string }   ← show this in the UI
+ *   200 blocked       { ok: false, error: string, lockUntil?: string } ← show in UI
  *   200 not_found     { ok: null }                   ← fall through to signIn()
  *   422               { ok: false, error: "Invalid input" }
  */
@@ -17,10 +17,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
-const MAX_FAILED_ATTEMPTS = 5;
-
 const bodySchema = z.object({
-  provider: z.enum(["student", "trainer", "auto"]),
+  provider: z.enum(["student", "trainer", "humi-admin", "corporate", "auto"]),
   email: z.string().email(),
 });
 
@@ -39,6 +37,7 @@ export async function POST(request: NextRequest) {
 
   const { provider, email } = parsed.data;
   const normalizedEmail = email.toLowerCase();
+  const now = new Date();
 
   /* ── student ────────────────────────────────────────────────── */
   if (provider === "student") {
@@ -46,19 +45,20 @@ export async function POST(request: NextRequest) {
       where: { email: normalizedEmail },
       select: {
         failedAttempts: true,
+        lockUntil: true,
         accessGranted: true,
         accessExpiry: true,
         mustChangePassword: true,
       },
     });
 
-    // User not found → return null so UI falls through to generic error
     if (!student) return NextResponse.json({ ok: null });
 
-    if (student.failedAttempts >= MAX_FAILED_ATTEMPTS) {
+    if (student.lockUntil && student.lockUntil > now) {
       return NextResponse.json({
         ok: false,
-        error: "Account locked after too many failed attempts. Please contact admin.",
+        error: "Your account is temporarily locked due to too many failed attempts.",
+        lockUntil: student.lockUntil.toISOString(),
       });
     }
 
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (student.accessExpiry && new Date(student.accessExpiry) < new Date()) {
+    if (student.accessExpiry && new Date(student.accessExpiry) < now) {
       return NextResponse.json({
         ok: false,
         error: "Your access has expired. Please contact admin to renew.",
@@ -79,6 +79,71 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       mustChangePassword: student.mustChangePassword,
+    });
+  }
+
+  /* ── corporate ─────────────────────────────────────────────── */
+  if (provider === "corporate") {
+    const manager = await prisma.corporateManager.findFirst({
+      where: { email: normalizedEmail },
+      select: { isActive: true, mustChangePassword: true, lockUntil: true, failedAttempts: true },
+    });
+
+    if (!manager) return NextResponse.json({ ok: null });
+
+    if (!manager.isActive) {
+      return NextResponse.json({
+        ok: false,
+        error: "Your account has been deactivated. Please contact admin.",
+      });
+    }
+
+    if (manager.lockUntil && manager.lockUntil > now) {
+      return NextResponse.json({
+        ok: false,
+        error: "Your account is temporarily locked due to too many failed attempts.",
+        lockUntil: manager.lockUntil.toISOString(),
+      });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      mustChangePassword: manager.mustChangePassword,
+    });
+  }
+
+  /* ── humi-admin ─────────────────────────────────────────────── */
+  if (provider === "humi-admin") {
+    const humiAdmin = await prisma.humiAdmin.findUnique({
+      where: { email: normalizedEmail },
+      select: {
+        failedAttempts: true,
+        lockUntil: true,
+        isActive: true,
+        mustChangePassword: true,
+      },
+    });
+
+    if (!humiAdmin) return NextResponse.json({ ok: null });
+
+    if (!humiAdmin.isActive) {
+      return NextResponse.json({
+        ok: false,
+        error: "Account deactivated. Contact the Super Admin.",
+      });
+    }
+
+    if (humiAdmin.lockUntil && humiAdmin.lockUntil > now) {
+      return NextResponse.json({
+        ok: false,
+        error: "Your account is temporarily locked due to too many failed attempts.",
+        lockUntil: humiAdmin.lockUntil.toISOString(),
+      });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      mustChangePassword: humiAdmin.mustChangePassword,
     });
   }
 
@@ -100,29 +165,54 @@ export async function POST(request: NextRequest) {
     // 2. Check student
     const studentAuto = await prisma.student.findUnique({
       where: { email: normalizedEmail },
-      select: { failedAttempts: true, accessGranted: true, accessExpiry: true, mustChangePassword: true },
+      select: {
+        failedAttempts: true,
+        lockUntil: true,
+        accessGranted: true,
+        accessExpiry: true,
+        mustChangePassword: true,
+      },
     });
     if (studentAuto) {
-      if (studentAuto.failedAttempts >= MAX_FAILED_ATTEMPTS) {
-        return NextResponse.json({ ok: false, error: "Account locked after too many failed attempts. Please contact admin." });
+      if (studentAuto.lockUntil && studentAuto.lockUntil > now) {
+        return NextResponse.json({
+          ok: false,
+          error: "Your account is temporarily locked due to too many failed attempts.",
+          lockUntil: studentAuto.lockUntil.toISOString(),
+          provider: "student",
+        });
       }
       if (!studentAuto.accessGranted) {
         return NextResponse.json({ ok: false, error: "Your access has not been granted yet. Please contact admin." });
       }
-      if (studentAuto.accessExpiry && new Date(studentAuto.accessExpiry) < new Date()) {
+      if (studentAuto.accessExpiry && new Date(studentAuto.accessExpiry) < now) {
         return NextResponse.json({ ok: false, error: "Your access has expired. Please contact admin to renew." });
       }
       return NextResponse.json({ ok: true, provider: "student", mustChangePassword: studentAuto.mustChangePassword });
     }
 
+
+
     // 3. Check trainer
     const trainerAuto = await prisma.trainer.findUnique({
       where: { email: normalizedEmail },
-      select: { passwordHash: true, failedAttempts: true, isActive: true, accessGranted: true, mustChangePassword: true },
+      select: {
+        passwordHash: true,
+        failedAttempts: true,
+        lockUntil: true,
+        isActive: true,
+        accessGranted: true,
+        mustChangePassword: true,
+      },
     });
     if (trainerAuto && trainerAuto.passwordHash) {
-      if (trainerAuto.failedAttempts >= MAX_FAILED_ATTEMPTS) {
-        return NextResponse.json({ ok: false, error: "Account locked after too many failed attempts. Please contact admin." });
+      if (trainerAuto.lockUntil && trainerAuto.lockUntil > now) {
+        return NextResponse.json({
+          ok: false,
+          error: "Your account is temporarily locked due to too many failed attempts.",
+          lockUntil: trainerAuto.lockUntil.toISOString(),
+          provider: "trainer",
+        });
       }
       if (!trainerAuto.isActive) {
         return NextResponse.json({ ok: false, error: "Your account has been deactivated. Please contact admin." });
@@ -143,19 +233,20 @@ export async function POST(request: NextRequest) {
     select: {
       passwordHash: true,
       failedAttempts: true,
+      lockUntil: true,
       isActive: true,
       accessGranted: true,
       mustChangePassword: true,
     },
   });
 
-  // No account or no password set → fall through to generic error
   if (!trainer || !trainer.passwordHash) return NextResponse.json({ ok: null });
 
-  if (trainer.failedAttempts >= MAX_FAILED_ATTEMPTS) {
+  if (trainer.lockUntil && trainer.lockUntil > now) {
     return NextResponse.json({
       ok: false,
-      error: "Account locked after too many failed attempts. Please contact admin.",
+      error: "Your account is temporarily locked due to too many failed attempts.",
+      lockUntil: trainer.lockUntil.toISOString(),
     });
   }
 
@@ -169,8 +260,7 @@ export async function POST(request: NextRequest) {
   if (!trainer.accessGranted) {
     return NextResponse.json({
       ok: false,
-      error:
-        "Your portal access has not been granted yet. Please contact admin.",
+      error: "Your portal access has not been granted yet. Please contact admin.",
     });
   }
 
