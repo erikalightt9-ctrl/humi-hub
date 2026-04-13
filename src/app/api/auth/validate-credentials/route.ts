@@ -39,6 +39,8 @@ export async function POST(request: NextRequest) {
   const normalizedEmail = email.toLowerCase();
   const now = new Date();
 
+  try {
+
   /* ── student ────────────────────────────────────────────────── */
   if (provider === "student") {
     const student = await prisma.student.findUnique({
@@ -227,7 +229,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: null });
   }
 
-  /* ── trainer ────────────────────────────────────────────────── */
+  /* ── trainer (explicit provider) ───────────────────────────── */
   const trainer = await prisma.trainer.findUnique({
     where: { email: normalizedEmail },
     select: {
@@ -268,4 +270,11 @@ export async function POST(request: NextRequest) {
     ok: true,
     mustChangePassword: trainer.mustChangePassword,
   });
+
+  } catch (err) {
+    console.error("[validate-credentials] DB error:", err);
+    // Return ok: null so the login page falls through to signIn() which will
+    // produce its own (more specific) error, rather than showing a generic crash.
+    return NextResponse.json({ ok: null });
+  }
 }
