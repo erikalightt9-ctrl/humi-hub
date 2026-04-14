@@ -53,18 +53,21 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
     const body = await request.json() as {
       roleLabel?:   string;
+      roleId?:      string | null;
       permissions?: ModuleKey[];
       isActive?:    boolean;
     };
 
     const updateData: {
       roleLabel?:   string;
+      roleId?:      string | null;
       permissions?: string[];
       isActive?:    boolean;
       updatedAt:    Date;
     } = { updatedAt: new Date() };
 
     if (body.roleLabel !== undefined)   updateData.roleLabel   = body.roleLabel.trim() || "User";
+    if ("roleId" in body)               updateData.roleId      = body.roleId ?? null;
     if (body.permissions !== undefined) updateData.permissions = body.permissions;
     if (body.isActive !== undefined)    updateData.isActive    = body.isActive;
 
@@ -76,6 +79,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         name:               true,
         email:              true,
         roleLabel:          true,
+        roleId:             true,
         permissions:        true,
         isActive:           true,
         mustChangePassword: true,

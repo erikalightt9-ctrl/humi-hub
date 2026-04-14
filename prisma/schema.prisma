@@ -1319,6 +1319,7 @@ model Organization {
   adminSuppliers       AdminSupplier[]
   adminEquipment       AdminEquipment[]
   tenantUsers          TenantUser[]
+  tenantRoles          TenantRole[]
 
   @@map("organizations")
 }
@@ -3147,23 +3148,44 @@ model AdminEquipment {
 /* ------------------------------------------------------------------ */
 
 model TenantUser {
-  id                 String    @id
+  id                 String      @id
   organizationId     String
-  name               String    @db.VarChar(200)
-  email              String    @db.VarChar(200)
+  roleId             String?
+  name               String      @db.VarChar(200)
+  email              String      @db.VarChar(200)
   passwordHash       String?
-  mustChangePassword Boolean   @default(true)
-  roleLabel          String    @default("User") @db.VarChar(100)
+  mustChangePassword Boolean     @default(true)
+  roleLabel          String      @default("User") @db.VarChar(100)
   permissions        String[]
-  isActive           Boolean   @default(true)
-  failedAttempts     Int       @default(0)
+  isActive           Boolean     @default(true)
+  failedAttempts     Int         @default(0)
   lockedUntil        DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @default(now())
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tenantRole   TenantRole?  @relation(fields: [roleId], references: [id], onDelete: SetNull)
 
   @@unique([organizationId, email])
   @@index([organizationId])
+  @@index([roleId])
   @@map("tenant_users")
+}
+
+model TenantRole {
+  id             String       @id
+  organizationId String
+  name           String       @db.VarChar(100)
+  description    String?      @db.VarChar(255)
+  permissions    Json         @default("{}")
+  isSystem       Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  users        TenantUser[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("tenant_roles")
 }

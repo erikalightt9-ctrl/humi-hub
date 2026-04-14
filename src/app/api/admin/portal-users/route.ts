@@ -75,6 +75,7 @@ export async function GET(request: NextRequest) {
           name:               true,
           email:              true,
           roleLabel:          true,
+          roleId:             true,
           permissions:        true,
           isActive:           true,
           mustChangePassword: true,
@@ -128,13 +129,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json() as {
-      name?: string;
-      email?: string;
-      roleLabel?: string;
+      name?:        string;
+      email?:       string;
+      roleLabel?:   string;
+      roleId?:      string | null;
       permissions?: ModuleKey[];
     };
 
-    const { name, email, roleLabel = "User", permissions = [] } = body;
+    const { name, email, roleLabel = "User", roleId = null, permissions = [] } = body;
 
     if (!name?.trim() || !email?.trim()) {
       return NextResponse.json(
@@ -164,6 +166,7 @@ export async function POST(request: NextRequest) {
       data: {
         id:                 createId(),
         organizationId:     org.id,
+        roleId:             roleId ?? null,
         name:               name.trim(),
         email:              normalizedEmail,
         passwordHash,
@@ -177,6 +180,7 @@ export async function POST(request: NextRequest) {
         name:        true,
         email:       true,
         roleLabel:   true,
+        roleId:      true,
         permissions: true,
         isActive:    true,
         createdAt:   true,
