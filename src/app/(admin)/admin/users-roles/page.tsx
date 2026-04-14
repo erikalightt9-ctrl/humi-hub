@@ -554,13 +554,14 @@ function RolesTab() {
 
   /* ── Toggle helpers ─────────────────────────────────────────────── */
   function toggleAction(sectionKey: SectionKey, actionKey: string) {
+    const current = permissions.sections[sectionKey] as unknown as Record<string, boolean>;
     setPermissions((prev) => ({
       ...prev,
       sections: {
         ...prev.sections,
         [sectionKey]: {
-          ...(prev.sections[sectionKey] as Record<string, boolean>),
-          [actionKey]: !(prev.sections[sectionKey] as Record<string, boolean>)[actionKey],
+          ...current,
+          [actionKey]: !current[actionKey],
         },
       },
     }));
@@ -569,7 +570,7 @@ function RolesTab() {
   function toggleAllSection(sectionKey: SectionKey) {
     const section    = PERMISSION_SECTIONS.find((s) => s.key === sectionKey);
     if (!section) return;
-    const current    = permissions.sections[sectionKey] as Record<string, boolean>;
+    const current    = permissions.sections[sectionKey] as unknown as Record<string, boolean>;
     const allEnabled = section.actions.every((a) => current[a.key]);
     const allActions = Object.fromEntries(section.actions.map((a) => [a.key, !allEnabled]));
     setPermissions((prev) => ({
@@ -855,7 +856,7 @@ function RolesTab() {
           {/* ── Section permissions ───────────────────────────────── */}
           <div className="space-y-4">
             {PERMISSION_SECTIONS.map((section) => {
-              const current    = permissions.sections[section.key] as Record<string, boolean>;
+              const current    = permissions.sections[section.key] as unknown as Record<string, boolean>;
               const allEnabled = section.actions.every((a) => current[a.key]);
               return (
                 <div key={section.key}>
