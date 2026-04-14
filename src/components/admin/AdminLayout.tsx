@@ -23,6 +23,7 @@ import {
   TrendingUp,
   Monitor,
   Briefcase,
+  UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/shared/NotificationBell";
@@ -49,6 +50,11 @@ interface NavItem {
 /** Items always visible regardless of enabled modules */
 const STATIC_NAV: ReadonlyArray<NavItem> = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+];
+
+/** Items visible only to tenant admins (not tenant_users) */
+const ADMIN_ONLY_NAV: ReadonlyArray<NavItem> = [
+  { href: "/admin/portal-users", label: "Portal Users", icon: UserCheck },
 ];
 
 /** Module-gated nav items — shown only when the module is enabled */
@@ -79,7 +85,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: session } = useSession();
-  const isSuperAdmin = (session?.user as { isSuperAdmin?: boolean })?.isSuperAdmin === true;
+  const isSuperAdmin  = (session?.user as { isSuperAdmin?: boolean })?.isSuperAdmin === true;
+  const isTenantAdmin = (session?.user as { isTenantAdmin?: boolean })?.isTenantAdmin === true;
+  const isTenantUser  = (session?.user as { isTenantUser?: boolean })?.isTenantUser  === true;
+  const userPermissions: string[] | null =
+    (session?.user as { permissions?: string[] | null })?.permissions ?? null;
+
   const [enabledModules, setEnabledModules] = useState<Partial<Record<ModuleKey, boolean>>>({
     module_lms: true, // optimistic default for LMS
   });
@@ -100,10 +111,17 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const visibleNav: NavItem[] = [
     ...STATIC_NAV,
     ...MODULE_NAV.filter((item) => {
-      if (item.moduleKey && !enabledModules[item.moduleKey]) return false;
+      // Tenant users only see modules in their permissions list
+      if (isTenantUser && userPermissions !== null) {
+        if (item.moduleKey && !userPermissions.includes(item.moduleKey)) return false;
+      } else {
+        if (item.moduleKey && !enabledModules[item.moduleKey]) return false;
+      }
       if (item.industries && !item.industries.includes(tenantIndustry ?? "")) return false;
       return true;
     }),
+    // Portal Users management — visible to tenant admins and super admins only
+    ...(isTenantAdmin || isSuperAdmin ? ADMIN_ONLY_NAV : []),
     ...SETTINGS_NAV,
   ];
 

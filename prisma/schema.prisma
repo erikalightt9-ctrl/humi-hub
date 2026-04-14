@@ -1318,6 +1318,7 @@ model Organization {
   adminRepairLogs      AdminRepairLog[]
   adminSuppliers       AdminSupplier[]
   adminEquipment       AdminEquipment[]
+  tenantUsers          TenantUser[]
 
   @@map("organizations")
 }
@@ -3139,4 +3140,30 @@ model AdminEquipment {
 
   @@index([organizationId, status])
   @@map("admin_equipment")
+}
+
+/* ------------------------------------------------------------------ */
+/*  Tenant User Management                                              */
+/* ------------------------------------------------------------------ */
+
+model TenantUser {
+  id                 String    @id
+  organizationId     String
+  name               String    @db.VarChar(200)
+  email              String    @db.VarChar(200)
+  passwordHash       String?
+  mustChangePassword Boolean   @default(true)
+  roleLabel          String    @default("User") @db.VarChar(100)
+  permissions        String[]
+  isActive           Boolean   @default(true)
+  failedAttempts     Int       @default(0)
+  lockedUntil        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, email])
+  @@index([organizationId])
+  @@map("tenant_users")
 }

@@ -72,11 +72,15 @@ export default function CorporateLoginPage() {
       // - isTenantAdmin → admin workspace (/admin)
       // - regular corporate manager → employee portal (/corporate/dashboard)
       const session = await getSession();
-      const user    = session?.user as { isTenantAdmin?: boolean; mustChangePassword?: boolean } | undefined;
+      const user    = session?.user as {
+        isTenantAdmin?:    boolean;
+        isTenantUser?:     boolean;
+        mustChangePassword?: boolean;
+      } | undefined;
 
       if (user?.mustChangePassword) {
         router.push("/corporate/change-password");
-      } else if (user?.isTenantAdmin) {
+      } else if (user?.isTenantAdmin || user?.isTenantUser) {
         router.push("/admin");
       } else {
         router.push("/corporate/dashboard");
