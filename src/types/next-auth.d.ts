@@ -15,15 +15,17 @@ declare module "next-auth" {
       id: string;
       email: string;
       name: string;
-      role: "admin" | "student" | "trainer" | "corporate" | "tenant_admin" | "employee" | "humi_admin" | string;
+      role: "admin" | "student" | "trainer" | "corporate" | "tenant_admin" | "tenant_user" | "employee" | "humi_admin" | string;
       isSuperAdmin: boolean;
       isTenantAdmin: boolean;
+      isTenantUser: boolean;
       isHumiAdmin: boolean;
       tenantId: string | null;
       organizationId: string | null;
       mustChangePassword: boolean;
       accessExpiry: string | null;
       portalRole: string | null;
+      permissions: string[] | null;
       humiAdminPermissions: HumiAdminPermissions | null;
     };
   }
@@ -35,12 +37,14 @@ declare module "next-auth/jwt" {
     role: string;
     isSuperAdmin: boolean;
     isTenantAdmin: boolean;
+    isTenantUser: boolean;
     isHumiAdmin: boolean;
     tenantId: string | null;
     organizationId: string | null;
     mustChangePassword: boolean;
     accessExpiry: string | null;
     portalRole: string | null;
+    permissions: string[] | null;
     humiAdminPermissions: HumiAdminPermissions | null;
   }
 }

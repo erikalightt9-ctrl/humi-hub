@@ -514,14 +514,74 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email and password are required");
         }
 
+        const emailLower = credentials.email.toLowerCase();
+
+        // ── Try CorporateManager first ──────────────────────────────────
         const manager = await prisma.corporateManager.findFirst({
-          where: { email: credentials.email.toLowerCase() },
+          where: { email: emailLower },
           include: { organization: true },
         });
 
+        // ── Fall back to TenantUser ─────────────────────────────────────
         if (!manager) {
-          console.error("[auth][corporate] Login failed — email not found:", credentials.email);
-          throw new Error("Invalid credentials");
+          const tenantUser = await prisma.tenantUser.findFirst({
+            where: { email: emailLower, isActive: true },
+            include: { organization: true },
+          });
+
+          if (!tenantUser) {
+            console.error("[auth][corporate] Login failed — email not found:", credentials.email);
+            throw new Error("Invalid credentials");
+          }
+
+          const now = new Date();
+          if (tenantUser.lockedUntil && tenantUser.lockedUntil > now) {
+            throw new Error(`LOCKED:${tenantUser.lockedUntil.toISOString()}`);
+          }
+
+          const valid = tenantUser.passwordHash
+            ? await bcrypt.compare(credentials.password, tenantUser.passwordHash)
+            : false;
+
+          if (!valid) {
+            const { failedAttempts: newAttempts } = await prisma.tenantUser.update({
+              where: { id: tenantUser.id },
+              data: { failedAttempts: { increment: 1 } },
+              select: { failedAttempts: true },
+            });
+            if (newAttempts >= MAX_FAILED_ATTEMPTS) {
+              const lockedUntil = lockUntilDate();
+              await prisma.tenantUser.update({ where: { id: tenantUser.id }, data: { lockedUntil } });
+              throw new Error(`LOCKED:${lockedUntil.toISOString()}`);
+            }
+            throw new Error("Invalid credentials");
+          }
+
+          if (!tenantUser.organization.isActive) {
+            throw new Error("Your organization has been deactivated. Please contact admin.");
+          }
+
+          if (tenantUser.failedAttempts > 0 || tenantUser.lockedUntil) {
+            await prisma.tenantUser.update({
+              where: { id: tenantUser.id },
+              data: { failedAttempts: 0, lockedUntil: null },
+            });
+          }
+
+          return {
+            id:                 tenantUser.id,
+            email:              tenantUser.email,
+            name:               tenantUser.name,
+            role:               "tenant_user" as const,
+            organizationId:     tenantUser.organizationId,
+            tenantId:           tenantUser.organizationId,
+            orgSubdomain:       tenantUser.organization.subdomain ?? null,
+            isSuperAdmin:       false,
+            isTenantAdmin:      false,
+            isTenantUser:       true,
+            mustChangePassword: tenantUser.mustChangePassword,
+            permissions:        tenantUser.permissions,
+          };
         }
 
         // Time-based lock check — auto-unlock when lockUntil has passed
@@ -626,6 +686,10 @@ export const authOptions: NextAuthOptions = {
           (user as typeof user & { isTenantAdmin?: boolean }).isTenantAdmin ?? false;
         token.portalRole =
           (user as typeof user & { portalRole?: string }).portalRole ?? null;
+        token.isTenantUser =
+          (user as typeof user & { isTenantUser?: boolean }).isTenantUser ?? false;
+        token.permissions =
+          (user as typeof user & { permissions?: string[] }).permissions ?? null;
         token.isHumiAdmin =
           (user as typeof user & { isHumiAdmin?: boolean }).isHumiAdmin ?? false;
         token.humiAdminPermissions =
@@ -654,6 +718,10 @@ export const authOptions: NextAuthOptions = {
         user.tenantId = (token.tenantId as string) ?? null;
         user.isSuperAdmin = (token.isSuperAdmin as boolean) ?? false;
         user.isTenantAdmin = (token.isTenantAdmin as boolean) ?? false;
+        (user as typeof user & { isTenantUser: boolean }).isTenantUser =
+          (token.isTenantUser as boolean) ?? false;
+        (user as typeof user & { permissions: string[] | null }).permissions =
+          (token.permissions as string[] | null) ?? null;
         (user as typeof user & { isHumiAdmin: boolean }).isHumiAdmin =
           (token.isHumiAdmin as boolean) ?? false;
         session.user.humiAdminPermissions =
