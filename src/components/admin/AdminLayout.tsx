@@ -52,9 +52,9 @@ const STATIC_NAV: ReadonlyArray<NavItem> = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
 ];
 
-/** Items visible only to tenant admins (not tenant_users) */
+/** Items visible only to tenant admins / super admins (not plain tenant_users) */
 const ADMIN_ONLY_NAV: ReadonlyArray<NavItem> = [
-  { href: "/admin/portal-users", label: "Portal Users", icon: UserCheck },
+  { href: "/admin/users-roles", label: "Users & Roles", icon: UserCheck },
 ];
 
 /** Module-gated nav items — shown only when the module is enabled */
