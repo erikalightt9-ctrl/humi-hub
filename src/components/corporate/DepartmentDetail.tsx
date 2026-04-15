@@ -1,16 +1,7 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Users,
-  UserCheck,
-  UserX,
-  Coffee,
-  Mail,
-  Phone,
-  Briefcase,
-} from "lucide-react";
 import type { DeptConfig } from "./DepartmentsPage";
 
 /* ------------------------------------------------------------------ */
@@ -30,103 +21,44 @@ export interface DeptEmployee {
   readonly employeeNumber: string | null;
 }
 
+type Tab = "members" | "activity" | "settings";
+
 /* ------------------------------------------------------------------ */
-/*  Status badge                                                       */
+/*  Static activity feed (per-department flavour)                     */
 /* ------------------------------------------------------------------ */
 
-const STATUS_STYLES: Record<string, string> = {
-  ACTIVE:     "bg-green-100 text-green-700",
-  ON_LEAVE:   "bg-yellow-100 text-yellow-700",
-  INACTIVE:   "bg-gray-100 text-gray-500",
-  RESIGNED:   "bg-red-50 text-red-600",
-  TERMINATED: "bg-red-100 text-red-700",
+const DEPT_ACTIVITIES: Record<string, ReadonlyArray<string>> = {
+  "administration-hr": [
+    "New employee onboarding completed",
+    "Company policy updated",
+    "Recruitment drive launched",
+  ],
+  "finance-payroll": [
+    "Payroll processed for this month",
+    "Budget report submitted",
+    "Government contributions filed",
+  ],
+  operations: [
+    "Weekly ops review conducted",
+    "New workflow process approved",
+    "SLA targets updated",
+  ],
+  "sales-marketing": [
+    "Q2 sales targets achieved",
+    "New marketing campaign launched",
+    "Lead generation report submitted",
+  ],
+  "it-systems": [
+    "System maintenance completed",
+    "Security audit passed",
+    "New software licenses acquired",
+  ],
+  "logistics-procurement": [
+    "Supplier contracts renewed",
+    "Inventory audit completed",
+    "Fleet fuel logs reviewed",
+  ],
 };
-
-function StatusBadge({ status }: { readonly status: string }) {
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[status] ?? "bg-gray-100 text-gray-600"}`}>
-      {status.replace("_", " ")}
-    </span>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Stat card                                                          */
-/* ------------------------------------------------------------------ */
-
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  accent,
-}: {
-  readonly label: string;
-  readonly value: number;
-  readonly icon: React.ComponentType<{ className?: string }>;
-  readonly accent: string;
-}) {
-  return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
-      <div className={`p-2.5 rounded-xl ${accent}`}>
-        <Icon className="h-4 w-4" />
-      </div>
-      <div>
-        <p className="text-xl font-bold text-gray-800 leading-none">{value}</p>
-        <p className="text-xs text-gray-400 mt-0.5">{label}</p>
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Employee row                                                       */
-/* ------------------------------------------------------------------ */
-
-interface EmployeeRowProps { emp: DeptEmployee }
-
-function EmployeeRow({ emp }: EmployeeRowProps) {
-  const initials = `${emp.firstName[0] ?? ""}${emp.lastName[0] ?? ""}`.toUpperCase();
-
-  return (
-    <div className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-0">
-      {/* Avatar */}
-      <div className="h-9 w-9 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
-        <span className="text-xs font-bold text-indigo-600">{initials}</span>
-      </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-800 truncate">
-          {emp.firstName} {emp.lastName}
-          {emp.employeeNumber && (
-            <span className="ml-2 text-xs font-normal text-gray-400">#{emp.employeeNumber}</span>
-          )}
-        </p>
-        <p className="text-xs text-gray-400 truncate flex items-center gap-1 mt-0.5">
-          <Briefcase className="h-3 w-3 shrink-0" />
-          {emp.position}
-        </p>
-      </div>
-
-      {/* Contact */}
-      <div className="hidden sm:flex flex-col gap-0.5 text-xs text-gray-400 min-w-0">
-        <span className="flex items-center gap-1 truncate">
-          <Mail className="h-3 w-3 shrink-0" /> {emp.email}
-        </span>
-        {emp.phone && (
-          <span className="flex items-center gap-1">
-            <Phone className="h-3 w-3 shrink-0" /> {emp.phone}
-          </span>
-        )}
-      </div>
-
-      {/* Status */}
-      <div className="shrink-0">
-        <StatusBadge status={emp.status} />
-      </div>
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  Main component                                                     */
@@ -141,61 +73,193 @@ export function DepartmentDetail({
   readonly employees: ReadonlyArray<DeptEmployee>;
   readonly total: number;
 }) {
-  const active   = employees.filter((e) => e.status === "ACTIVE").length;
-  const onLeave  = employees.filter((e) => e.status === "ON_LEAVE").length;
-  const inactive = employees.filter((e) => e.status === "INACTIVE" || e.status === "RESIGNED" || e.status === "TERMINATED").length;
+  const [tab, setTab]         = useState<Tab>("members");
+  const [members, setMembers] = useState(employees.map((e) => ({ ...e })));
+  const [headId, setHeadId]   = useState<string | null>(employees[0]?.id ?? null);
+  const [search, setSearch]   = useState("");
+  const [deptName, setDeptName]         = useState(dept.name);
+  const [deptDescription, setDeptDescription] = useState(dept.description);
+
+  const filtered = members.filter((m) =>
+    `${m.firstName} ${m.lastName}`.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const head    = members.find((m) => m.id === headId);
+  const activities = DEPT_ACTIVITIES[dept.slug] ?? ["No recent activity."];
+
+  function removeMember(id: string) {
+    setMembers((prev) => prev.filter((m) => m.id !== id));
+    if (headId === id) setHeadId(members.find((m) => m.id !== id)?.id ?? null);
+  }
 
   return (
     <div className="p-6 space-y-6 max-w-5xl">
-      {/* Back link */}
-      <Link
-        href="/corporate/departments"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Departments
+      {/* Back */}
+      <Link href="/corporate/departments" className="text-indigo-600 text-sm hover:underline">
+        ← Back to Departments
       </Link>
 
       {/* Header card */}
-      <div className="bg-white rounded-2xl shadow p-6 flex items-center gap-5">
-        <div className="text-5xl">{dept.emoji}</div>
-        <div>
-          <h1 className="text-xl font-semibold text-gray-800">{dept.name}</h1>
-          <p className="text-sm text-gray-500 mt-1">{dept.description}</p>
+      <div className="bg-white p-6 rounded-2xl shadow flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div className="flex items-center gap-4">
+          <span className="text-4xl">{dept.emoji}</span>
+          <div>
+            <h1 className="text-xl font-semibold">{deptName}</h1>
+            <p className="text-gray-500 text-sm">{deptDescription}</p>
+            <p className="text-sm mt-1 text-gray-600">
+              Members: <span className="font-medium">{members.length}</span>
+              {head && (
+                <>
+                  {" "}| Head:{" "}
+                  <span className="font-medium">
+                    {head.firstName} {head.lastName}
+                  </span>
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium transition-colors">
+            Edit
+          </button>
+          <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors">
+            Add Member
+          </button>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard label="Total Members" value={total}    icon={Users}     accent="bg-indigo-50 text-indigo-600" />
-        <StatCard label="Active"        value={active}   icon={UserCheck} accent="bg-green-50 text-green-600" />
-        <StatCard label="On Leave"      value={onLeave}  icon={Coffee}    accent="bg-yellow-50 text-yellow-600" />
-        <StatCard label="Inactive"      value={inactive} icon={UserX}     accent="bg-gray-50 text-gray-400" />
+      {/* Tabs */}
+      <div className="flex gap-2">
+        {(["members", "activity", "settings"] as Tab[]).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-4 py-2 rounded-xl capitalize text-sm font-medium transition-colors ${
+              tab === t ? "bg-indigo-600 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+            }`}
+          >
+            {t}
+          </button>
+        ))}
       </div>
 
-      {/* Employee list */}
-      <div className="bg-white rounded-2xl shadow">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-700">Team Members</h2>
-          <p className="text-xs text-gray-400 mt-0.5">{total} assigned to this department</p>
-        </div>
+      {/* ── Members tab ── */}
+      {tab === "members" && (
+        <div className="bg-white p-6 rounded-2xl shadow space-y-4">
+          <input
+            type="text"
+            placeholder="Search members..."
+            className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-        <div className="px-6">
-          {employees.length === 0 ? (
-            <div className="py-16 flex flex-col items-center gap-3 text-center">
-              <div className="text-5xl">{dept.emoji}</div>
-              <div>
-                <p className="text-sm font-semibold text-gray-700">No members yet</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Employees assigned to {dept.name} will appear here.
-                </p>
-              </div>
-            </div>
+          {filtered.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-8">No members found.</p>
           ) : (
-            employees.map((emp) => <EmployeeRow key={emp.id} emp={emp} />)
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-gray-400 text-left">
+                    <th className="pb-3 font-medium">Name</th>
+                    <th className="pb-3 font-medium">Email</th>
+                    <th className="pb-3 font-medium">Role</th>
+                    <th className="pb-3 font-medium">Status</th>
+                    <th className="pb-3" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((m) => (
+                    <tr key={m.id} className="border-t border-gray-100">
+                      <td className="py-3 pr-4">
+                        <span className="font-medium text-gray-800">
+                          {m.firstName} {m.lastName}
+                        </span>
+                        {m.id === headId && (
+                          <span className="ml-2 text-yellow-500 text-xs">👑 Head</span>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4 text-gray-500">{m.email}</td>
+                      <td className="py-3 pr-4 text-gray-600">{m.position}</td>
+                      <td className="py-3 pr-4">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                            m.status === "ACTIVE"
+                              ? "bg-green-100 text-green-700"
+                              : m.status === "ON_LEAVE"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-gray-100 text-gray-500"
+                          }`}
+                        >
+                          {m.status.replace("_", " ")}
+                        </span>
+                      </td>
+                      <td className="py-3 space-x-3 whitespace-nowrap">
+                        {m.id !== headId && (
+                          <button
+                            onClick={() => setHeadId(m.id)}
+                            className="text-indigo-600 hover:underline text-xs font-medium"
+                          >
+                            Set Head
+                          </button>
+                        )}
+                        <button
+                          onClick={() => removeMember(m.id)}
+                          className="text-red-500 hover:underline text-xs font-medium"
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
-      </div>
+      )}
+
+      {/* ── Activity tab ── */}
+      {tab === "activity" && (
+        <div className="bg-white p-6 rounded-2xl shadow space-y-3">
+          {activities.map((text, i) => (
+            <div key={i} className="border-l-4 border-indigo-500 pl-4 py-1 text-sm text-gray-700">
+              {text}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Settings tab ── */}
+      {tab === "settings" && (
+        <div className="bg-white p-6 rounded-2xl shadow space-y-4">
+          <div>
+            <label className="text-sm font-medium text-gray-700">Department Name</label>
+            <input
+              className="w-full border border-gray-200 rounded-xl px-4 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              value={deptName}
+              onChange={(e) => setDeptName(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700">Description</label>
+            <input
+              className="w-full border border-gray-200 rounded-xl px-4 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              value={deptDescription}
+              onChange={(e) => setDeptDescription(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-3 pt-2">
+            <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors">
+              Save Changes
+            </button>
+            <button className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-colors">
+              Delete Department
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
