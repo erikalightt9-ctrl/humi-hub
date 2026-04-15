@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = createSchema.safeParse(await request.json());
     if (!parsed.success) {
-      return NextResponse.json({ success: false, data: null, error: parsed.error.errors[0]?.message ?? "Invalid data" }, { status: 400 });
+      return NextResponse.json({ success: false, data: null, error: parsed.error.issues[0]?.message ?? "Invalid data" }, { status: 400 });
     }
 
     const { leaveType, startDate, endDate, reason } = parsed.data;

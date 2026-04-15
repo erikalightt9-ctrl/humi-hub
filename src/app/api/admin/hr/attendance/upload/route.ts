@@ -15,7 +15,9 @@ import { requireAdmin } from "@/lib/auth-guards";
 import * as XLSX from "xlsx";
 import OpenAI from "openai";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getOpenAI() {
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                               */
@@ -117,7 +119,7 @@ async function extractWithAI(
   // For PDFs, send as base64 text content since GPT-4o can read PDFs via text
   if (mimeType === "application/pdf") {
     const textContent = Buffer.from(fileBytes).toString("latin1");
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
@@ -132,7 +134,7 @@ async function extractWithAI(
   }
 
   // For images: use vision
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: "gpt-4o",
     messages: [
       {

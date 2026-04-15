@@ -9,6 +9,7 @@ import {
   Package,
   TrendingUp,
   Monitor,
+  Briefcase,
   Loader2,
   AlertCircle,
   Search,
@@ -28,6 +29,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Package,
   TrendingUp,
   Monitor,
+  Briefcase,
 };
 
 /* ------------------------------------------------------------------ */
@@ -205,6 +207,7 @@ export default function ModulesPage() {
               module_inventory: "Package",
               module_sales: "TrendingUp",
               module_it: "Monitor",
+              module_admin: "Briefcase",
             }[m.key] as string
           ] ?? Building2;
           return (
@@ -275,6 +278,7 @@ export default function ModulesPage() {
                         module_inventory: "Package",
                         module_sales: "TrendingUp",
                         module_it: "Monitor",
+                        module_admin: "Briefcase",
                       }[m.key] as string
                     ] ?? Building2;
                     return (
