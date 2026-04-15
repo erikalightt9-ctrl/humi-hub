@@ -17,11 +17,6 @@ import {
   Shield,
   ExternalLink,
   DollarSign,
-  Landmark,
-  Megaphone,
-  Package,
-  TrendingUp,
-  Monitor,
   Briefcase,
   UserCheck,
   Building2,
@@ -65,14 +60,8 @@ const MODULE_NAV: ReadonlyArray<NavItem> = [
   { href: "/admin/trainers",   label: "Trainers",   icon: UserCog,       moduleKey: "module_lms" },
   { href: "/admin/enrollees",  label: "Tasks",      icon: CheckSquare,   moduleKey: "module_lms" },
   { href: "/admin/revenue",    label: "Revenue",    icon: DollarSign,    moduleKey: "module_lms" },
-  { href: "/admin/hr",          label: "HR",          icon: Users,      moduleKey: "module_hr" },
-  { href: "/admin/departments", label: "Departments", icon: Building2,  moduleKey: "module_hr" },
-  { href: "/admin/accounting", label: "Accounting", icon: Landmark,      moduleKey: "module_accounting" },
-  { href: "/admin/marketing",  label: "Marketing",  icon: Megaphone,     moduleKey: "module_marketing" },
-  { href: "/admin/inventory",  label: "Inventory",  icon: Package,       moduleKey: "module_inventory" },
-  { href: "/admin/sales",      label: "Sales",      icon: TrendingUp,    moduleKey: "module_sales" },
-  { href: "/admin/it",         label: "IT",         icon: Monitor,       moduleKey: "module_it" },
-  { href: "/admin/admin",      label: "Office Admin", icon: Briefcase,     moduleKey: "module_admin" },
+  { href: "/admin/departments", label: "Departments",  icon: Building2,  moduleKey: "module_hr" },
+  { href: "/admin/admin",       label: "Office Admin", icon: Briefcase,  moduleKey: "module_admin" },
 ];
 
 const SETTINGS_NAV: ReadonlyArray<NavItem> = [
