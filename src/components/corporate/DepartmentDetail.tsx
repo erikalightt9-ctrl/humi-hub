@@ -7,7 +7,6 @@ import {
   UserCheck,
   UserX,
   Coffee,
-  BadgeCheck,
   Mail,
   Phone,
   Briefcase,
@@ -67,13 +66,13 @@ function StatCard({
   readonly accent: string;
 }) {
   return (
-    <div className="bg-ds-card rounded-xl border border-ds-border p-4 flex items-center gap-3">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
       <div className={`p-2.5 rounded-xl ${accent}`}>
         <Icon className="h-4 w-4" />
       </div>
       <div>
-        <p className="text-xl font-bold text-ds-text leading-none">{value}</p>
-        <p className="text-xs text-ds-muted mt-0.5">{label}</p>
+        <p className="text-xl font-bold text-gray-800 leading-none">{value}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{label}</p>
       </div>
     </div>
   );
@@ -89,28 +88,28 @@ function EmployeeRow({ emp }: EmployeeRowProps) {
   const initials = `${emp.firstName[0] ?? ""}${emp.lastName[0] ?? ""}`.toUpperCase();
 
   return (
-    <div className="flex items-center gap-4 py-3 border-b border-ds-border last:border-0">
+    <div className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-0">
       {/* Avatar */}
-      <div className="h-9 w-9 rounded-full bg-ds-primary/10 flex items-center justify-center shrink-0">
-        <span className="text-xs font-bold text-ds-primary">{initials}</span>
+      <div className="h-9 w-9 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
+        <span className="text-xs font-bold text-indigo-600">{initials}</span>
       </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-ds-text truncate">
+        <p className="text-sm font-semibold text-gray-800 truncate">
           {emp.firstName} {emp.lastName}
           {emp.employeeNumber && (
-            <span className="ml-2 text-xs font-normal text-ds-muted">#{emp.employeeNumber}</span>
+            <span className="ml-2 text-xs font-normal text-gray-400">#{emp.employeeNumber}</span>
           )}
         </p>
-        <p className="text-xs text-ds-muted truncate flex items-center gap-1 mt-0.5">
+        <p className="text-xs text-gray-400 truncate flex items-center gap-1 mt-0.5">
           <Briefcase className="h-3 w-3 shrink-0" />
           {emp.position}
         </p>
       </div>
 
       {/* Contact */}
-      <div className="hidden sm:flex flex-col gap-0.5 text-xs text-ds-muted min-w-0">
+      <div className="hidden sm:flex flex-col gap-0.5 text-xs text-gray-400 min-w-0">
         <span className="flex items-center gap-1 truncate">
           <Mail className="h-3 w-3 shrink-0" /> {emp.email}
         </span>
@@ -142,69 +141,52 @@ export function DepartmentDetail({
   readonly employees: ReadonlyArray<DeptEmployee>;
   readonly total: number;
 }) {
-  const Icon = dept.icon;
-
-  const active    = employees.filter((e) => e.status === "ACTIVE").length;
-  const onLeave   = employees.filter((e) => e.status === "ON_LEAVE").length;
-  const inactive  = employees.filter((e) => e.status === "INACTIVE" || e.status === "RESIGNED" || e.status === "TERMINATED").length;
+  const active   = employees.filter((e) => e.status === "ACTIVE").length;
+  const onLeave  = employees.filter((e) => e.status === "ON_LEAVE").length;
+  const inactive = employees.filter((e) => e.status === "INACTIVE" || e.status === "RESIGNED" || e.status === "TERMINATED").length;
 
   return (
-    <div className="space-y-8 max-w-5xl">
+    <div className="p-6 space-y-6 max-w-5xl">
       {/* Back link */}
       <Link
         href="/corporate/departments"
-        className="inline-flex items-center gap-1.5 text-sm text-ds-muted hover:text-ds-text transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Departments
       </Link>
 
       {/* Header card */}
-      <div className="bg-ds-card rounded-2xl border border-ds-border p-6 flex items-start gap-5">
-        <div className={`p-4 rounded-2xl ${dept.accent} shrink-0`}>
-          <Icon className={`h-8 w-8 ${dept.iconColor}`} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-ds-text">{dept.name}</h1>
-          <p className="text-sm text-ds-muted mt-1 leading-relaxed">{dept.description}</p>
-          {/* Bullet list */}
-          <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-1">
-            {dept.bullets.map((b) => (
-              <li key={b} className="flex items-center gap-1.5 text-xs text-ds-muted">
-                <BadgeCheck className={`h-3.5 w-3.5 shrink-0 ${dept.iconColor}`} />
-                {b}
-              </li>
-            ))}
-          </ul>
+      <div className="bg-white rounded-2xl shadow p-6 flex items-center gap-5">
+        <div className="text-5xl">{dept.emoji}</div>
+        <div>
+          <h1 className="text-xl font-semibold text-gray-800">{dept.name}</h1>
+          <p className="text-sm text-gray-500 mt-1">{dept.description}</p>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard label="Total Members"   value={total}    icon={Users}     accent={`${dept.accent}`} />
-        <StatCard label="Active"          value={active}   icon={UserCheck} accent="bg-green-50 text-green-700" />
-        <StatCard label="On Leave"        value={onLeave}  icon={Coffee}    accent="bg-yellow-50 text-yellow-700" />
-        <StatCard label="Inactive"        value={inactive} icon={UserX}     accent="bg-gray-50 text-gray-500" />
+        <StatCard label="Total Members" value={total}    icon={Users}     accent="bg-indigo-50 text-indigo-600" />
+        <StatCard label="Active"        value={active}   icon={UserCheck} accent="bg-green-50 text-green-600" />
+        <StatCard label="On Leave"      value={onLeave}  icon={Coffee}    accent="bg-yellow-50 text-yellow-600" />
+        <StatCard label="Inactive"      value={inactive} icon={UserX}     accent="bg-gray-50 text-gray-400" />
       </div>
 
       {/* Employee list */}
-      <div className="bg-ds-card rounded-2xl border border-ds-border">
-        <div className="px-6 py-4 border-b border-ds-border flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-bold text-ds-text">Team Members</h2>
-            <p className="text-xs text-ds-muted mt-0.5">{total} assigned to this department</p>
-          </div>
+      <div className="bg-white rounded-2xl shadow">
+        <div className="px-6 py-4 border-b border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-700">Team Members</h2>
+          <p className="text-xs text-gray-400 mt-0.5">{total} assigned to this department</p>
         </div>
 
         <div className="px-6">
           {employees.length === 0 ? (
             <div className="py-16 flex flex-col items-center gap-3 text-center">
-              <div className={`p-4 rounded-2xl ${dept.accent}`}>
-                <Icon className={`h-8 w-8 ${dept.iconColor}`} />
-              </div>
+              <div className="text-5xl">{dept.emoji}</div>
               <div>
-                <p className="text-sm font-semibold text-ds-text">No members yet</p>
-                <p className="text-xs text-ds-muted mt-1">
+                <p className="text-sm font-semibold text-gray-700">No members yet</p>
+                <p className="text-xs text-gray-400 mt-1">
                   Employees assigned to {dept.name} will appear here.
                 </p>
               </div>
