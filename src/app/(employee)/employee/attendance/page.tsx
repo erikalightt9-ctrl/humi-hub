@@ -1,13 +1,27 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import {
   MapPin, Camera, Clock, CheckCircle2, XCircle, Loader2,
-  AlertCircle, LogOut, RefreshCw, ShieldCheck, ShieldX,
+  AlertCircle, LogOut, RefreshCw, ShieldCheck, ShieldX, Navigation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+/* ─ Leaflet map loaded only client-side ─────────────────────────── */
+const LeafletMap = dynamic(
+  () => import("@/components/shared/LeafletMap").then((m) => m.LeafletMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center bg-slate-100 rounded-xl" style={{ height: 230 }}>
+        <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+      </div>
+    ),
+  }
+);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -64,16 +78,16 @@ export default function EmployeeAttendancePage() {
   const [todayLog, setTodayLog]       = useState<TodayLog | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
-  const [gpsState, setGpsState]       = useState<GpsState>("idle");
-  const [coords, setCoords]           = useState<{ lat: number; lng: number } | null>(null);
-  const [inZone, setInZone]           = useState<boolean | null>(null);
-  const [distance, setDistance]       = useState<number | null>(null);
+  const [gpsState, setGpsState] = useState<GpsState>("idle");
+  const [coords,   setCoords]   = useState<{ lat: number; lng: number } | null>(null);
+  const [inZone,   setInZone]   = useState<boolean | null>(null);
+  const [distance, setDistance] = useState<number | null>(null);
 
-  const [cameraOn, setCameraOn]       = useState(false);
-  const [photoUrl, setPhotoUrl]       = useState<string | null>(null);
+  const [cameraOn, setCameraOn] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
-  const [submitting, setSubmitting]   = useState(false);
-  const [message, setMessage]         = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [message,    setMessage]    = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // ── Load geofence + today's log ──────────────────────────────────────────
   const loadData = useCallback(async () => {
@@ -178,6 +192,7 @@ export default function EmployeeAttendancePage() {
         setPhotoUrl(null);
         setCoords(null);
         setInZone(null);
+        setDistance(null);
         setGpsState("idle");
         await loadData();
       }
@@ -194,8 +209,12 @@ export default function EmployeeAttendancePage() {
   const canClockIn        = !alreadyClockedIn;
   const canClockOut       = alreadyClockedIn && !alreadyClockedOut;
   const allDone           = alreadyClockedIn && alreadyClockedOut;
+  const readyToSubmit     = coords !== null && photoUrl !== null && inZone !== false;
 
-  const readyToSubmit = coords !== null && photoUrl !== null && inZone !== false;
+  const hasOffice = geofence?.officeLatitude != null && geofence?.officeLongitude != null;
+  const mapCenter = hasOffice
+    ? { lat: geofence!.officeLatitude!, lng: geofence!.officeLongitude! }
+    : coords;
 
   // ── Render ────────────────────────────────────────────────────────────────
   if (loadingData) {
@@ -207,202 +226,279 @@ export default function EmployeeAttendancePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-lg mx-auto space-y-4">
+    <div className="min-h-screen bg-gray-50">
 
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">My Attendance</h1>
-            <p className="text-sm text-gray-500">{user?.name} · {new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}</p>
-          </div>
-          <button
-            onClick={() => signOut({ callbackUrl: "/employee/login" })}
-            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </button>
+      {/* ── Top bar ───────────────────────────────────────────────── */}
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+        <div>
+          <p className="font-bold text-gray-900 text-sm">{user?.name}</p>
+          <p className="text-xs text-gray-400">
+            {new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}
+          </p>
         </div>
+        <button
+          onClick={() => signOut({ callbackUrl: "/employee/login" })}
+          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors"
+        >
+          <LogOut className="h-4 w-4" />Sign out
+        </button>
+      </div>
 
-        {/* Today's status card */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h2 className="text-sm font-medium text-gray-500 mb-3">Today's Record</h2>
-          <div className="grid grid-cols-2 gap-4">
+      <div className="max-w-lg mx-auto p-4 space-y-4 pb-10">
+
+        {/* ── Today's status card ───────────────────────────────── */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Today&apos;s Record</p>
+          </div>
+          <div className="px-5 py-4 grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-gray-400">Clock In</p>
-              <p className="text-lg font-semibold text-gray-900">{fmt(todayLog?.clockIn ?? null)}</p>
+              <p className="text-xs text-gray-400 mb-1">Clock In</p>
+              <p className="text-2xl font-bold text-gray-900 tabular-nums">{fmt(todayLog?.clockIn ?? null)}</p>
               {todayLog?.clockInLatitude && (
-                <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                  <MapPin className="h-3 w-3" />{todayLog.clockInLatitude.toFixed(4)}, {todayLog.clockInLongitude?.toFixed(4)}
+                <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+                  <MapPin className="h-3 w-3 text-green-500" />
+                  {todayLog.clockInLatitude.toFixed(4)}, {todayLog.clockInLongitude?.toFixed(4)}
                 </p>
+              )}
+              {todayLog?.clockInPhotoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={todayLog.clockInPhotoUrl} alt="Clock-in photo"
+                  className="mt-2 h-12 w-12 rounded-lg object-cover border border-gray-200" />
               )}
             </div>
             <div>
-              <p className="text-xs text-gray-400">Clock Out</p>
-              <p className="text-lg font-semibold text-gray-900">{fmt(todayLog?.clockOut ?? null)}</p>
+              <p className="text-xs text-gray-400 mb-1">Clock Out</p>
+              <p className="text-2xl font-bold text-gray-900 tabular-nums">{fmt(todayLog?.clockOut ?? null)}</p>
               {todayLog?.clockOutLatitude && (
-                <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                  <MapPin className="h-3 w-3" />{todayLog.clockOutLatitude.toFixed(4)}, {todayLog.clockOutLongitude?.toFixed(4)}
+                <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+                  <MapPin className="h-3 w-3 text-blue-400" />
+                  {todayLog.clockOutLatitude.toFixed(4)}, {todayLog.clockOutLongitude?.toFixed(4)}
                 </p>
+              )}
+              {todayLog?.clockOutPhotoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={todayLog.clockOutPhotoUrl} alt="Clock-out photo"
+                  className="mt-2 h-12 w-12 rounded-lg object-cover border border-gray-200" />
               )}
             </div>
           </div>
           {todayLog?.status && (
-            <div className={`mt-3 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
-              todayLog.status === "PRESENT" ? "bg-green-50 text-green-700" :
-              todayLog.status === "LATE"    ? "bg-yellow-50 text-yellow-700" :
-              "bg-gray-100 text-gray-600"
-            }`}>
-              {todayLog.status === "PRESENT" ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-              {todayLog.status}
+            <div className="px-5 pb-4">
+              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full ${
+                todayLog.status === "PRESENT" ? "bg-green-100 text-green-700" :
+                todayLog.status === "LATE"    ? "bg-amber-100 text-amber-700" :
+                                                "bg-gray-100 text-gray-600"
+              }`}>
+                {todayLog.status === "PRESENT"
+                  ? <CheckCircle2 className="h-3 w-3" />
+                  : <Clock className="h-3 w-3" />}
+                {todayLog.status}
+              </span>
             </div>
           )}
         </div>
 
-        {/* Geofence status */}
-        {geofence?.officeLatitude && (
-          <div className={`rounded-xl border p-4 flex items-start gap-3 ${
-            inZone === null  ? "bg-gray-50 border-gray-200" :
-            inZone           ? "bg-green-50 border-green-200" :
-                               "bg-red-50 border-red-200"
-          }`}>
-            {inZone === null  ? <MapPin className="h-5 w-5 text-gray-400 mt-0.5 shrink-0" /> :
-             inZone           ? <ShieldCheck className="h-5 w-5 text-green-600 mt-0.5 shrink-0" /> :
-                                <ShieldX className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />}
-            <div>
-              <p className={`text-sm font-medium ${inZone === null ? "text-gray-600" : inZone ? "text-green-700" : "text-red-700"}`}>
-                {inZone === null ? "Location not verified yet" :
-                 inZone         ? `Within office zone (${distance}m away)` :
-                                  `Outside office zone (${distance}m away — limit ${geofence.geofenceRadiusMeters}m)`}
-              </p>
-              {geofence.officeAddress && (
-                <p className="text-xs text-gray-500 mt-0.5">{geofence.officeAddress}</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Message */}
+        {/* ── Message ───────────────────────────────────────────── */}
         {message && (
-          <div className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm ${
+          <div className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${
             message.type === "success"
               ? "bg-green-50 border border-green-200 text-green-700"
               : "bg-red-50 border border-red-200 text-red-700"
           }`}>
             {message.type === "success"
               ? <CheckCircle2 className="h-4 w-4 shrink-0" />
-              : <AlertCircle className="h-4 w-4 shrink-0" />}
+              : <AlertCircle  className="h-4 w-4 shrink-0" />}
             {message.text}
           </div>
         )}
 
+        {/* ── All done ──────────────────────────────────────────── */}
         {allDone ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
-            <CheckCircle2 className="h-10 w-10 text-green-500 mx-auto mb-2" />
-            <p className="font-medium text-gray-900">Attendance complete for today</p>
-            <p className="text-sm text-gray-500 mt-1">See you tomorrow!</p>
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center">
+            <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+              <CheckCircle2 className="h-8 w-8 text-green-500" />
+            </div>
+            <p className="font-semibold text-gray-900">Attendance complete for today</p>
+            <p className="text-sm text-gray-400 mt-1">See you tomorrow!</p>
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-            <h2 className="font-medium text-gray-900">
-              {canClockIn ? "Clock In" : "Clock Out"}
-            </h2>
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
 
-            {/* Step 1: GPS */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5" /> Step 1 — Verify Location
+            {/* Card header */}
+            <div className="px-5 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+              <p className="text-sm font-semibold text-gray-800">
+                {canClockIn ? "Clock In" : "Clock Out"}
               </p>
-              {gpsState === "granted" && coords ? (
-                <div className="flex items-center justify-between bg-green-50 rounded-lg px-3 py-2">
-                  <span className="text-sm text-green-700">
-                    {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
-                  </span>
-                  <button
-                    onClick={() => { setCoords(null); setGpsState("idle"); setInZone(null); }}
-                    className="text-green-600 hover:text-green-800"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={requestGps}
-                  disabled={gpsState === "loading"}
-                >
-                  {gpsState === "loading" ? (
-                    <><Loader2 className="h-4 w-4 animate-spin mr-2" />Getting location…</>
-                  ) : (
-                    <><MapPin className="h-4 w-4 mr-2" />Get My Location</>
-                  )}
-                </Button>
+              {geofence?.officeAddress && (
+                <p className="text-xs text-gray-400 flex items-center gap-1 truncate max-w-[180px]">
+                  <MapPin className="h-3 w-3 shrink-0" />{geofence.officeAddress}
+                </p>
               )}
             </div>
 
-            {/* Step 2: Photo */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide flex items-center gap-1">
-                <Camera className="h-3.5 w-3.5" /> Step 2 — Take Photo
-              </p>
-              {photoUrl ? (
-                <div className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={photoUrl} alt="Captured" className="w-full rounded-lg object-cover max-h-48" />
-                  <button
-                    onClick={() => { setPhotoUrl(null); startCamera(); }}
-                    className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full p-1.5 text-gray-600"
+            <div className="p-5 space-y-5">
+
+              {/* Step 1: GPS */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <span className="inline-flex h-4 w-4 rounded-full bg-indigo-100 text-indigo-700 text-[10px] items-center justify-center font-bold shrink-0">1</span>
+                  Verify Location
+                </p>
+
+                {gpsState === "granted" && coords ? (
+                  <div className="space-y-3">
+                    {/* Zone status banner */}
+                    <div className={`flex items-center gap-3 rounded-xl px-4 py-3 ${
+                      inZone === false
+                        ? "bg-red-50 border border-red-200"
+                        : "bg-green-50 border border-green-200"
+                    }`}>
+                      {inZone === false
+                        ? <ShieldX     className="h-5 w-5 text-red-500 shrink-0" />
+                        : <ShieldCheck className="h-5 w-5 text-green-600 shrink-0" />}
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-semibold leading-tight ${inZone === false ? "text-red-700" : "text-green-700"}`}>
+                          {inZone === false
+                            ? `Outside geofence — ${distance}m away (limit ${geofence?.geofenceRadiusMeters}m)`
+                            : inZone
+                              ? `Inside office zone${distance != null ? ` — ${distance}m from office` : ""}`
+                              : "Location verified"}
+                        </p>
+                        <p className="text-[11px] text-gray-400 font-mono mt-0.5">
+                          {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => { setCoords(null); setGpsState("idle"); setInZone(null); setDistance(null); }}
+                        className="text-gray-400 hover:text-gray-600 shrink-0 transition-colors"
+                        title="Re-detect location"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {/* Live map showing office perimeter + user pin */}
+                    {mapCenter && (
+                      <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                        <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 flex items-center gap-1.5">
+                          <Navigation className="h-3.5 w-3.5 text-indigo-500" />
+                          <span className="text-xs font-medium text-gray-600">Live Location</span>
+                          {hasOffice && geofence?.geofenceRadiusMeters && (
+                            <span className="ml-auto text-xs text-gray-400">
+                              {geofence.geofenceRadiusMeters}m perimeter
+                            </span>
+                          )}
+                        </div>
+                        <LeafletMap
+                          key={`${coords.lat.toFixed(5)}-${coords.lng.toFixed(5)}`}
+                          center={mapCenter}
+                          radiusMeters={geofence?.geofenceRadiusMeters ?? 0}
+                          userLocation={coords}
+                          inZone={inZone}
+                          height="240px"
+                          zoom={17}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full h-11"
+                    onClick={requestGps}
+                    disabled={gpsState === "loading"}
                   >
-                    <RefreshCw className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : cameraOn ? (
-                <div className="space-y-2">
-                  <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg bg-black" />
-                  <Button className="w-full" onClick={capturePhoto}>
-                    <Camera className="h-4 w-4 mr-2" />Capture
+                    {gpsState === "loading" ? (
+                      <><Loader2 className="h-4 w-4 animate-spin mr-2" />Getting location…</>
+                    ) : (
+                      <><MapPin className="h-4 w-4 mr-2 text-indigo-500" />Get My Location</>
+                    )}
                   </Button>
-                </div>
-              ) : (
-                <Button variant="outline" className="w-full" onClick={startCamera}>
-                  <Camera className="h-4 w-4 mr-2" />Open Camera
-                </Button>
+                )}
+              </div>
+
+              {/* Step 2: Photo */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <span className="inline-flex h-4 w-4 rounded-full bg-indigo-100 text-indigo-700 text-[10px] items-center justify-center font-bold shrink-0">2</span>
+                  Take Photo
+                </p>
+                {photoUrl ? (
+                  <div className="relative rounded-xl overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={photoUrl} alt="Captured" className="w-full rounded-xl object-cover max-h-52" />
+                    <button
+                      onClick={() => { setPhotoUrl(null); startCamera(); }}
+                      className="absolute top-2 right-2 bg-white/90 hover:bg-white rounded-full p-1.5 text-gray-600 shadow"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </button>
+                    <div className="absolute bottom-2 left-2 bg-black/50 rounded-lg px-2 py-1 flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3 text-green-400" />
+                      <span className="text-white text-xs font-medium">Photo captured</span>
+                    </div>
+                  </div>
+                ) : cameraOn ? (
+                  <div className="space-y-2">
+                    <div className="relative rounded-xl overflow-hidden bg-black">
+                      <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-xl" />
+                      {/* Face-guide circle overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-36 h-36 rounded-full border-2 border-white/50 border-dashed" />
+                      </div>
+                    </div>
+                    <Button className="w-full h-11 bg-indigo-600 hover:bg-indigo-700" onClick={capturePhoto}>
+                      <Camera className="h-4 w-4 mr-2" />Capture Photo
+                    </Button>
+                  </div>
+                ) : (
+                  <Button variant="outline" className="w-full h-11" onClick={startCamera}>
+                    <Camera className="h-4 w-4 mr-2 text-indigo-500" />Open Camera
+                  </Button>
+                )}
+                <canvas ref={canvasRef} className="hidden" />
+              </div>
+
+              {/* Submit */}
+              <Button
+                className={`w-full h-12 text-sm font-semibold rounded-xl ${
+                  canClockIn
+                    ? "bg-indigo-600 hover:bg-indigo-700"
+                    : "bg-emerald-600 hover:bg-emerald-700"
+                }`}
+                disabled={!readyToSubmit || submitting}
+                onClick={() => handleClock(canClockIn ? "clock-in" : "clock-out")}
+              >
+                {submitting ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" />Submitting…</>
+                ) : canClockIn ? (
+                  <><CheckCircle2 className="h-4 w-4 mr-2" />Clock In</>
+                ) : (
+                  <><XCircle className="h-4 w-4 mr-2" />Clock Out</>
+                )}
+              </Button>
+
+              {!readyToSubmit && (
+                <p className="text-xs text-center text-gray-400">
+                  {!coords
+                    ? "Get your location first"
+                    : !photoUrl
+                      ? "Take a photo first"
+                      : "You are outside the office geofence"}
+                </p>
               )}
-              <canvas ref={canvasRef} className="hidden" />
             </div>
-
-            {/* Submit */}
-            <Button
-              className={`w-full ${canClockIn ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}`}
-              disabled={!readyToSubmit || submitting}
-              onClick={() => handleClock(canClockIn ? "clock-in" : "clock-out")}
-            >
-              {submitting ? (
-                <><Loader2 className="h-4 w-4 animate-spin mr-2" />Submitting…</>
-              ) : canClockIn ? (
-                <><CheckCircle2 className="h-4 w-4 mr-2" />Clock In</>
-              ) : (
-                <><XCircle className="h-4 w-4 mr-2" />Clock Out</>
-              )}
-            </Button>
-
-            {!readyToSubmit && (
-              <p className="text-xs text-center text-gray-400">
-                {!coords ? "Get your location first" : !photoUrl ? "Take a photo first" : `You are outside the office geofence`}
-              </p>
-            )}
           </div>
         )}
 
         {/* Navigation */}
-        <div className="flex justify-center gap-6">
-          <a href="/employee/leave" className="text-sm text-blue-600 hover:underline">
+        <div className="flex justify-center gap-6 pt-2">
+          <a href="/employee/leave" className="text-sm text-indigo-600 hover:underline font-medium">
             Leave Requests →
           </a>
           {user?.portalRole === "DRIVER" && (
-            <a href="/employee/fuel-requests" className="text-sm text-indigo-600 hover:underline">
+            <a href="/employee/fuel-requests" className="text-sm text-indigo-600 hover:underline font-medium">
               Fuel Requests →
             </a>
           )}

@@ -47,20 +47,33 @@ export async function seedDefaultPhGovRules(organizationId: string) {
   /**
    * SSS 2025 — 15% total (Employee 5%, Employer 10%)
    * Uses official MSC bracket table: salary range → MSC → fixed contribution
-   * MSC 3,500  : salary 0–3,749
-   * MSC 4,000  : salary 3,750–4,249
-   * …(+500 MSC per ₱500 salary band)…
-   * MSC 30,000 : salary 29,750+
+   * MSC 3,000  : salary below ₱3,250
+   * MSC 3,500  : salary ₱3,250–₱3,749.99
+   * MSC 4,000  : salary ₱3,750–₱4,249.99
+   * …(+₱500 MSC per ₱500 salary band)…
+   * MSC 35,000 : salary ₱34,750 and above
    *
    * employee = MSC × 5%   |   employer = MSC × 10%
    * Source: SSS Circular 2024-003 effective Jan 2025
+   * PDF table range: ₱3,000 MSC (floor) → ₱35,000 MSC (ceiling)
    */
   const sssRules: RuleInput[] = [];
-  for (let msc = 3500; msc <= 30000; msc += 500) {
+  // Floor bracket: any salary below ₱3,250 → MSC ₱3,000
+  sssRules.push({
+    contributionType: "SSS",
+    salaryFrom:    0,
+    salaryTo:      3249.99,
+    employeeShare: Math.round(3000 * 0.05 * 100) / 100,  // ₱150
+    employerShare: Math.round(3000 * 0.10 * 100) / 100,  // ₱300
+    ruleKind:      "FIXED",
+    effectiveDate: effective,
+  });
+  // Regular brackets: MSC ₱3,500 → ₱35,000 in ₱500 steps
+  for (let msc = 3500; msc <= 35000; msc += 500) {
     const empShare = Math.round(msc * 0.05 * 100) / 100;   // 5%
     const erShare  = Math.round(msc * 0.10 * 100) / 100;   // 10%
-    const salFrom  = msc === 3500 ? 0 : msc - 250;
-    const salTo    = msc === 30000 ? undefined : msc + 249;
+    const salFrom  = msc - 250;
+    const salTo    = msc === 35000 ? undefined : msc + 249.99;
     sssRules.push({
       contributionType: "SSS",
       salaryFrom:    salFrom,
@@ -74,13 +87,15 @@ export async function seedDefaultPhGovRules(organizationId: string) {
 
   /**
    * PhilHealth 2025 — 5% of Basic Monthly Salary (2.5% employee / 2.5% employer)
-   * Floor salary basis: ₱10,000 → min contribution ₱250 each
-   * Ceiling salary basis: ₱100,000 → max contribution ₱2,500 each
+   * Floor: salary < ₱10,000 → premium basis treated as ₱10,000 → each side ₱250
+   * Rate:  ₱10,000 – ₱99,999.99 → 2.5% each
+   * Ceiling: salary ≥ ₱100,000 → premium basis capped at ₱100,000 → each side ₱2,500
+   * Total monthly premium: ₱500 min → ₱5,000 max
    */
   const philhealthRules: RuleInput[] = [
-    { contributionType: "PHILHEALTH", salaryFrom: 0,        salaryTo: 9999.99,   employeeShare: 250,  employerShare: 250,  ruleKind: "FIXED", effectiveDate: effective },
-    { contributionType: "PHILHEALTH", salaryFrom: 10000,    salaryTo: 99999.99,  employeeShare: 2.5,  employerShare: 2.5,  ruleKind: "RATE",  effectiveDate: effective },
-    { contributionType: "PHILHEALTH", salaryFrom: 100000,   salaryTo: undefined, employeeShare: 2500, employerShare: 2500, ruleKind: "FIXED", effectiveDate: effective },
+    { contributionType: "PHILHEALTH", salaryFrom: 0,       salaryTo: 9999.99,   employeeShare: 250,  employerShare: 250,  ruleKind: "FIXED", effectiveDate: effective },
+    { contributionType: "PHILHEALTH", salaryFrom: 10000,   salaryTo: 99999.99,  employeeShare: 2.5,  employerShare: 2.5,  ruleKind: "RATE",  effectiveDate: effective },
+    { contributionType: "PHILHEALTH", salaryFrom: 100000,  salaryTo: undefined, employeeShare: 2500, employerShare: 2500, ruleKind: "FIXED", effectiveDate: effective },
   ];
 
   /**
