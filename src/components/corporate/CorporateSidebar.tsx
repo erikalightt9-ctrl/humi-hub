@@ -11,6 +11,7 @@ import {
   CheckSquare,
   Settings,
   LogOut,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,12 +27,13 @@ interface NavItem {
 }
 
 const NAV_ITEMS: ReadonlyArray<NavItem> = [
-  { href: "/corporate/dashboard",  label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/corporate/courses",    label: "Courses",   icon: BookOpen },
-  { href: "/corporate/employees",  label: "Students",  icon: Users },
-  { href: "/corporate/trainers",   label: "Trainers",  icon: GraduationCap },
-  { href: "/corporate/tasks",      label: "Tasks",     icon: CheckSquare },
-  { href: "/corporate/settings",   label: "Settings",  icon: Settings },
+  { href: "/corporate/dashboard",    label: "Dashboard",   icon: LayoutDashboard, exact: true },
+  { href: "/corporate/departments",  label: "Departments", icon: Building2 },
+  { href: "/corporate/courses",      label: "Courses",     icon: BookOpen },
+  { href: "/corporate/employees",    label: "Students",    icon: Users },
+  { href: "/corporate/trainers",     label: "Trainers",    icon: GraduationCap },
+  { href: "/corporate/tasks",        label: "Tasks",       icon: CheckSquare },
+  { href: "/corporate/settings",     label: "Settings",    icon: Settings },
 ];
 
 /* ------------------------------------------------------------------ */
