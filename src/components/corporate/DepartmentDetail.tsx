@@ -25,61 +25,88 @@ export interface DeptEmployee {
 type Tab = "members" | "activity" | "settings";
 
 /* ------------------------------------------------------------------ */
-/*  Static activity feed (per-department)                             */
+/*  Ripple button                                                      */
 /* ------------------------------------------------------------------ */
 
-const DEPT_ACTIVITIES: Record<string, ReadonlyArray<string>> = {
-  "administration-hr": [
-    "New employee onboarding completed",
-    "Company policy updated",
-    "Recruitment drive launched",
-  ],
-  "finance-payroll": [
-    "Payroll processed for this month",
-    "Budget report submitted",
-    "Government contributions filed",
-  ],
-  operations: [
-    "Weekly ops review conducted",
-    "New workflow process approved",
-    "SLA targets updated",
-  ],
-  "sales-marketing": [
-    "Q2 sales targets achieved",
-    "New marketing campaign launched",
-    "Lead generation report submitted",
-  ],
-  "it-systems": [
-    "System maintenance completed",
-    "Security audit passed",
-    "New software licenses acquired",
-  ],
-  "logistics-procurement": [
-    "Supplier contracts renewed",
-    "Inventory audit completed",
-    "Fleet fuel logs reviewed",
-  ],
-};
+interface Ripple { id: number; x: number; y: number; size: number }
 
-/* ------------------------------------------------------------------ */
-/*  Sub-components                                                     */
-/* ------------------------------------------------------------------ */
+interface RippleButtonProps {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+}
 
-function DepartmentIcon({ emoji }: { emoji: string }) {
+function RippleButton({ children, className = "", onClick }: RippleButtonProps) {
+  const [ripples, setRipples] = useState<Ripple[]>([]);
+
+  function createRipple(e: React.MouseEvent<HTMLButtonElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x    = e.clientX - rect.left  - size / 2;
+    const y    = e.clientY - rect.top   - size / 2;
+    const id   = Date.now();
+
+    setRipples((prev) => [...prev, { id, x, y, size }]);
+    setTimeout(() => setRipples((prev) => prev.filter((r) => r.id !== id)), 600);
+  }
+
   return (
-    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow text-2xl shrink-0">
-      {emoji}
+    <button
+      onClick={(e) => { createRipple(e); onClick?.(e); }}
+      className={`relative overflow-hidden ${className}`}
+    >
+      {children}
+      {ripples.map((r) => (
+        <span
+          key={r.id}
+          className="absolute rounded-full bg-white/40 animate-ripple pointer-events-none"
+          style={{ width: r.size, height: r.size, top: r.y, left: r.x }}
+        />
+      ))}
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Custom SVG icons                                                   */
+/* ------------------------------------------------------------------ */
+
+function DepartmentIcon() {
+  return (
+    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow shrink-0">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
+        <rect x="3"  y="10" width="6" height="10" stroke="currentColor" strokeWidth="1.5" />
+        <rect x="9"  y="6"  width="6" height="14" stroke="currentColor" strokeWidth="1.5" />
+        <rect x="15" y="12" width="6" height="8"  stroke="currentColor" strokeWidth="1.5" />
+      </svg>
     </div>
   );
 }
 
-function CrownBadge() {
+function CrownIcon() {
   return (
-    <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-600 font-medium">
-      Head
-    </span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <path d="M3 10L7 4L12 10L17 4L21 10V20H3V10Z" stroke="#EAB308" strokeWidth="1.5" />
+    </svg>
   );
 }
+
+function ActivityDot() {
+  return <div className="w-2 h-2 mt-2 rounded-full bg-indigo-500 shrink-0" />;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Static activity feed                                               */
+/* ------------------------------------------------------------------ */
+
+const DEPT_ACTIVITIES: Record<string, ReadonlyArray<string>> = {
+  "administration-hr":    ["New employee onboarding completed", "Company policy updated", "Recruitment drive launched"],
+  "finance-payroll":      ["Payroll processed for this month", "Budget report submitted", "Government contributions filed"],
+  "operations":           ["Weekly ops review conducted", "New workflow process approved", "SLA targets updated"],
+  "sales-marketing":      ["Q2 sales targets achieved", "New marketing campaign launched", "Lead generation report submitted"],
+  "it-systems":           ["System maintenance completed", "Security audit passed", "New software licenses acquired"],
+  "logistics-procurement":["Supplier contracts renewed", "Inventory audit completed", "Fleet fuel logs reviewed"],
+};
 
 /* ------------------------------------------------------------------ */
 /*  Main component                                                     */
@@ -88,7 +115,6 @@ function CrownBadge() {
 export function DepartmentDetail({
   dept,
   employees,
-  total,
 }: {
   readonly dept: DeptConfig;
   readonly employees: ReadonlyArray<DeptEmployee>;
@@ -98,13 +124,12 @@ export function DepartmentDetail({
   const [members, setMembers] = useState(employees.map((e) => ({ ...e })));
   const [headId, setHeadId]   = useState<string | null>(employees[0]?.id ?? null);
   const [search, setSearch]   = useState("");
-  const [deptName, setDeptName]           = useState(dept.name);
+  const [deptName, setDeptName]               = useState(dept.name);
   const [deptDescription, setDeptDescription] = useState(dept.description);
 
-  const filtered = members.filter((m) =>
+  const filtered   = members.filter((m) =>
     `${m.firstName} ${m.lastName}`.toLowerCase().includes(search.toLowerCase()),
   );
-
   const head       = members.find((m) => m.id === headId);
   const activities = DEPT_ACTIVITIES[dept.slug] ?? ["No recent activity."];
 
@@ -115,6 +140,15 @@ export function DepartmentDetail({
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
+      {/* Ripple keyframe */}
+      <style>{`
+        @keyframes ripple {
+          0%   { transform: scale(0); opacity: 0.6; }
+          100% { transform: scale(2); opacity: 0; }
+        }
+        .animate-ripple { animation: ripple 0.6s linear; }
+      `}</style>
+
       {/* Back */}
       <Link href="/corporate/departments" className="text-indigo-600 hover:underline text-sm">
         ← Back to Departments
@@ -127,7 +161,7 @@ export function DepartmentDetail({
         className="bg-white p-6 rounded-2xl shadow flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4"
       >
         <div className="flex gap-4 items-center">
-          <DepartmentIcon emoji={dept.emoji} />
+          <DepartmentIcon />
           <div>
             <h1 className="text-xl font-semibold">{deptName}</h1>
             <p className="text-gray-500 text-sm">{deptDescription}</p>
@@ -140,20 +174,21 @@ export function DepartmentDetail({
           </div>
         </div>
         <div className="flex gap-2 shrink-0">
-          <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm transition">
+          <RippleButton className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm transition">
             Edit
-          </button>
-          <button className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow hover:scale-105 transition text-sm font-medium">
+          </RippleButton>
+          <RippleButton className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow active:scale-95 transition text-sm font-medium">
             Add Member
-          </button>
+          </RippleButton>
         </div>
       </motion.div>
 
       {/* Tabs */}
       <div className="flex gap-3">
         {(["members", "activity", "settings"] as Tab[]).map((t) => (
-          <button
+          <motion.button
             key={t}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setTab(t)}
             className={`px-4 py-2 rounded-full text-sm capitalize transition ${
               tab === t
@@ -162,11 +197,11 @@ export function DepartmentDetail({
             }`}
           >
             {t}
-          </button>
+          </motion.button>
         ))}
       </div>
 
-      {/* Content panel */}
+      {/* Content */}
       <motion.div
         key={tab}
         initial={{ opacity: 0, y: 10 }}
@@ -191,13 +226,18 @@ export function DepartmentDetail({
                 {filtered.map((m) => (
                   <motion.div
                     key={m.id}
-                    whileHover={{ scale: 1.01 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     className="flex justify-between items-center p-4 border border-gray-100 rounded-xl"
                   >
                     <div>
-                      <div className="font-medium text-gray-800">
+                      <div className="font-medium text-gray-800 flex items-center gap-2">
                         {m.firstName} {m.lastName}
-                        {m.id === headId && <CrownBadge />}
+                        {m.id === headId && (
+                          <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-600 font-medium">
+                            <CrownIcon /> Head
+                          </span>
+                        )}
                       </div>
                       <div className="text-sm text-gray-500">{m.email}</div>
                     </div>
@@ -205,19 +245,19 @@ export function DepartmentDetail({
                     <div className="flex items-center gap-4">
                       <span className="text-sm text-gray-600 hidden sm:block">{m.position}</span>
                       {m.id !== headId && (
-                        <button
+                        <RippleButton
                           onClick={() => setHeadId(m.id)}
-                          className="text-indigo-600 hover:underline text-xs font-medium"
+                          className="text-indigo-600 text-xs font-medium hover:underline"
                         >
                           Set Head
-                        </button>
+                        </RippleButton>
                       )}
-                      <button
+                      <RippleButton
                         onClick={() => removeMember(m.id)}
-                        className="text-red-500 hover:underline text-xs font-medium"
+                        className="text-red-500 text-xs font-medium hover:underline"
                       >
                         Remove
-                      </button>
+                      </RippleButton>
                     </div>
                   </motion.div>
                 ))}
@@ -237,7 +277,7 @@ export function DepartmentDetail({
                 transition={{ delay: i * 0.05 }}
                 className="flex items-start gap-3"
               >
-                <div className="w-2 h-2 mt-2 rounded-full bg-indigo-500 shrink-0" />
+                <ActivityDot />
                 <div className="text-sm text-gray-700">{text}</div>
               </motion.div>
             ))}
@@ -264,12 +304,12 @@ export function DepartmentDetail({
               />
             </div>
             <div className="flex items-center gap-3 pt-2">
-              <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition">
+              <RippleButton className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition">
                 Save Changes
-              </button>
-              <button className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition">
+              </RippleButton>
+              <RippleButton className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition">
                 Delete Department
-              </button>
+              </RippleButton>
             </div>
           </div>
         )}
