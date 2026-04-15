@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import type { DeptConfig } from "./DepartmentsPage";
 
 /* ------------------------------------------------------------------ */
@@ -24,7 +25,7 @@ export interface DeptEmployee {
 type Tab = "members" | "activity" | "settings";
 
 /* ------------------------------------------------------------------ */
-/*  Static activity feed (per-department flavour)                     */
+/*  Static activity feed (per-department)                             */
 /* ------------------------------------------------------------------ */
 
 const DEPT_ACTIVITIES: Record<string, ReadonlyArray<string>> = {
@@ -61,6 +62,26 @@ const DEPT_ACTIVITIES: Record<string, ReadonlyArray<string>> = {
 };
 
 /* ------------------------------------------------------------------ */
+/*  Sub-components                                                     */
+/* ------------------------------------------------------------------ */
+
+function DepartmentIcon({ emoji }: { emoji: string }) {
+  return (
+    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow text-2xl shrink-0">
+      {emoji}
+    </div>
+  );
+}
+
+function CrownBadge() {
+  return (
+    <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-600 font-medium">
+      Head
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 
@@ -77,14 +98,14 @@ export function DepartmentDetail({
   const [members, setMembers] = useState(employees.map((e) => ({ ...e })));
   const [headId, setHeadId]   = useState<string | null>(employees[0]?.id ?? null);
   const [search, setSearch]   = useState("");
-  const [deptName, setDeptName]         = useState(dept.name);
+  const [deptName, setDeptName]           = useState(dept.name);
   const [deptDescription, setDeptDescription] = useState(dept.description);
 
   const filtered = members.filter((m) =>
     `${m.firstName} ${m.lastName}`.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const head    = members.find((m) => m.id === headId);
+  const head       = members.find((m) => m.id === headId);
   const activities = DEPT_ACTIVITIES[dept.slug] ?? ["No recent activity."];
 
   function removeMember(id: string) {
@@ -93,50 +114,51 @@ export function DepartmentDetail({
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl">
+    <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* Back */}
-      <Link href="/corporate/departments" className="text-indigo-600 text-sm hover:underline">
+      <Link href="/corporate/departments" className="text-indigo-600 hover:underline text-sm">
         ← Back to Departments
       </Link>
 
-      {/* Header card */}
-      <div className="bg-white p-6 rounded-2xl shadow flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div className="flex items-center gap-4">
-          <span className="text-4xl">{dept.emoji}</span>
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white p-6 rounded-2xl shadow flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4"
+      >
+        <div className="flex gap-4 items-center">
+          <DepartmentIcon emoji={dept.emoji} />
           <div>
             <h1 className="text-xl font-semibold">{deptName}</h1>
             <p className="text-gray-500 text-sm">{deptDescription}</p>
-            <p className="text-sm mt-1 text-gray-600">
-              Members: <span className="font-medium">{members.length}</span>
+            <p className="text-sm mt-2 text-gray-600">
+              {members.length} Members
               {head && (
-                <>
-                  {" "}| Head:{" "}
-                  <span className="font-medium">
-                    {head.firstName} {head.lastName}
-                  </span>
-                </>
+                <> • Head: <span className="font-medium">{head.firstName} {head.lastName}</span></>
               )}
             </p>
           </div>
         </div>
         <div className="flex gap-2 shrink-0">
-          <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium transition-colors">
+          <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm transition">
             Edit
           </button>
-          <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors">
+          <button className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow hover:scale-105 transition text-sm font-medium">
             Add Member
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Tabs */}
-      <div className="flex gap-2">
+      <div className="flex gap-3">
         {(["members", "activity", "settings"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-xl capitalize text-sm font-medium transition-colors ${
-              tab === t ? "bg-indigo-600 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+            className={`px-4 py-2 rounded-full text-sm capitalize transition ${
+              tab === t
+                ? "bg-indigo-600 text-white shadow"
+                : "bg-white hover:bg-gray-100 text-gray-600"
             }`}
           >
             {t}
@@ -144,122 +166,114 @@ export function DepartmentDetail({
         ))}
       </div>
 
-      {/* ── Members tab ── */}
-      {tab === "members" && (
-        <div className="bg-white p-6 rounded-2xl shadow space-y-4">
-          <input
-            type="text"
-            placeholder="Search members..."
-            className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      {/* Content panel */}
+      <motion.div
+        key={tab}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white p-6 rounded-2xl shadow"
+      >
+        {/* ── Members ── */}
+        {tab === "members" && (
+          <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="Search members..."
+              className="w-full border rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
 
-          {filtered.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">No members found.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-gray-400 text-left">
-                    <th className="pb-3 font-medium">Name</th>
-                    <th className="pb-3 font-medium">Email</th>
-                    <th className="pb-3 font-medium">Role</th>
-                    <th className="pb-3 font-medium">Status</th>
-                    <th className="pb-3" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((m) => (
-                    <tr key={m.id} className="border-t border-gray-100">
-                      <td className="py-3 pr-4">
-                        <span className="font-medium text-gray-800">
-                          {m.firstName} {m.lastName}
-                        </span>
-                        {m.id === headId && (
-                          <span className="ml-2 text-yellow-500 text-xs">👑 Head</span>
-                        )}
-                      </td>
-                      <td className="py-3 pr-4 text-gray-500">{m.email}</td>
-                      <td className="py-3 pr-4 text-gray-600">{m.position}</td>
-                      <td className="py-3 pr-4">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                            m.status === "ACTIVE"
-                              ? "bg-green-100 text-green-700"
-                              : m.status === "ON_LEAVE"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
-                        >
-                          {m.status.replace("_", " ")}
-                        </span>
-                      </td>
-                      <td className="py-3 space-x-3 whitespace-nowrap">
-                        {m.id !== headId && (
-                          <button
-                            onClick={() => setHeadId(m.id)}
-                            className="text-indigo-600 hover:underline text-xs font-medium"
-                          >
-                            Set Head
-                          </button>
-                        )}
+            {filtered.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">No members found.</p>
+            ) : (
+              <div className="space-y-2">
+                {filtered.map((m) => (
+                  <motion.div
+                    key={m.id}
+                    whileHover={{ scale: 1.01 }}
+                    className="flex justify-between items-center p-4 border border-gray-100 rounded-xl"
+                  >
+                    <div>
+                      <div className="font-medium text-gray-800">
+                        {m.firstName} {m.lastName}
+                        {m.id === headId && <CrownBadge />}
+                      </div>
+                      <div className="text-sm text-gray-500">{m.email}</div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-gray-600 hidden sm:block">{m.position}</span>
+                      {m.id !== headId && (
                         <button
-                          onClick={() => removeMember(m.id)}
-                          className="text-red-500 hover:underline text-xs font-medium"
+                          onClick={() => setHeadId(m.id)}
+                          className="text-indigo-600 hover:underline text-xs font-medium"
                         >
-                          Remove
+                          Set Head
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
+                      )}
+                      <button
+                        onClick={() => removeMember(m.id)}
+                        className="text-red-500 hover:underline text-xs font-medium"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-      {/* ── Activity tab ── */}
-      {tab === "activity" && (
-        <div className="bg-white p-6 rounded-2xl shadow space-y-3">
-          {activities.map((text, i) => (
-            <div key={i} className="border-l-4 border-indigo-500 pl-4 py-1 text-sm text-gray-700">
-              {text}
-            </div>
-          ))}
-        </div>
-      )}
+        {/* ── Activity ── */}
+        {tab === "activity" && (
+          <div className="space-y-3">
+            {activities.map((text, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="flex items-start gap-3"
+              >
+                <div className="w-2 h-2 mt-2 rounded-full bg-indigo-500 shrink-0" />
+                <div className="text-sm text-gray-700">{text}</div>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
-      {/* ── Settings tab ── */}
-      {tab === "settings" && (
-        <div className="bg-white p-6 rounded-2xl shadow space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-700">Department Name</label>
-            <input
-              className="w-full border border-gray-200 rounded-xl px-4 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              value={deptName}
-              onChange={(e) => setDeptName(e.target.value)}
-            />
+        {/* ── Settings ── */}
+        {tab === "settings" && (
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Department Name</label>
+              <input
+                className="w-full border border-gray-200 rounded-xl px-4 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                value={deptName}
+                onChange={(e) => setDeptName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Description</label>
+              <input
+                className="w-full border border-gray-200 rounded-xl px-4 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                value={deptDescription}
+                onChange={(e) => setDeptDescription(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition">
+                Save Changes
+              </button>
+              <button className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition">
+                Delete Department
+              </button>
+            </div>
           </div>
-          <div>
-            <label className="text-sm font-medium text-gray-700">Description</label>
-            <input
-              className="w-full border border-gray-200 rounded-xl px-4 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              value={deptDescription}
-              onChange={(e) => setDeptDescription(e.target.value)}
-            />
-          </div>
-          <div className="flex items-center gap-3 pt-2">
-            <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors">
-              Save Changes
-            </button>
-            <button className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-colors">
-              Delete Department
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+      </motion.div>
     </div>
   );
 }
