@@ -8,6 +8,8 @@ import {
   Loader2, Plus, CheckCircle, DollarSign, AlertCircle,
   Monitor, Package, UserCheck, Wrench, Trash2, Archive,
   ChevronRight, Search, X as XIcon,
+  Users, Calendar, TrendingUp, PhoneCall, Briefcase,
+  ClipboardList, Clock,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -50,7 +52,7 @@ interface PayrollRun {
   _count: { lines: number };
 }
 
-type Tab = "members" | "activity" | "payroll" | "assets" | "settings";
+type Tab = "members" | "activity" | "payroll" | "assets" | "hr" | "crm" | "settings";
 
 /* ------------------------------------------------------------------ */
 /*  IT Asset types                                                      */
@@ -68,6 +70,36 @@ interface ItAsset {
 interface ItStats {
   total: number; available: number; assigned: number;
   inRepair: number; forDisposal: number; retired: number;
+}
+
+/* ------------------------------------------------------------------ */
+/*  HR Overview types                                                   */
+/* ------------------------------------------------------------------ */
+
+interface LeaveRequest {
+  id: string; leaveType: string; startDate: string; endDate: string;
+  status: string; reason: string;
+  employee: { firstName: string; lastName: string; position: string } | null;
+}
+
+interface AttendanceRecord {
+  id: string; clockIn: string; clockOut: string | null; status: string;
+  employee: { firstName: string; lastName: string } | null;
+}
+
+/* ------------------------------------------------------------------ */
+/*  CRM types                                                           */
+/* ------------------------------------------------------------------ */
+
+interface CrmDashboard {
+  kpis: { totalContacts: number; totalDeals: number; pipelineValue: number; wonThisMonth: number };
+  funnel: Array<{ stage: string; count: number; totalValue: number }>;
+  recentActivities: Array<{
+    id: string; activityType: string; subject: string; createdAt: string;
+    deal: { title: string } | null;
+    contact: { firstName: string; lastName: string } | null;
+  }>;
+  overdueTasks: Array<{ id: string; title: string; dueDate: string; deal: { title: string } | null }>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -687,6 +719,249 @@ function ItAssetsTab() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  HR Overview Tab (Administration & HR)                              */
+/* ------------------------------------------------------------------ */
+
+const LEAVE_STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
+  PENDING:  { label: "Pending",  bg: "bg-amber-100",  text: "text-amber-700" },
+  APPROVED: { label: "Approved", bg: "bg-green-100",  text: "text-green-700" },
+  REJECTED: { label: "Rejected", bg: "bg-red-100",    text: "text-red-600"   },
+};
+
+function HrOverviewTab() {
+  const [leaves, setLeaves]         = useState<LeaveRequest[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [loadingL, setLoadingL]     = useState(true);
+  const [loadingA, setLoadingA]     = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/hr/leave?status=PENDING&limit=8")
+      .then((r) => r.json())
+      .then((j) => { if (j.success) setLeaves(j.data.data ?? []); })
+      .finally(() => setLoadingL(false));
+
+    const today = new Date().toISOString().split("T")[0];
+    fetch(`/api/admin/hr/attendance?date=${today}`)
+      .then((r) => r.json())
+      .then((j) => { if (j.success) setAttendance(j.data ?? []); })
+      .finally(() => setLoadingA(false));
+  }, []);
+
+  const present  = attendance.filter((a) => a.status === "PRESENT").length;
+  const late     = attendance.filter((a) => a.status === "LATE").length;
+  const absent   = attendance.filter((a) => a.status === "ABSENT").length;
+
+  return (
+    <div className="space-y-6">
+      {/* Today's Attendance */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <Clock className="h-4 w-4 text-indigo-500" /> Today&apos;s Attendance
+          </h3>
+          <Link href="/admin/hr/attendance" className="text-xs text-indigo-600 hover:underline">View All →</Link>
+        </div>
+        {loadingA ? (
+          <div className="flex items-center justify-center py-6 text-slate-400"><Loader2 className="h-5 w-5 animate-spin" /></div>
+        ) : (
+          <div className="grid grid-cols-3 gap-3">
+            {([
+              { label: "Present", value: present, color: "text-green-700", bg: "bg-green-50" },
+              { label: "Late",    value: late,    color: "text-amber-700", bg: "bg-amber-50" },
+              { label: "Absent",  value: absent,  color: "text-red-600",   bg: "bg-red-50"   },
+            ]).map((s) => (
+              <div key={s.label} className={`${s.bg} rounded-xl p-4 text-center`}>
+                <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Pending Leave Requests */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-indigo-500" /> Pending Leave Requests
+          </h3>
+          <Link href="/admin/hr/leave" className="text-xs text-indigo-600 hover:underline">View All →</Link>
+        </div>
+        {loadingL ? (
+          <div className="flex items-center justify-center py-6 text-slate-400"><Loader2 className="h-5 w-5 animate-spin" /></div>
+        ) : leaves.length === 0 ? (
+          <div className="text-center py-8">
+            <CheckCircle className="h-8 w-8 text-green-300 mx-auto mb-2" />
+            <p className="text-sm text-slate-500">No pending leave requests</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {leaves.map((req) => {
+              const cfg = LEAVE_STATUS_CONFIG[req.status] ?? { label: req.status, bg: "bg-slate-100", text: "text-slate-600" };
+              const start = new Date(req.startDate).toLocaleDateString("en-PH", { month: "short", day: "numeric" });
+              const end   = new Date(req.endDate).toLocaleDateString("en-PH", { month: "short", day: "numeric" });
+              return (
+                <div key={req.id} className="flex items-center justify-between p-3 border border-slate-100 rounded-xl">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-slate-800">
+                      {req.employee ? `${req.employee.firstName} ${req.employee.lastName}` : "—"}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {req.leaveType.replace(/_/g, " ")} · {start} – {end}
+                    </p>
+                  </div>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${cfg.bg} ${cfg.text}`}>
+                    {cfg.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Quick links */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
+        {([
+          { label: "Employees",   href: "/admin/hr/employees",          icon: <Users className="h-4 w-4" /> },
+          { label: "Leave",       href: "/admin/hr/leave",              icon: <Calendar className="h-4 w-4" /> },
+          { label: "Attendance",  href: "/admin/hr/attendance",         icon: <ClipboardList className="h-4 w-4" /> },
+        ]).map((l) => (
+          <Link key={l.label} href={l.href}
+            className="flex items-center gap-2 p-3 border border-slate-200 rounded-xl text-sm text-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/40 transition">
+            {l.icon} {l.label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  CRM Tab (Sales & Marketing)                                        */
+/* ------------------------------------------------------------------ */
+
+const CRM_STAGE_LABELS: Record<string, string> = {
+  NEW_LEAD: "New Lead", QUALIFIED: "Qualified", PROPOSAL: "Proposal",
+  NEGOTIATION: "Negotiation", WON: "Won", LOST: "Lost",
+};
+
+const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
+  CALL:    <PhoneCall className="h-3.5 w-3.5" />,
+  EMAIL:   <Briefcase className="h-3.5 w-3.5" />,
+  MEETING: <Users className="h-3.5 w-3.5" />,
+};
+
+function CrmTab() {
+  const [data, setData]       = useState<CrmDashboard | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/sales/dashboard")
+      .then((r) => r.json())
+      .then((j) => { if (j.success) setData(j.data); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const peso = (n: number) =>
+    `₱${n.toLocaleString("en-PH", { minimumFractionDigits: 0 })}`;
+
+  if (loading) {
+    return <div className="flex items-center justify-center py-12 text-slate-400"><Loader2 className="h-5 w-5 animate-spin" /></div>;
+  }
+
+  if (!data) {
+    return (
+      <div className="text-center py-10">
+        <AlertCircle className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+        <p className="text-sm text-slate-500">Unable to load CRM data</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {([
+          { label: "Contacts",       value: data.kpis.totalContacts,              icon: <Users className="h-4 w-4 text-indigo-500" />,  color: "text-indigo-700" },
+          { label: "Deals",          value: data.kpis.totalDeals,                 icon: <Briefcase className="h-4 w-4 text-purple-500" />, color: "text-purple-700" },
+          { label: "Pipeline Value", value: peso(data.kpis.pipelineValue),        icon: <TrendingUp className="h-4 w-4 text-green-500" />, color: "text-green-700" },
+          { label: "Won This Month", value: peso(data.kpis.wonThisMonth),         icon: <CheckCircle className="h-4 w-4 text-emerald-500" />, color: "text-emerald-700" },
+        ]).map((k) => (
+          <div key={k.label} className="bg-slate-50 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">{k.icon}<p className="text-xs text-slate-500">{k.label}</p></div>
+            <p className={`text-lg font-bold ${k.color}`}>{k.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Deal Funnel */}
+      {data.funnel.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-indigo-500" /> Deal Pipeline
+          </h3>
+          <div className="space-y-2">
+            {data.funnel.map((stage) => (
+              <div key={stage.stage} className="flex items-center gap-3">
+                <span className="text-xs text-slate-500 w-28 shrink-0">{CRM_STAGE_LABELS[stage.stage] ?? stage.stage}</span>
+                <div className="flex-1 bg-slate-100 rounded-full h-2">
+                  <div
+                    className="bg-indigo-500 h-2 rounded-full transition-all"
+                    style={{ width: `${Math.min(100, (stage.count / Math.max(1, data.funnel[0]?.count ?? 1)) * 100)}%` }}
+                  />
+                </div>
+                <span className="text-xs font-medium text-slate-700 w-6 text-right">{stage.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Activities */}
+      {data.recentActivities.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-slate-700">Recent Activity</h3>
+            <Link href="/admin/sales/activities" className="text-xs text-indigo-600 hover:underline">View All →</Link>
+          </div>
+          <div className="space-y-2">
+            {data.recentActivities.slice(0, 5).map((act) => (
+              <div key={act.id} className="flex items-start gap-3 p-3 border border-slate-100 rounded-xl">
+                <div className="mt-0.5 text-slate-400">{ACTIVITY_ICONS[act.activityType] ?? <PhoneCall className="h-3.5 w-3.5" />}</div>
+                <div className="min-w-0">
+                  <p className="text-sm text-slate-700 truncate">{act.subject}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {act.contact ? `${act.contact.firstName} ${act.contact.lastName}` : ""}
+                    {act.deal ? ` · ${act.deal.title}` : ""}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Quick links */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+        {([
+          { label: "Contacts", href: "/admin/sales/contacts",    icon: <Users className="h-4 w-4" /> },
+          { label: "Deals",    href: "/admin/sales/deals",       icon: <Briefcase className="h-4 w-4" /> },
+          { label: "Pipeline", href: "/admin/sales",             icon: <TrendingUp className="h-4 w-4" /> },
+          { label: "Tasks",    href: "/admin/sales/tasks",       icon: <ClipboardList className="h-4 w-4" /> },
+        ]).map((l) => (
+          <Link key={l.label} href={l.href}
+            className="flex items-center gap-2 p-3 border border-slate-200 rounded-xl text-sm text-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/40 transition">
+            {l.icon} {l.label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
@@ -697,11 +972,17 @@ export default function AdminDepartmentDetailPage() {
 
   const isFinance = slug === "finance-payroll";
   const isIT      = slug === "it-systems";
+  const isHR      = slug === "administration-hr";
+  const isSales   = slug === "sales-marketing";
   const TABS: Tab[] = isFinance
     ? ["members", "payroll", "activity", "settings"]
     : isIT
       ? ["members", "assets", "activity", "settings"]
-      : ["members", "activity", "settings"];
+      : isHR
+        ? ["members", "hr", "activity", "settings"]
+        : isSales
+          ? ["members", "crm", "activity", "settings"]
+          : ["members", "activity", "settings"];
 
   const [tab, setTab]             = useState<Tab>("members");
   const [members, setMembers]     = useState<Employee[]>([]);
@@ -829,7 +1110,11 @@ export default function AdminDepartmentDetailPage() {
                 : "bg-white border border-slate-200 hover:bg-slate-50 text-slate-600"
             }`}
           >
-            {t === "payroll" ? "💵 Payroll Runs" : t === "assets" ? "💻 IT Assets" : t}
+            {t === "payroll" ? "💵 Payroll Runs"
+              : t === "assets" ? "💻 IT Assets"
+              : t === "hr"     ? "👥 HR Overview"
+              : t === "crm"    ? "📈 Sales & CRM"
+              : t}
           </motion.button>
         ))}
       </div>
@@ -893,6 +1178,12 @@ export default function AdminDepartmentDetailPage() {
 
         {/* ── IT Assets (IT & Systems only) ── */}
         {tab === "assets" && <ItAssetsTab />}
+
+        {/* ── HR Overview (Administration & HR only) ── */}
+        {tab === "hr" && <HrOverviewTab />}
+
+        {/* ── CRM / Sales (Sales & Marketing only) ── */}
+        {tab === "crm" && <CrmTab />}
 
         {/* ── Activity ── */}
         {tab === "activity" && (
