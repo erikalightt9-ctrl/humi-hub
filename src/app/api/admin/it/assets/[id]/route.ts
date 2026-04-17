@@ -66,6 +66,7 @@ export async function PATCH(
       model:         d.model         ?? undefined,
       serialNumber:  d.serialNumber  ?? undefined,
       specs:         d.specs         ?? undefined,
+      purchaseCost:  d.purchaseCost  ?? undefined,
       supplier:      d.supplier      ?? undefined,
       location:      d.location      ?? undefined,
       notes:         d.notes         ?? undefined,
