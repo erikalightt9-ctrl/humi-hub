@@ -11,7 +11,7 @@ const createSchema = z.object({
   brand:         z.string().max(100).optional(),
   model:         z.string().max(100).optional(),
   serialNumber:  z.string().max(100).optional(),
-  specs:         z.record(z.unknown()).optional(),
+  specs:         z.record(z.string(), z.unknown()).optional(),
   purchaseDate:  z.string().optional(),
   purchaseCost:  z.number().nonnegative().optional(),
   supplier:      z.string().max(200).optional(),

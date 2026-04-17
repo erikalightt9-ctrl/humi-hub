@@ -10,7 +10,7 @@ const updateSchema = z.object({
   brand:         z.string().max(100).nullable().optional(),
   model:         z.string().max(100).nullable().optional(),
   serialNumber:  z.string().max(100).nullable().optional(),
-  specs:         z.record(z.unknown()).nullable().optional(),
+  specs:         z.record(z.string(), z.unknown()).nullable().optional(),
   purchaseDate:  z.string().nullable().optional(),
   purchaseCost:  z.number().nonnegative().nullable().optional(),
   supplier:      z.string().max(200).nullable().optional(),
