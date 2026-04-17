@@ -244,6 +244,43 @@ export default function EmployeesPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  /* Auto-regularize: Probationary + Active + hired 6+ months ago → Regular */
+  useEffect(() => {
+    if (employees.length === 0) return;
+    const today = new Date();
+    const toRegularize = employees.filter(emp => {
+      if (emp.employmentType !== "PROBATIONARY" || emp.status !== "ACTIVE") return false;
+      const sixMonths = new Date(emp.hireDate);
+      sixMonths.setMonth(sixMonths.getMonth() + 6);
+      return today >= sixMonths;
+    });
+    if (toRegularize.length === 0) return;
+
+    // Optimistically update UI
+    setEmployees(prev => prev.map(emp => {
+      const match = toRegularize.find(r => r.id === emp.id);
+      if (!match) return emp;
+      const sixMonths = new Date(emp.hireDate);
+      sixMonths.setMonth(sixMonths.getMonth() + 6);
+      return { ...emp, employmentType: "REGULAR", regularizationDate: sixMonths.toISOString().split("T")[0] };
+    }));
+
+    // Persist to DB in background (fire-and-forget)
+    toRegularize.forEach(emp => {
+      const sixMonths = new Date(emp.hireDate);
+      sixMonths.setMonth(sixMonths.getMonth() + 6);
+      fetch(`/api/admin/hr/employees/${emp.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employmentType:    "REGULAR",
+          regularizationDate: sixMonths.toISOString().split("T")[0],
+        }),
+      }).catch(() => { /* silent — UI already updated */ });
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [employees.length]);
+
   function handleStatusChanged(id: string, status: string) {
     setEmployees(prev => prev.map(e => e.id === id ? { ...e, status } : e));
     setStats(prev => {
