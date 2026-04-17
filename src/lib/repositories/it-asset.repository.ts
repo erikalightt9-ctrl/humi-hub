@@ -2,7 +2,8 @@
  * IT Asset Management — Repository Layer
  */
 import { prisma } from "@/lib/prisma";
-import type { ItAssetStatus, ItAssetCondition, Prisma } from "@prisma/client";
+import type { ItAssetStatus, ItAssetCondition } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 /* ------------------------------------------------------------------ */
 /*  Asset Tag Generator                                                */
