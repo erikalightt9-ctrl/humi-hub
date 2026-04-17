@@ -25,13 +25,13 @@ interface DeptConfig {
 }
 
 const DEPARTMENTS: DeptConfig[] = [
-  { slug: "administration",         name: "Administration",           description: "Office management, compliance, policies",     emoji: "🏢", activities: ["Company policy updated", "Compliance audit completed", "Office facilities reviewed"] },
-  { slug: "human-resources",        name: "Human Resources",          description: "Recruitment, employee relations, benefits",    emoji: "🧑‍💼", activities: ["New employee onboarding completed", "Recruitment drive launched", "Performance reviews scheduled"] },
-  { slug: "finance-payroll",        name: "Finance & Payroll",        description: "Budgeting, payroll, financial reports",        emoji: "💵",  activities: ["Payroll processed for this month", "Budget report submitted", "Government contributions filed"] },
-  { slug: "operations",             name: "Operations",               description: "Daily operations and workflow",                emoji: "⚙️",  activities: ["Weekly ops review conducted", "New workflow process approved", "SLA targets updated"] },
-  { slug: "sales-marketing",        name: "Sales & Marketing",        description: "Sales, branding, lead generation",             emoji: "📈",  activities: ["Q2 sales targets achieved", "New marketing campaign launched", "Lead generation report submitted"] },
-  { slug: "it-systems",             name: "IT & Systems",             description: "System management and support",                emoji: "💻",  activities: ["System maintenance completed", "Security audit passed", "New software licenses acquired"] },
-  { slug: "logistics-procurement",  name: "Logistics & Procurement",  description: "Suppliers, inventory, fleet",                  emoji: "🚚",  activities: ["Supplier contracts renewed", "Inventory audit completed", "Fleet fuel logs reviewed"] },
+  { slug: "administration",        name: "Administration",          description: "Office management, compliance, policies",     emoji: "🏢",  activities: ["Office compliance review completed", "Company policy updated", "Stockroom inventory audited"] },
+  { slug: "human-resources",       name: "Human Resources",         description: "Recruitment, employee relations, benefits",   emoji: "🧑‍💼", activities: ["New employee onboarding completed", "Recruitment drive launched", "Benefits review submitted"] },
+  { slug: "finance-payroll",       name: "Finance & Payroll",       description: "Budgeting, payroll, financial reports",       emoji: "💵",  activities: ["Payroll processed for this month", "Budget report submitted", "Government contributions filed"] },
+  { slug: "operations",            name: "Operations",              description: "Daily operations and workflow",               emoji: "⚙️",  activities: ["Weekly ops review conducted", "New workflow process approved", "SLA targets updated"] },
+  { slug: "sales-marketing",       name: "Sales & Marketing",       description: "Sales, branding, lead generation",            emoji: "📈",  activities: ["Q2 sales targets achieved", "New marketing campaign launched", "Lead generation report submitted"] },
+  { slug: "it-systems",            name: "IT & Systems",            description: "System management and support",               emoji: "💻",  activities: ["System maintenance completed", "Security audit passed", "New software licenses acquired"] },
+  { slug: "logistics-procurement", name: "Logistics & Procurement", description: "Suppliers, inventory, fleet",                 emoji: "🚚",  activities: ["Supplier contracts renewed", "Inventory audit completed", "Fleet fuel logs reviewed"] },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -963,6 +963,81 @@ function CrmTab() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Stockroom Section — always visible on Administration page          */
+/* ------------------------------------------------------------------ */
+
+const STOCK_CATEGORIES = [
+  { name: "Cleaning Supplies",    icon: "🧹", bg: "bg-blue-50",   border: "border-blue-200"   },
+  { name: "Pantry Supplies",      icon: "🍱", bg: "bg-green-50",  border: "border-green-200"  },
+  { name: "Maintenance Supplies", icon: "🔧", bg: "bg-orange-50", border: "border-orange-200" },
+  { name: "Assets (Appliances, Equipment, Furniture & Fixtures)", icon: "📦", bg: "bg-purple-50", border: "border-purple-200" },
+  { name: "Stockroom Stocks",     icon: "🏪", bg: "bg-teal-50",   border: "border-teal-200"   },
+] as const;
+
+function StockroomSection() {
+  const [stats, setStats]     = useState<{ total: number; totalLow: number; byCategory: { category: string; count: number; lowStock: number }[] } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/dept/stock?stats=1")
+      .then((r) => r.json())
+      .then((j) => { if (j.success) setStats(j.data); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-800">Stockroom Inventory</h2>
+          <p className="text-xs text-slate-400 mt-0.5">
+            {loading ? "Loading…" : `${stats?.total ?? 0} total items${(stats?.totalLow ?? 0) > 0 ? ` · ${stats?.totalLow} low stock` : ""}`}
+          </p>
+        </div>
+        <Link href="/admin/admin/stockroom"
+          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-xl font-medium transition-colors shadow-sm">
+          Manage Stockroom →
+        </Link>
+      </div>
+
+      {loading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {STOCK_CATEGORIES.map((c) => (
+            <div key={c.name} className="h-28 rounded-2xl bg-slate-100 animate-pulse" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {STOCK_CATEGORIES.map((cat) => {
+            const apiName = cat.name.startsWith("Assets") ? "Assets" : cat.name;
+            const stat  = stats?.byCategory.find((s) => s.category === apiName);
+            const count = stat?.count    ?? 0;
+            const low   = stat?.lowStock ?? 0;
+            return (
+              <Link
+                key={cat.name}
+                href="/admin/admin/stockroom"
+                className={`${cat.bg} ${cat.border} border rounded-2xl p-4 hover:shadow-md hover:scale-[1.02] transition-all duration-150 block`}
+              >
+                <div className="text-3xl mb-2">{cat.icon}</div>
+                <p className="text-xs font-semibold text-slate-700 leading-snug">{cat.name}</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1 leading-none">{count}</p>
+                <p className="text-xs text-slate-500 mt-0.5">items</p>
+                {low > 0 && (
+                  <p className="text-xs text-amber-600 font-semibold mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3 shrink-0" /> {low} low stock
+                  </p>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
@@ -975,6 +1050,7 @@ export default function AdminDepartmentDetailPage() {
   const isIT      = slug === "it-systems";
   const isHR      = slug === "human-resources";
   const isSales   = slug === "sales-marketing";
+  const isAdmin   = slug === "administration";
   const TABS: Tab[] = isFinance
     ? ["members", "payroll", "activity", "settings"]
     : isIT
@@ -983,7 +1059,9 @@ export default function AdminDepartmentDetailPage() {
         ? ["members", "hr", "activity", "settings"]
         : isSales
           ? ["members", "crm", "activity", "settings"]
-          : ["members", "activity", "settings"];
+          : isAdmin
+            ? ["members", "activity", "settings"]
+            : ["members", "activity", "settings"];
 
   const [tab, setTab]             = useState<Tab>("members");
   const [members, setMembers]     = useState<Employee[]>([]);
@@ -1098,6 +1176,9 @@ export default function AdminDepartmentDetailPage() {
         <StatCard label="Inactive"      value={inactive}       accent="text-slate-400" />
       </div>
 
+      {/* Stockroom Category Cards — Administration only */}
+      {isAdmin && <StockroomSection />}
+
       {/* Tabs */}
       <div className="flex gap-3 flex-wrap">
         {TABS.map((t) => (
@@ -1111,10 +1192,10 @@ export default function AdminDepartmentDetailPage() {
                 : "bg-white border border-slate-200 hover:bg-slate-50 text-slate-600"
             }`}
           >
-            {t === "payroll" ? "💵 Payroll Runs"
-              : t === "assets" ? "💻 IT Assets"
-              : t === "hr"     ? "👥 HR Overview"
-              : t === "crm"    ? "📈 Sales & CRM"
+            {t === "payroll"    ? "💵 Payroll Runs"
+              : t === "assets"    ? "💻 IT Assets"
+              : t === "hr"        ? "👥 HR Overview"
+              : t === "crm"       ? "📈 Sales & CRM"
               : t}
           </motion.button>
         ))}

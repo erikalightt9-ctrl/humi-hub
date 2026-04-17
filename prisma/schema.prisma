@@ -1317,6 +1317,7 @@ model Organization {
   adminFuelLogs        AdminFuelLog[]
   adminPantryItems     AdminPantryItem[]
   adminMaintenanceItems AdminMaintenanceItem[]
+  adminStockItems      AdminStockItem[]
   adminRepairLogs      AdminRepairLog[]
   adminSuppliers       AdminSupplier[]
   adminEquipment       AdminEquipment[]
@@ -3119,6 +3120,26 @@ model AdminMaintenanceItem {
 
   @@index([organizationId])
   @@map("admin_maintenance_items")
+}
+
+model AdminStockItem {
+  id             String   @id
+  organizationId String
+  name           String   @db.VarChar(200)
+  category       String   @db.VarChar(100)
+  quantity       Decimal  @default(0) @db.Decimal(10, 2)
+  unit           String   @default("pcs") @db.VarChar(50)
+  minThreshold   Decimal  @default(0) @db.Decimal(10, 2)
+  location       String?  @db.VarChar(200)
+  supplier       String?  @db.VarChar(200)
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, category])
+  @@map("admin_stock_items")
 }
 
 model AdminRepairLog {
