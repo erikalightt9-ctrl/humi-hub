@@ -25,12 +25,13 @@ interface DeptConfig {
 }
 
 const DEPARTMENTS: DeptConfig[] = [
-  { slug: "administration-hr",     name: "Administration & HR",     description: "Employee management, recruitment, policies",  emoji: "🧑‍💼", activities: ["New employee onboarding completed", "Company policy updated", "Recruitment drive launched"] },
-  { slug: "finance-payroll",       name: "Finance & Payroll",       description: "Budgeting, payroll, financial reports",        emoji: "💵",  activities: ["Payroll processed for this month", "Budget report submitted", "Government contributions filed"] },
-  { slug: "operations",            name: "Operations",               description: "Daily operations and workflow",                emoji: "⚙️",  activities: ["Weekly ops review conducted", "New workflow process approved", "SLA targets updated"] },
-  { slug: "sales-marketing",       name: "Sales & Marketing",       description: "Sales, branding, lead generation",             emoji: "📈",  activities: ["Q2 sales targets achieved", "New marketing campaign launched", "Lead generation report submitted"] },
-  { slug: "it-systems",            name: "IT & Systems",             description: "System management and support",                emoji: "💻",  activities: ["System maintenance completed", "Security audit passed", "New software licenses acquired"] },
-  { slug: "logistics-procurement", name: "Logistics & Procurement", description: "Suppliers, inventory, fleet",                  emoji: "🚚",  activities: ["Supplier contracts renewed", "Inventory audit completed", "Fleet fuel logs reviewed"] },
+  { slug: "administration",        name: "Administration",          description: "Office management, compliance, policies",     emoji: "🏢",  activities: ["Office compliance review completed", "Company policy updated", "Stockroom inventory audited"] },
+  { slug: "human-resources",       name: "Human Resources",         description: "Recruitment, employee relations, benefits",   emoji: "🧑‍💼", activities: ["New employee onboarding completed", "Recruitment drive launched", "Benefits review submitted"] },
+  { slug: "finance-payroll",       name: "Finance & Payroll",       description: "Budgeting, payroll, financial reports",       emoji: "💵",  activities: ["Payroll processed for this month", "Budget report submitted", "Government contributions filed"] },
+  { slug: "operations",            name: "Operations",              description: "Daily operations and workflow",               emoji: "⚙️",  activities: ["Weekly ops review conducted", "New workflow process approved", "SLA targets updated"] },
+  { slug: "sales-marketing",       name: "Sales & Marketing",       description: "Sales, branding, lead generation",            emoji: "📈",  activities: ["Q2 sales targets achieved", "New marketing campaign launched", "Lead generation report submitted"] },
+  { slug: "it-systems",            name: "IT & Systems",            description: "System management and support",               emoji: "💻",  activities: ["System maintenance completed", "Security audit passed", "New software licenses acquired"] },
+  { slug: "logistics-procurement", name: "Logistics & Procurement", description: "Suppliers, inventory, fleet",                 emoji: "🚚",  activities: ["Supplier contracts renewed", "Inventory audit completed", "Fleet fuel logs reviewed"] },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -52,7 +53,7 @@ interface PayrollRun {
   _count: { lines: number };
 }
 
-type Tab = "members" | "activity" | "payroll" | "assets" | "hr" | "crm" | "settings";
+type Tab = "members" | "activity" | "payroll" | "assets" | "hr" | "crm" | "stockroom" | "settings";
 
 /* ------------------------------------------------------------------ */
 /*  IT Asset types                                                      */
@@ -962,6 +963,86 @@ function CrmTab() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Stockroom Overview Tab (Administration only)                       */
+/* ------------------------------------------------------------------ */
+
+const STOCK_CATEGORIES = [
+  { name: "Cleaning Supplies",    icon: "🧹", color: "bg-blue-50 border-blue-200 text-blue-700" },
+  { name: "Pantry Supplies",      icon: "🍱", color: "bg-green-50 border-green-200 text-green-700" },
+  { name: "Maintenance Supplies", icon: "🔧", color: "bg-orange-50 border-orange-200 text-orange-700" },
+  { name: "Assets",               icon: "📦", color: "bg-purple-50 border-purple-200 text-purple-700" },
+  { name: "Stockroom Stocks",     icon: "🏪", color: "bg-teal-50 border-teal-200 text-teal-700" },
+] as const;
+
+function StockroomOverviewTab() {
+  const [stats, setStats]     = useState<{ total: number; totalLow: number; byCategory: { category: string; count: number; lowStock: number }[] } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/dept/stock?stats=1")
+      .then((r) => r.json())
+      .then((j) => { if (j.success) setStats(j.data); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-semibold text-slate-800">Stockroom Inventory</p>
+          <p className="text-xs text-slate-400 mt-0.5">
+            {stats ? `${stats.total} total items${stats.totalLow > 0 ? ` · ${stats.totalLow} low stock` : ""}` : "Loading…"}
+          </p>
+        </div>
+        <Link href="/admin/admin/stockroom"
+          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-xl font-medium transition">
+          Open Stockroom →
+        </Link>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12 text-slate-400">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {STOCK_CATEGORIES.map((cat) => {
+              const stat = stats?.byCategory.find((s) => s.category === cat.name);
+              const count  = stat?.count    ?? 0;
+              const low    = stat?.lowStock ?? 0;
+              return (
+                <Link key={cat.name} href={`/admin/admin/stockroom`}
+                  className={`border rounded-2xl p-4 hover:shadow-md transition-all ${cat.color.replace("text-", "").split(" ").slice(0, 2).join(" ")} border-opacity-60`}>
+                  <div className="text-3xl mb-2">{cat.icon}</div>
+                  <p className="text-xs font-medium text-slate-600 leading-tight">{cat.name}</p>
+                  <p className="text-2xl font-bold text-slate-900 mt-1">{count}</p>
+                  {low > 0 && (
+                    <p className="text-xs text-amber-600 font-medium mt-0.5 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> {low} low
+                    </p>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+
+          {stats && stats.total === 0 && (
+            <div className="text-center py-8">
+              <Package className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">No stock items recorded yet.</p>
+              <Link href="/admin/admin/stockroom" className="text-sm text-indigo-600 hover:underline mt-1 inline-block">
+                Go to Stockroom →
+              </Link>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
@@ -972,8 +1053,9 @@ export default function AdminDepartmentDetailPage() {
 
   const isFinance = slug === "finance-payroll";
   const isIT      = slug === "it-systems";
-  const isHR      = slug === "administration-hr";
+  const isHR      = slug === "human-resources";
   const isSales   = slug === "sales-marketing";
+  const isAdmin   = slug === "administration";
   const TABS: Tab[] = isFinance
     ? ["members", "payroll", "activity", "settings"]
     : isIT
@@ -982,7 +1064,9 @@ export default function AdminDepartmentDetailPage() {
         ? ["members", "hr", "activity", "settings"]
         : isSales
           ? ["members", "crm", "activity", "settings"]
-          : ["members", "activity", "settings"];
+          : isAdmin
+            ? ["members", "stockroom", "activity", "settings"]
+            : ["members", "activity", "settings"];
 
   const [tab, setTab]             = useState<Tab>("members");
   const [members, setMembers]     = useState<Employee[]>([]);
@@ -1110,10 +1194,11 @@ export default function AdminDepartmentDetailPage() {
                 : "bg-white border border-slate-200 hover:bg-slate-50 text-slate-600"
             }`}
           >
-            {t === "payroll" ? "💵 Payroll Runs"
-              : t === "assets" ? "💻 IT Assets"
-              : t === "hr"     ? "👥 HR Overview"
-              : t === "crm"    ? "📈 Sales & CRM"
+            {t === "payroll"    ? "💵 Payroll Runs"
+              : t === "assets"    ? "💻 IT Assets"
+              : t === "hr"        ? "👥 HR Overview"
+              : t === "crm"       ? "📈 Sales & CRM"
+              : t === "stockroom" ? "📦 Stockroom"
               : t}
           </motion.button>
         ))}
@@ -1184,6 +1269,9 @@ export default function AdminDepartmentDetailPage() {
 
         {/* ── CRM / Sales (Sales & Marketing only) ── */}
         {tab === "crm" && <CrmTab />}
+
+        {/* ── Stockroom (Administration only) ── */}
+        {tab === "stockroom" && <StockroomOverviewTab />}
 
         {/* ── Activity ── */}
         {tab === "activity" && (
