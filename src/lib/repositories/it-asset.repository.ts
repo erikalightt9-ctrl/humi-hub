@@ -2,7 +2,8 @@
  * IT Asset Management — Repository Layer
  */
 import { prisma } from "@/lib/prisma";
-import type { ItAssetStatus, ItAssetCondition, Prisma } from "@prisma/client";
+import type { ItAssetStatus, ItAssetCondition } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 /* ------------------------------------------------------------------ */
 /*  Asset Tag Generator                                                */
@@ -143,7 +144,7 @@ export async function createAsset(organizationId: string, input: CreateAssetInpu
       brand:        input.brand      ?? null,
       model:        input.model      ?? null,
       serialNumber: input.serialNumber ?? null,
-      specs:        input.specs      ?? undefined,
+      specs:        input.specs as import("@prisma/client").Prisma.InputJsonValue ?? undefined,
       purchaseDate: input.purchaseDate ?? null,
       purchaseCost: input.purchaseCost != null ? new Prisma.Decimal(input.purchaseCost) : null,
       supplier:     input.supplier   ?? null,
@@ -188,7 +189,7 @@ export async function updateAsset(
   if (data.brand !== undefined)        updateData.brand        = data.brand;
   if (data.model !== undefined)        updateData.model        = data.model;
   if (data.serialNumber !== undefined) updateData.serialNumber = data.serialNumber;
-  if (data.specs !== undefined)        updateData.specs        = data.specs ?? undefined;
+  if (data.specs !== undefined)        updateData.specs        = data.specs as import("@prisma/client").Prisma.InputJsonValue ?? undefined;
   if (data.purchaseDate !== undefined) updateData.purchaseDate = data.purchaseDate;
   if (data.purchaseCost !== undefined) updateData.purchaseCost = data.purchaseCost != null ? new Prisma.Decimal(data.purchaseCost) : null;
   if (data.supplier !== undefined)     updateData.supplier     = data.supplier;

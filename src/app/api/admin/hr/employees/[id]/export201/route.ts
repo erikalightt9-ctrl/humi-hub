@@ -70,7 +70,7 @@ export async function GET(
     const filename = `${emp.employeeNumber}-${emp.lastName}-201.pdf`
       .replace(/[^a-zA-Z0-9._-]/g, "_");
 
-    return new NextResponse(buf, {
+    return new NextResponse(new Uint8Array(buf), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}"`,
