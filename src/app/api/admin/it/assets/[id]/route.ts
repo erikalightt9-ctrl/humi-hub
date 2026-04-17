@@ -61,6 +61,14 @@ export async function PATCH(
     const d = parsed.data;
     const updated = await updateAsset(guard.tenantId, id, {
       ...d,
+      categoryId:    d.categoryId    ?? undefined,
+      brand:         d.brand         ?? undefined,
+      model:         d.model         ?? undefined,
+      serialNumber:  d.serialNumber  ?? undefined,
+      specs:         d.specs         ?? undefined,
+      supplier:      d.supplier      ?? undefined,
+      location:      d.location      ?? undefined,
+      notes:         d.notes         ?? undefined,
       purchaseDate:  d.purchaseDate  !== undefined ? (d.purchaseDate  ? new Date(d.purchaseDate)  : undefined) : undefined,
       warrantyStart: d.warrantyStart !== undefined ? (d.warrantyStart ? new Date(d.warrantyStart) : undefined) : undefined,
       warrantyEnd:   d.warrantyEnd   !== undefined ? (d.warrantyEnd   ? new Date(d.warrantyEnd)   : undefined) : undefined,
