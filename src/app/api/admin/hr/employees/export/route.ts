@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
     const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
     const date = new Date().toISOString().split("T")[0];
 
-    return new NextResponse(buf, {
+    return new NextResponse(new Uint8Array(buf), {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="employees-201-${date}.xlsx"`,

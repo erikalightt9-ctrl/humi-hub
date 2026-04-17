@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
     const filename = `revenue-export-${new Date().toISOString().split("T")[0]}.xlsx`;
 
-    return new NextResponse(buf, {
+    return new NextResponse(new Uint8Array(buf), {
       status: 200,
       headers: {
         "Content-Type":
