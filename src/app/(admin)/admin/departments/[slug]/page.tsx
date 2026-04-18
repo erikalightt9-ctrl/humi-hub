@@ -1079,8 +1079,8 @@ function InventoryTab() {
 
       {/* Category Cards */}
       {loadingData ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {STOCK_CATEGORIES.map(c => <div key={c.name} className="h-28 rounded-2xl bg-slate-100 animate-pulse" />)}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {STOCK_CATEGORIES.map(c => <div key={c.name} className="h-36 rounded-2xl bg-slate-100 animate-pulse" />)}
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
