@@ -1104,7 +1104,6 @@ function InventoryTab() {
 
       {/* Module Cards */}
       <div>
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Modules</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {([
             { name: "Fuel Requests",         icon: "⛽", desc: "Fuel logs & requests",          href: "/admin/admin/fuel-requests",   bg: "bg-yellow-50 border-yellow-200" },
