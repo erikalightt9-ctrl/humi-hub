@@ -18,7 +18,7 @@ import {
 
 const TABS = [
   { label: "Overview",                href: "/admin/admin",                  icon: LayoutDashboard },
-  { label: "Stockroom",               href: "/admin/admin/stockroom",        icon: PackageSearch },
+  { label: "Inventory",               href: "/admin/admin/stockroom",        icon: PackageSearch },
   { label: "Inventory",               href: "/admin/admin/assets",           icon: Archive },
   { label: "Fuel Requests",           href: "/admin/admin/fuel-requests",    icon: Fuel },
   { label: "Maintenance Supplies",    href: "/admin/admin/maintenance",      icon: Wrench },
