@@ -1174,7 +1174,7 @@ function InventoryTab() {
             </tbody>
           </table>
           <div className="px-4 py-2.5 border-t border-slate-100 text-xs text-slate-400">
-            Showing {filtered.length} of {items.length} items · <Link href="/admin/admin/stockroom" className="text-indigo-600 hover:underline">Full Stockroom →</Link>
+            Showing {filtered.length} of {items.length} items
           </div>
         </div>
       )}
