@@ -1443,7 +1443,6 @@ export default function AdminDepartmentDetailPage() {
             </div>
             <div className="flex items-center gap-3 pt-2">
               <RippleButton className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition">Save Changes</RippleButton>
-              <RippleButton className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition">Delete Department</RippleButton>
             </div>
           </div>
         )}
