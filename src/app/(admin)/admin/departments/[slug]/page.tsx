@@ -1291,13 +1291,15 @@ export default function AdminDepartmentDetailPage() {
         </div>
       </motion.div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard label="Total Members" value={members.length} accent="text-indigo-600" />
-        <StatCard label="Active"        value={active}         accent="text-green-600" />
-        <StatCard label="On Leave"      value={onLeave}        accent="text-amber-600" />
-        <StatCard label="Inactive"      value={inactive}       accent="text-slate-400" />
-      </div>
+      {/* Stats — hidden for Administration (inventory-focused dept) */}
+      {!isAdmin && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <StatCard label="Total Members" value={members.length} accent="text-indigo-600" />
+          <StatCard label="Active"        value={active}         accent="text-green-600" />
+          <StatCard label="On Leave"      value={onLeave}        accent="text-amber-600" />
+          <StatCard label="Inactive"      value={inactive}       accent="text-slate-400" />
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-3 flex-wrap">
