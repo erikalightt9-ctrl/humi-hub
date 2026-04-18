@@ -1218,6 +1218,9 @@ export default function AdminDepartmentDetailPage() {
   const [deptName, setDeptName]   = useState(dept?.name ?? "");
   const [deptDesc, setDeptDesc]   = useState(dept?.description ?? "");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName]   = useState(dept?.name ?? "");
+  const [editDesc, setEditDesc]   = useState(dept?.description ?? "");
 
   const loadMembers = useCallback(() => {
     if (!dept) return;
@@ -1287,6 +1290,40 @@ export default function AdminDepartmentDetailPage() {
         />
       )}
 
+      {/* Edit Department Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowEditModal(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h2 className="text-base font-semibold text-slate-900">Edit Department</h2>
+              <button onClick={() => setShowEditModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
+                <XIcon className="h-4 w-4 text-slate-500" />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Department Name</label>
+                <input value={editName} onChange={e => setEditName(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Description</label>
+                <input value={editDesc} onChange={e => setEditDesc(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+              <button onClick={() => setShowEditModal(false)} className="px-4 py-2.5 text-sm border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100">Cancel</button>
+              <button
+                onClick={() => { setDeptName(editName); setDeptDesc(editDesc); setShowEditModal(false); }}
+                className="px-5 py-2.5 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium"
+              >Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Back */}
       <Link href="/admin/departments" className="text-indigo-600 hover:underline text-sm">
         ← Back to Departments
@@ -1310,7 +1347,7 @@ export default function AdminDepartmentDetailPage() {
           </div>
         </div>
         <div className="flex gap-2 shrink-0">
-          <RippleButton className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm transition">Edit</RippleButton>
+          <RippleButton onClick={() => { setEditName(deptName); setEditDesc(deptDesc); setShowEditModal(true); }} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm transition">Edit</RippleButton>
         </div>
       </motion.div>
 
