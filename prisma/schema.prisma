@@ -1315,6 +1315,7 @@ model Organization {
   adminAssets          AdminAsset[]
   adminCarMaintenance  AdminCarMaintenance[]
   adminFuelLogs        AdminFuelLog[]
+  adminVehicleLogs     AdminVehicleLog[]
   adminPantryItems     AdminPantryItem[]
   adminMaintenanceItems AdminMaintenanceItem[]
   adminStockItems      AdminStockItem[]
@@ -3081,6 +3082,24 @@ model AdminFuelLog {
 
   @@index([organizationId, date])
   @@map("admin_fuel_logs")
+}
+
+model AdminVehicleLog {
+  id             String   @id
+  organizationId String
+  plateNumber    String   @db.VarChar(50)
+  vehicleType    String   @db.VarChar(100)
+  logType        String   @db.VarChar(20)  // FUEL | MAINTENANCE
+  description    String?
+  amount         Decimal? @db.Decimal(10, 2)
+  performedBy    String?  @db.VarChar(150)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, logType])
+  @@map("admin_vehicle_logs")
 }
 
 model AdminPantryItem {
