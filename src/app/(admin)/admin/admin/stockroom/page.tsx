@@ -406,13 +406,13 @@ export default function StockroomPage() {
 
       {/* Category Cards */}
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {CATEGORIES.map((c) => (
-            <div key={c} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 animate-pulse h-24" />
+            <div key={c} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 animate-pulse h-36" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {CATEGORIES.map((cat) => {
             const stat = stats?.byCategory.find((s) => s.category === cat);
             const count   = stat?.count    ?? 0;
