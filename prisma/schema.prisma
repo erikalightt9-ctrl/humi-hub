@@ -1322,6 +1322,10 @@ model Organization {
   adminRepairLogs      AdminRepairLog[]
   adminSuppliers       AdminSupplier[]
   adminEquipment       AdminEquipment[]
+  inventoryCategories  InventoryCategory[]
+  inventoryItems       InventoryItem[]
+  stockMovements       StockMovement[]
+  inventoryAuditLogs   InventoryAuditLog[]
   tenantUsers          TenantUser[]
   tenantRoles          TenantRole[]
 
@@ -3160,6 +3164,87 @@ model AdminStockItem {
 
   @@index([organizationId, category])
   @@map("admin_stock_items")
+}
+
+/* ================================================================
+   Inventory v2 — Category → Item → Stock Movement ledger
+   ================================================================ */
+
+model InventoryCategory {
+  id             String   @id
+  organizationId String
+  name           String   @db.VarChar(150)
+  description    String?
+  icon           String?  @db.VarChar(10)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items        InventoryItem[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("inventory_categories")
+}
+
+model InventoryItem {
+  id             String   @id
+  organizationId String
+  categoryId     String
+  name           String   @db.VarChar(200)
+  sku            String?  @db.VarChar(100)
+  unit           String   @default("pcs") @db.VarChar(50)
+  description    String?
+  minThreshold   Decimal  @default(0) @db.Decimal(10, 2)
+  totalStock     Decimal  @default(0) @db.Decimal(10, 2)
+  location       String?  @db.VarChar(200)
+  createdBy      String?  @db.VarChar(30)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category     InventoryCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  movements    StockMovement[]
+
+  @@unique([organizationId, sku])
+  @@index([organizationId, categoryId])
+  @@map("inventory_items")
+}
+
+model StockMovement {
+  id             String   @id
+  organizationId String
+  itemId         String
+  type           String   @db.VarChar(20)  // IN | OUT | ADJUST
+  quantity       Decimal  @db.Decimal(10, 2)
+  unitCost       Decimal? @db.Decimal(12, 2)
+  supplier       String?  @db.VarChar(200)
+  note           String?
+  userId         String?  @db.VarChar(30)
+  createdAt      DateTime @default(now())
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  item         InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, itemId])
+  @@index([organizationId, createdAt])
+  @@map("stock_movements")
+}
+
+model InventoryAuditLog {
+  id             String   @id
+  organizationId String
+  actorId        String?  @db.VarChar(30)
+  action         String   @db.VarChar(50)   // e.g. category.create, item.delete, stock.in
+  targetType     String   @db.VarChar(30)   // category | item | movement
+  targetId       String?  @db.VarChar(30)
+  payload        Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@map("inventory_audit_logs")
 }
 
 model AdminRepairLog {

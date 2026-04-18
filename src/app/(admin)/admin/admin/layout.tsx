@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 const TABS = [
-  { label: "Inventory Management", href: "/admin/admin/stockroom", icon: PackageSearch },
+  { label: "Inventory Management", href: "/admin/admin/inventory", icon: PackageSearch },
 ];
 
 export default function AdminDeptLayout({ children }: { children: React.ReactNode }) {

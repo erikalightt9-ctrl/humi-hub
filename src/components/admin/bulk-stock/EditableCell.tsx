@@ -15,7 +15,8 @@ type BaseProps = {
 
 type TextCellProps = BaseProps & { kind: "text" };
 type NumberCellProps = BaseProps & { kind: "number"; min?: number };
-type SelectCellProps = BaseProps & { kind: "select"; options: readonly string[] };
+type SelectOption = { value: string; label: string };
+type SelectCellProps = BaseProps & { kind: "select"; options: readonly SelectOption[] };
 
 type Props = TextCellProps | NumberCellProps | SelectCellProps;
 
@@ -42,7 +43,7 @@ export const EditableCell = forwardRef<HTMLInputElement | HTMLSelectElement, Pro
         >
           <option value="" disabled hidden>{placeholder ?? "Select..."}</option>
           {props.options.map((opt) => (
-            <option key={opt} value={opt}>{opt}</option>
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
       );

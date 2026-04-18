@@ -10,7 +10,7 @@ export default function BulkStockPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <Link
-            href="/admin/admin/stockroom"
+            href="/admin/admin/inventory"
             className="inline-flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 hover:underline mb-2"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Back to Inventory
