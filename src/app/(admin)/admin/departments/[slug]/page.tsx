@@ -1077,10 +1077,10 @@ function InventoryTab() {
         </div>
       )}
 
-      {/* Category Cards */}
+      {/* Category + Module Cards — unified grid so no orphan row */}
       {loadingData ? (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {STOCK_CATEGORIES.map(c => <div key={c.name} className="h-[72px] rounded-2xl bg-slate-100 animate-pulse" />)}
+          {[...STOCK_CATEGORIES, ...Array(8)].map((_, i) => <div key={i} className="h-[72px] rounded-2xl bg-slate-100 animate-pulse" />)}
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1103,21 +1103,15 @@ function InventoryTab() {
               </button>
             );
           })}
-        </div>
-      )}
-
-      {/* Module Cards */}
-      <div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {([
-            { name: "Vehicle Fuel & Maintenance", icon: "⛽", desc: "Fuel logs & maintenance requests",          href: "/admin/admin/fuel-requests",   bg: "bg-yellow-50 border-yellow-200" },
-            { name: "Office Supplies",        icon: "🛒", desc: "Pantry & office consumables",   href: "/admin/admin/pantry",          bg: "bg-sky-50 border-sky-200" },
-            { name: "Medicine",               icon: "💊", desc: "First aid & medical supplies",  href: "/admin/admin/medicine",        bg: "bg-pink-50 border-pink-200" },
-            { name: "Vehicle & Fuel",         icon: "🚗", desc: "Vehicle maintenance & fuel",    href: "/admin/admin/car-maintenance", bg: "bg-slate-50 border-slate-200" },
-            { name: "Maintenance Supplies",   icon: "🔧", desc: "Tools & maintenance materials", href: "/admin/admin/maintenance",     bg: "bg-orange-50 border-orange-200" },
-            { name: "Appliances & Furniture", icon: "🛋️", desc: "Equipment & office fixtures",  href: "/admin/admin/equipment",      bg: "bg-purple-50 border-purple-200" },
-            { name: "Repair Logs",            icon: "🛠️", desc: "Track repairs & service logs", href: "/admin/admin/repair-logs",    bg: "bg-red-50 border-red-200" },
-            { name: "Suppliers",              icon: "🚚", desc: "Vendor & supplier directory",   href: "/admin/admin/suppliers",      bg: "bg-indigo-50 border-indigo-200" },
+            { name: "Vehicle Fuel & Maintenance", icon: "⛽", desc: "Fuel logs & maintenance requests", href: "/admin/admin/fuel-requests",   bg: "bg-yellow-50 border-yellow-200" },
+            { name: "Office Supplies",            icon: "🛒", desc: "Pantry & office consumables",      href: "/admin/admin/pantry",          bg: "bg-sky-50 border-sky-200" },
+            { name: "Medicine",                   icon: "💊", desc: "First aid & medical supplies",     href: "/admin/admin/medicine",        bg: "bg-pink-50 border-pink-200" },
+            { name: "Vehicle & Fuel",             icon: "🚗", desc: "Vehicle maintenance & fuel",       href: "/admin/admin/car-maintenance", bg: "bg-slate-50 border-slate-200" },
+            { name: "Maintenance Supplies",       icon: "🔧", desc: "Tools & maintenance materials",    href: "/admin/admin/maintenance",     bg: "bg-orange-50 border-orange-200" },
+            { name: "Appliances & Furniture",     icon: "🛋️", desc: "Equipment & office fixtures",    href: "/admin/admin/equipment",      bg: "bg-purple-50 border-purple-200" },
+            { name: "Repair Logs",                icon: "🛠️", desc: "Track repairs & service logs",   href: "/admin/admin/repair-logs",    bg: "bg-red-50 border-red-200" },
+            { name: "Suppliers",                  icon: "🚚", desc: "Vendor & supplier directory",      href: "/admin/admin/suppliers",      bg: "bg-indigo-50 border-indigo-200" },
           ] as const).map((mod) => (
             <Link key={mod.name} href={mod.href}
               className={`${mod.bg} border rounded-2xl px-3 py-2 hover:shadow-md hover:scale-[1.02] transition-all duration-150 flex items-center gap-3 h-[72px]`}>
@@ -1129,7 +1123,7 @@ function InventoryTab() {
             </Link>
           ))}
         </div>
-      </div>
+      )}
 
       {/* Search + Add */}
       <div className="flex items-center gap-3">

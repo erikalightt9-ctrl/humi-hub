@@ -404,27 +404,24 @@ export default function StockroomPage() {
         </button>
       </div>
 
-      {/* Category Cards */}
+      {/* All cards unified — category + module in one grid, no orphan row */}
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {CATEGORIES.map((c) => (
-            <div key={c} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl animate-pulse h-[72px]" />
+          {[...CATEGORIES, ...Array(8)].map((_, i) => (
+            <div key={i} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl animate-pulse h-[72px]" />
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {CATEGORIES.map((cat) => {
-            const stat = stats?.byCategory.find((s) => s.category === cat);
-            const count   = stat?.count    ?? 0;
-            const lowCnt  = stat?.lowStock ?? 0;
+            const stat   = stats?.byCategory.find((s) => s.category === cat);
+            const count  = stat?.count    ?? 0;
+            const lowCnt = stat?.lowStock ?? 0;
             return (
-              <button
-                key={cat}
-                onClick={() => setFilterCat(filterCat === cat ? "All" : cat)}
+              <button key={cat} onClick={() => setFilterCat(filterCat === cat ? "All" : cat)}
                 className={`border rounded-2xl px-3 py-2 text-left transition-all hover:shadow-md h-[72px] flex flex-col justify-between ${CAT_COLORS[cat]} ${
                   filterCat === cat ? "ring-2 ring-indigo-500 ring-offset-1" : ""
-                }`}
-              >
+                }`}>
                 <div className="flex items-center gap-2">
                   <span className="text-xl">{CAT_ICONS[cat]}</span>
                   <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-tight">{cat}</p>
@@ -440,21 +437,15 @@ export default function StockroomPage() {
               </button>
             );
           })}
-        </div>
-      )}
-
-      {/* Module Link Cards */}
-      <div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {([
-            { name: "Vehicle Fuel & Maintenance", icon: "⛽", desc: "Fuel logs & maintenance requests",          href: "/admin/admin/fuel-requests",   bg: "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/40 dark:border-yellow-800" },
-            { name: "Office Supplies",         icon: "🛒", desc: "Pantry & office consumables",   href: "/admin/admin/pantry",          bg: "bg-sky-50 border-sky-200 dark:bg-sky-950/40 dark:border-sky-800" },
-            { name: "Medicine",                icon: "💊", desc: "First aid & medical supplies",  href: "/admin/admin/medicine",        bg: "bg-pink-50 border-pink-200 dark:bg-pink-950/40 dark:border-pink-800" },
-            { name: "Vehicle & Fuel",          icon: "🚗", desc: "Vehicle maintenance & fuel",    href: "/admin/admin/car-maintenance", bg: "bg-slate-50 border-slate-200 dark:bg-slate-800/60 dark:border-slate-700" },
-            { name: "Maintenance Supplies",    icon: "🔧", desc: "Tools & maintenance materials", href: "/admin/admin/maintenance",     bg: "bg-orange-50 border-orange-200 dark:bg-orange-950/40 dark:border-orange-800" },
-            { name: "Appliances & Furniture",  icon: "🛋️", desc: "Equipment & office fixtures",  href: "/admin/admin/equipment",      bg: "bg-purple-50 border-purple-200 dark:bg-purple-950/40 dark:border-purple-800" },
-            { name: "Repair Logs",             icon: "🛠️", desc: "Track repairs & service logs", href: "/admin/admin/repair-logs",    bg: "bg-red-50 border-red-200 dark:bg-red-950/40 dark:border-red-800" },
-            { name: "Suppliers",               icon: "🚚", desc: "Vendor & supplier directory",   href: "/admin/admin/suppliers",      bg: "bg-indigo-50 border-indigo-200 dark:bg-indigo-950/40 dark:border-indigo-800" },
+            { name: "Vehicle Fuel & Maintenance", icon: "⛽", desc: "Fuel logs & maintenance requests", href: "/admin/admin/fuel-requests",   bg: "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/40 dark:border-yellow-800" },
+            { name: "Office Supplies",            icon: "🛒", desc: "Pantry & office consumables",      href: "/admin/admin/pantry",          bg: "bg-sky-50 border-sky-200 dark:bg-sky-950/40 dark:border-sky-800" },
+            { name: "Medicine",                   icon: "💊", desc: "First aid & medical supplies",     href: "/admin/admin/medicine",        bg: "bg-pink-50 border-pink-200 dark:bg-pink-950/40 dark:border-pink-800" },
+            { name: "Vehicle & Fuel",             icon: "🚗", desc: "Vehicle maintenance & fuel",       href: "/admin/admin/car-maintenance", bg: "bg-slate-50 border-slate-200 dark:bg-slate-800/60 dark:border-slate-700" },
+            { name: "Maintenance Supplies",       icon: "🔧", desc: "Tools & maintenance materials",    href: "/admin/admin/maintenance",     bg: "bg-orange-50 border-orange-200 dark:bg-orange-950/40 dark:border-orange-800" },
+            { name: "Appliances & Furniture",     icon: "🛋️", desc: "Equipment & office fixtures",    href: "/admin/admin/equipment",      bg: "bg-purple-50 border-purple-200 dark:bg-purple-950/40 dark:border-purple-800" },
+            { name: "Repair Logs",                icon: "🛠️", desc: "Track repairs & service logs",   href: "/admin/admin/repair-logs",    bg: "bg-red-50 border-red-200 dark:bg-red-950/40 dark:border-red-800" },
+            { name: "Suppliers",                  icon: "🚚", desc: "Vendor & supplier directory",      href: "/admin/admin/suppliers",      bg: "bg-indigo-50 border-indigo-200 dark:bg-indigo-950/40 dark:border-indigo-800" },
           ] as const).map((mod) => (
             <a key={mod.name} href={mod.href}
               className={`${mod.bg} border rounded-2xl px-3 py-2 hover:shadow-md hover:scale-[1.02] transition-all duration-150 flex items-center gap-3 h-[72px]`}>
@@ -466,7 +457,7 @@ export default function StockroomPage() {
             </a>
           ))}
         </div>
-      </div>
+      )}
 
       {/* Summary bar */}
       {!loading && stats && (
