@@ -441,13 +441,17 @@ export default function StockroomPage() {
 
       {/* Module Link Cards */}
       <div>
-        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">Quick Access Modules</p>
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">Modules</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {([
-            { name: "Fuel Requests",  icon: "⛽", desc: "Fuel logs & requests",         href: "/admin/admin/fuel-requests",   bg: "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/40 dark:border-yellow-800" },
-            { name: "Office Supplies", icon: "🛒", desc: "Pantry & office consumables",  href: "/admin/admin/pantry",          bg: "bg-sky-50 border-sky-200 dark:bg-sky-950/40 dark:border-sky-800" },
-            { name: "Medicine",        icon: "💊", desc: "First aid & medical supplies", href: "/admin/admin/medicine",        bg: "bg-pink-50 border-pink-200 dark:bg-pink-950/40 dark:border-pink-800" },
-            { name: "Vehicle & Fuel",  icon: "🚗", desc: "Vehicle maintenance & fuel",   href: "/admin/admin/car-maintenance", bg: "bg-slate-50 border-slate-200 dark:bg-slate-800/60 dark:border-slate-700" },
+            { name: "Fuel Requests",          icon: "⛽", desc: "Fuel logs & requests",          href: "/admin/admin/fuel-requests",   bg: "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/40 dark:border-yellow-800" },
+            { name: "Office Supplies",         icon: "🛒", desc: "Pantry & office consumables",   href: "/admin/admin/pantry",          bg: "bg-sky-50 border-sky-200 dark:bg-sky-950/40 dark:border-sky-800" },
+            { name: "Medicine",                icon: "💊", desc: "First aid & medical supplies",  href: "/admin/admin/medicine",        bg: "bg-pink-50 border-pink-200 dark:bg-pink-950/40 dark:border-pink-800" },
+            { name: "Vehicle & Fuel",          icon: "🚗", desc: "Vehicle maintenance & fuel",    href: "/admin/admin/car-maintenance", bg: "bg-slate-50 border-slate-200 dark:bg-slate-800/60 dark:border-slate-700" },
+            { name: "Maintenance Supplies",    icon: "🔧", desc: "Tools & maintenance materials", href: "/admin/admin/maintenance",     bg: "bg-orange-50 border-orange-200 dark:bg-orange-950/40 dark:border-orange-800" },
+            { name: "Appliances & Furniture",  icon: "🛋️", desc: "Equipment & office fixtures",  href: "/admin/admin/equipment",      bg: "bg-purple-50 border-purple-200 dark:bg-purple-950/40 dark:border-purple-800" },
+            { name: "Repair Logs",             icon: "🛠️", desc: "Track repairs & service logs", href: "/admin/admin/repair-logs",    bg: "bg-red-50 border-red-200 dark:bg-red-950/40 dark:border-red-800" },
+            { name: "Suppliers",               icon: "🚚", desc: "Vendor & supplier directory",   href: "/admin/admin/suppliers",      bg: "bg-indigo-50 border-indigo-200 dark:bg-indigo-950/40 dark:border-indigo-800" },
           ] as const).map((mod) => (
             <a key={mod.name} href={mod.href}
               className={`${mod.bg} border rounded-2xl p-4 hover:shadow-md hover:scale-[1.02] transition-all duration-150 block`}>

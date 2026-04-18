@@ -4,21 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Wrench,
-  Sofa,
-  ShoppingBag,
-  ClipboardList,
-  Truck,
   PackageSearch,
+  ShoppingBag,
 } from "lucide-react";
 
 const TABS = [
-  { label: "Overview",               href: "/admin/admin",                 icon: LayoutDashboard },
-  { label: "Inventory",              href: "/admin/admin/stockroom",       icon: PackageSearch   },
-  { label: "Maintenance Supplies",   href: "/admin/admin/maintenance",     icon: Wrench          },
-  { label: "Appliances & Furniture", href: "/admin/admin/equipment",       icon: Sofa            },
-  { label: "Repair Logs",            href: "/admin/admin/repair-logs",     icon: ClipboardList   },
-  { label: "Suppliers",              href: "/admin/admin/suppliers",       icon: Truck           },
+  { label: "Overview",  href: "/admin/admin",           icon: LayoutDashboard },
+  { label: "Inventory", href: "/admin/admin/stockroom", icon: PackageSearch   },
 ];
 
 export default function AdminDeptLayout({ children }: { children: React.ReactNode }) {
