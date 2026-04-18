@@ -19,6 +19,7 @@ const rowSchema = z.object({
   quantity:     z.number().min(0),
   unit:         z.string().min(1).max(50).default("pcs"),
   minThreshold: z.number().min(0).default(0),
+  location:     z.string().max(200).optional(),
 });
 
 const bulkSchema = z.object({
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
       quantity: r.quantity,
       unit: r.unit.trim() || "pcs",
       minThreshold: r.minThreshold,
+      location: r.location?.trim() || null,
       createdBy,
     }));
 

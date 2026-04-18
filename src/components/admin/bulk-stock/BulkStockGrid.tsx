@@ -14,35 +14,35 @@ const CATEGORIES = [
   "Stockroom Stocks",
 ] as const;
 
-const UNITS_SUGGEST = ["pcs", "box", "liters", "kg", "pack", "bottle"];
+const TODAY = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
 type Row = {
   name: string;
   category: string;
   quantity: string;
-  unit: string;
   minThreshold: string;
+  location: string;
 };
 
-const COLUMNS = ["name", "category", "quantity", "unit", "minThreshold"] as const;
+const COLUMNS = ["name", "category", "quantity", "minThreshold", "location"] as const;
 type ColKey = (typeof COLUMNS)[number];
 
 const COL_COUNT = COLUMNS.length;
 const DEFAULT_ROWS = 5;
 
 function makeEmptyRow(): Row {
-  return { name: "", category: "", quantity: "", unit: "pcs", minThreshold: "0" };
+  return { name: "", category: "", quantity: "", minThreshold: "0", location: "" };
 }
 
 function isRowEmpty(r: Row): boolean {
-  return !r.name.trim() && !r.category && !r.quantity.trim() && !r.minThreshold.trim();
+  return !r.name.trim() && !r.category && !r.quantity.trim();
 }
 
 function isRowFilled(r: Row): boolean {
-  return !!r.name.trim() && !!r.category && r.quantity.trim() !== "" && !!r.unit.trim();
+  return !!r.name.trim() && !!r.category && r.quantity.trim() !== "";
 }
 
-type CellError = { name?: boolean; category?: boolean; quantity?: boolean; unit?: boolean; minThreshold?: boolean };
+type CellError = { name?: boolean; category?: boolean; quantity?: boolean; minThreshold?: boolean };
 
 function validateRow(r: Row): CellError {
   const errs: CellError = {};
@@ -52,10 +52,17 @@ function validateRow(r: Row): CellError {
   if (!r.category || !(CATEGORIES as readonly string[]).includes(r.category)) errs.category = true;
   const q = Number(r.quantity);
   if (r.quantity.trim() === "" || isNaN(q) || q < 0) errs.quantity = true;
-  if (!r.unit.trim()) errs.unit = true;
   const m = Number(r.minThreshold);
   if (r.minThreshold.trim() !== "" && (isNaN(m) || m < 0)) errs.minThreshold = true;
   return errs;
+}
+
+function computeStatus(qty: string, min: string): { label: string; cls: string } {
+  const q = Number(qty) || 0;
+  const m = Number(min) || 0;
+  if (q === 0) return { label: "Out of Stock", cls: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" };
+  if (m > 0 && q <= m) return { label: "Low Stock",    cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" };
+  return                { label: "In Stock",    cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" };
 }
 
 type Props = {
@@ -65,11 +72,11 @@ type Props = {
 const PREVIEW_THRESHOLD = 20;
 
 function downloadCsvTemplate() {
-  const header = "Item Name\tCategory\tQuantity\tUnit\tMin Threshold";
+  const header = "Item Name\tCategory\tQuantity\tMin Threshold\tLocation";
   const sample = [
-    "Bond paper A4\tStockroom Stocks\t50\tream\t10",
-    "Dishwashing liquid 500ml\tCleaning Supplies\t12\tbottle\t3",
-    "Coffee sachets\tPantry Supplies\t100\tpack\t20",
+    "Bond paper A4\tStockroom Stocks\t50\t10\tStorage Room A",
+    "Dishwashing liquid 500ml\tCleaning Supplies\t12\t3\tKitchen Cabinet",
+    "Coffee sachets\tPantry Supplies\t100\t20\tPantry Shelf 2",
   ].join("\n");
   const tsv = `${header}\n${sample}\n`;
   const blob = new Blob([tsv], { type: "text/tab-separated-values;charset=utf-8" });
@@ -283,8 +290,9 @@ export function BulkStockGrid({ onSaved }: Props) {
           name: r.name.trim(),
           category: r.category,
           quantity: Number(r.quantity),
-          unit: r.unit.trim() || "pcs",
+          unit: "pcs",
           minThreshold: Number(r.minThreshold) || 0,
+          location: r.location.trim() || undefined,
         })),
     [rows, rowErrors]
   );
@@ -389,10 +397,12 @@ export function BulkStockGrid({ onSaved }: Props) {
             <tr>
               <th className="w-10 px-2 py-2 text-center font-medium border-b border-slate-200 dark:border-slate-700">#</th>
               <th className="px-2 py-2 text-left font-medium border-b border-slate-200 dark:border-slate-700 min-w-[200px]">Item Name</th>
-              <th className="px-2 py-2 text-left font-medium border-b border-slate-200 dark:border-slate-700 min-w-[180px]">Category</th>
-              <th className="px-2 py-2 text-left font-medium border-b border-slate-200 dark:border-slate-700 w-[110px]">Quantity</th>
-              <th className="px-2 py-2 text-left font-medium border-b border-slate-200 dark:border-slate-700 w-[100px]">Unit</th>
-              <th className="px-2 py-2 text-left font-medium border-b border-slate-200 dark:border-slate-700 w-[130px]">Min Threshold</th>
+              <th className="px-2 py-2 text-left font-medium border-b border-slate-200 dark:border-slate-700 min-w-[170px]">Category</th>
+              <th className="px-2 py-2 text-left font-medium border-b border-slate-200 dark:border-slate-700 w-[100px]">Quantity</th>
+              <th className="px-2 py-2 text-left font-medium border-b border-slate-200 dark:border-slate-700 w-[90px]">Min</th>
+              <th className="px-2 py-2 text-left font-medium border-b border-slate-200 dark:border-slate-700 w-[120px]">Status</th>
+              <th className="px-2 py-2 text-left font-medium border-b border-slate-200 dark:border-slate-700 min-w-[150px]">Location</th>
+              <th className="px-2 py-2 text-left font-medium border-b border-slate-200 dark:border-slate-700 w-[110px]">Last Updated</th>
               <th className="w-10 px-2 py-2 border-b border-slate-200 dark:border-slate-700"></th>
             </tr>
           </thead>
@@ -467,7 +477,6 @@ export function BulkStockGrid({ onSaved }: Props) {
                       placeholder="0"
                       invalid={errs.quantity}
                       onChange={(v) => {
-                        // prevent negative quantities
                         if (v.startsWith("-")) return;
                         updateCell(rIdx, "quantity", v);
                       }}
@@ -485,25 +494,6 @@ export function BulkStockGrid({ onSaved }: Props) {
                   >
                     <EditableCell
                       ref={registerRef(rIdx, 3)}
-                      kind="text"
-                      value={row.unit}
-                      placeholder="pcs"
-                      invalid={errs.unit}
-                      onChange={(v) => updateCell(rIdx, "unit", v)}
-                      onKeyDown={(e) =>
-                        onKey(e, { row: rIdx, col: 3 }, empty, row.unit === "")
-                      }
-                      onPaste={(e) => handlePaste(e, rIdx, 3)}
-                      onFocus={() => handleCellFocus(rIdx, 3)}
-                    />
-                  </td>
-                  <td
-                    className={cellTdClass(4)}
-                    onMouseDown={() => handleCellMouseDown(rIdx, 4)}
-                    onMouseEnter={() => handleCellMouseEnter(rIdx, 4)}
-                  >
-                    <EditableCell
-                      ref={registerRef(rIdx, 4)}
                       kind="number"
                       min={0}
                       value={row.minThreshold}
@@ -514,11 +504,48 @@ export function BulkStockGrid({ onSaved }: Props) {
                         updateCell(rIdx, "minThreshold", v);
                       }}
                       onKeyDown={(e) =>
-                        onKey(e, { row: rIdx, col: 4 }, empty, row.minThreshold === "")
+                        onKey(e, { row: rIdx, col: 3 }, empty, row.minThreshold === "")
+                      }
+                      onPaste={(e) => handlePaste(e, rIdx, 3)}
+                      onFocus={() => handleCellFocus(rIdx, 3)}
+                    />
+                  </td>
+                  {/* Status — computed, read-only */}
+                  <td className="border-l border-slate-100 dark:border-slate-800 px-2">
+                    {!empty && row.quantity.trim() !== "" ? (
+                      (() => {
+                        const st = computeStatus(row.quantity, row.minThreshold);
+                        return (
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium ${st.cls}`}>
+                            {st.label}
+                          </span>
+                        );
+                      })()
+                    ) : (
+                      <span className="text-xs text-slate-300 dark:text-slate-600">—</span>
+                    )}
+                  </td>
+                  <td
+                    className={cellTdClass(4)}
+                    onMouseDown={() => handleCellMouseDown(rIdx, 4)}
+                    onMouseEnter={() => handleCellMouseEnter(rIdx, 4)}
+                  >
+                    <EditableCell
+                      ref={registerRef(rIdx, 4)}
+                      kind="text"
+                      value={row.location}
+                      placeholder="e.g. Storage Room A"
+                      onChange={(v) => updateCell(rIdx, "location", v)}
+                      onKeyDown={(e) =>
+                        onKey(e, { row: rIdx, col: 4 }, empty, row.location === "")
                       }
                       onPaste={(e) => handlePaste(e, rIdx, 4)}
                       onFocus={() => handleCellFocus(rIdx, 4)}
                     />
+                  </td>
+                  {/* Last Updated — auto today */}
+                  <td className="border-l border-slate-100 dark:border-slate-800 px-2 text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                    {!empty ? TODAY : <span className="text-slate-300 dark:text-slate-600">—</span>}
                   </td>
                   <td className="text-center">
                     <button
@@ -538,8 +565,8 @@ export function BulkStockGrid({ onSaved }: Props) {
       </div>
 
       <p className="text-[11px] text-slate-500 dark:text-slate-400">
-        Tip: copy rows from Excel/Sheets and paste into any cell — columns map to Item Name, Category, Quantity, Unit, Min Threshold.
-        Suggested units: {UNITS_SUGGEST.join(", ")}.
+        Tip: paste from Excel/Sheets — columns map to Item Name, Category, Quantity, Min Threshold, Location.
+        Status and Last Updated are computed automatically.
       </p>
 
       {previewOpen && (
@@ -577,21 +604,32 @@ export function BulkStockGrid({ onSaved }: Props) {
                     <th className="text-left px-3 py-2 font-medium">Name</th>
                     <th className="text-left px-3 py-2 font-medium">Category</th>
                     <th className="text-right px-3 py-2 font-medium">Qty</th>
-                    <th className="text-left px-3 py-2 font-medium">Unit</th>
                     <th className="text-right px-3 py-2 font-medium">Min</th>
+                    <th className="text-left px-3 py-2 font-medium">Status</th>
+                    <th className="text-left px-3 py-2 font-medium">Location</th>
+                    <th className="text-left px-3 py-2 font-medium">Last Updated</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {validPayload.map((r, i) => (
-                    <tr key={i} className="border-t border-slate-100 dark:border-slate-800">
-                      <td className="px-3 py-1.5 text-xs text-slate-400 font-mono">{i + 1}</td>
-                      <td className="px-3 py-1.5 text-slate-800 dark:text-slate-200">{r.name}</td>
-                      <td className="px-3 py-1.5 text-slate-600 dark:text-slate-400">{r.category}</td>
-                      <td className="px-3 py-1.5 text-right tabular-nums">{r.quantity}</td>
-                      <td className="px-3 py-1.5">{r.unit}</td>
-                      <td className="px-3 py-1.5 text-right tabular-nums">{r.minThreshold}</td>
-                    </tr>
-                  ))}
+                  {validPayload.map((r, i) => {
+                    const st = computeStatus(String(r.quantity), String(r.minThreshold));
+                    return (
+                      <tr key={i} className="border-t border-slate-100 dark:border-slate-800">
+                        <td className="px-3 py-1.5 text-xs text-slate-400 font-mono">{i + 1}</td>
+                        <td className="px-3 py-1.5 text-slate-800 dark:text-slate-200">{r.name}</td>
+                        <td className="px-3 py-1.5 text-slate-600 dark:text-slate-400">{r.category}</td>
+                        <td className="px-3 py-1.5 text-right tabular-nums">{r.quantity}</td>
+                        <td className="px-3 py-1.5 text-right tabular-nums">{r.minThreshold}</td>
+                        <td className="px-3 py-1.5">
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium ${st.cls}`}>
+                            {st.label}
+                          </span>
+                        </td>
+                        <td className="px-3 py-1.5 text-slate-500">{r.location ?? "—"}</td>
+                        <td className="px-3 py-1.5 text-slate-400 text-xs">{TODAY}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

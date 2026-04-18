@@ -399,16 +399,10 @@ export default function StockroomPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <a
             href="/admin/admin/stockroom/bulk"
-            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm rounded-xl font-medium transition-colors shadow-sm border border-slate-200 dark:border-slate-700"
-          >
-            <Package className="h-4 w-4" /> Bulk Entry
-          </a>
-          <button
-            onClick={() => { setEditing(null); setShowModal(true); }}
             className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-xl font-medium transition-colors shadow-sm"
           >
-            <Plus className="h-4 w-4" /> Add Stock Item
-          </button>
+            <Plus className="h-4 w-4" /> Add Stocks
+          </a>
         </div>
       </div>
 
