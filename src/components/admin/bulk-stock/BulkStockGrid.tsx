@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState, ClipboardEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, ClipboardEvent } from "react";
 import { Plus, Trash2, Save, Loader2, AlertTriangle, CheckCircle, Download, X } from "lucide-react";
 import { EditableCell } from "./EditableCell";
 import { useKeyboardNavigation, CellPos } from "./useKeyboardNavigation";
@@ -89,6 +89,19 @@ export function BulkStockGrid({ onSaved }: Props) {
   const [banner, setBanner] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
 
+  const [anchor, setAnchor] = useState<CellPos>({ row: 0, col: 0 });
+  const [active, setActive] = useState<CellPos>({ row: 0, col: 0 });
+  const dragging = useRef(false);
+  const programmatic = useRef(false);
+
+  useEffect(() => {
+    const onUp = () => {
+      dragging.current = false;
+    };
+    window.addEventListener("mouseup", onUp);
+    return () => window.removeEventListener("mouseup", onUp);
+  }, []);
+
   const cellRefs = useRef<Map<string, HTMLInputElement | HTMLSelectElement | null>>(new Map());
 
   const keyOf = (row: number, col: number) => `${row}-${col}`;
@@ -103,10 +116,56 @@ export function BulkStockGrid({ onSaved }: Props) {
   const focusCell = useCallback((pos: CellPos) => {
     const el = cellRefs.current.get(keyOf(pos.row, pos.col));
     if (el) {
+      programmatic.current = true;
       el.focus();
       if (el instanceof HTMLInputElement) el.select();
+      setTimeout(() => {
+        programmatic.current = false;
+      }, 0);
     }
   }, []);
+
+  const handleCellMouseDown = useCallback((r: number, c: number) => {
+    dragging.current = true;
+    setAnchor({ row: r, col: c });
+    setActive({ row: r, col: c });
+  }, []);
+
+  const handleCellMouseEnter = useCallback((r: number, c: number) => {
+    if (!dragging.current) return;
+    setActive({ row: r, col: c });
+  }, []);
+
+  const handleCellFocus = useCallback((r: number, c: number) => {
+    if (programmatic.current || dragging.current) return;
+    setAnchor({ row: r, col: c });
+    setActive({ row: r, col: c });
+  }, []);
+
+  const moveTo = useCallback(
+    (pos: CellPos, extend: boolean) => {
+      setActive(pos);
+      if (!extend) setAnchor(pos);
+      focusCell(pos);
+    },
+    [focusCell]
+  );
+
+  const selectionBounds = useMemo(() => {
+    const r1 = Math.min(anchor.row, active.row);
+    const r2 = Math.max(anchor.row, active.row);
+    const c1 = Math.min(anchor.col, active.col);
+    const c2 = Math.max(anchor.col, active.col);
+    return { r1, r2, c1, c2, multi: r1 !== r2 || c1 !== c2 };
+  }, [anchor, active]);
+
+  const isSelected = useCallback(
+    (r: number, c: number) => {
+      const { r1, r2, c1, c2 } = selectionBounds;
+      return r >= r1 && r <= r2 && c >= c1 && c <= c2;
+    },
+    [selectionBounds]
+  );
 
   const addRow = useCallback(() => {
     setRows((prev) => [...prev, makeEmptyRow()]);
@@ -132,19 +191,39 @@ export function BulkStockGrid({ onSaved }: Props) {
   const handleEnterAtLastCell = useCallback(() => {
     setRows((prev) => {
       const next = [...prev, makeEmptyRow()];
-      setTimeout(() => focusCell({ row: next.length - 1, col: 0 }), 0);
+      setTimeout(() => moveTo({ row: next.length - 1, col: 0 }, false), 0);
       return next;
     });
-  }, [focusCell]);
+  }, [moveTo]);
 
   const rowCount = rows.length;
+
+  const handleCopy = useCallback((): boolean => {
+    if (!selectionBounds.multi) return false;
+    const { r1, r2, c1, c2 } = selectionBounds;
+    const lines: string[] = [];
+    for (let r = r1; r <= r2; r++) {
+      const cells: string[] = [];
+      for (let c = c1; c <= c2; c++) {
+        const key = COLUMNS[c];
+        cells.push(((rows[r] as Row)[key] ?? "").replace(/\t|\n/g, " "));
+      }
+      lines.push(cells.join("\t"));
+    }
+    const tsv = lines.join("\n");
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(tsv);
+    }
+    return true;
+  }, [selectionBounds, rows]);
 
   const onKey = useKeyboardNavigation({
     rowCount,
     colCount: COL_COUNT,
-    focusCell,
+    moveTo,
     onEnterAtLastCell: handleEnterAtLastCell,
     onBackspaceEmptyRow: deleteRow,
+    onCopy: handleCopy,
   });
 
   const handlePaste = useCallback(
@@ -262,7 +341,7 @@ export function BulkStockGrid({ onSaved }: Props) {
             </span>
           )}
           <span className="text-slate-500 dark:text-slate-400">
-            Tab/Enter to move · Paste from Excel supported
+            Tab/Enter to move · Shift+Arrow to select range · Ctrl+C copies TSV · Paste from Excel supported
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -323,6 +402,12 @@ export function BulkStockGrid({ onSaved }: Props) {
               const empty = isRowEmpty(row);
               const filled = isRowFilled(row);
               const incompleteBg = !empty && !filled ? "bg-amber-50/40 dark:bg-amber-950/20" : "";
+              const cellTdClass = (c: number) =>
+                `border-l border-slate-100 dark:border-slate-800 ${
+                  isSelected(rIdx, c) && selectionBounds.multi
+                    ? "bg-blue-50 dark:bg-blue-950/40"
+                    : ""
+                }`;
               return (
                 <tr
                   key={rIdx}
@@ -331,7 +416,11 @@ export function BulkStockGrid({ onSaved }: Props) {
                   <td className="text-center text-xs text-slate-400 dark:text-slate-500 font-mono px-1">
                     {rIdx + 1}
                   </td>
-                  <td className="border-l border-slate-100 dark:border-slate-800">
+                  <td
+                    className={cellTdClass(0)}
+                    onMouseDown={() => handleCellMouseDown(rIdx, 0)}
+                    onMouseEnter={() => handleCellMouseEnter(rIdx, 0)}
+                  >
                     <EditableCell
                       ref={registerRef(rIdx, 0)}
                       kind="text"
@@ -343,9 +432,14 @@ export function BulkStockGrid({ onSaved }: Props) {
                         onKey(e, { row: rIdx, col: 0 }, empty, row.name === "")
                       }
                       onPaste={(e) => handlePaste(e, rIdx, 0)}
+                      onFocus={() => handleCellFocus(rIdx, 0)}
                     />
                   </td>
-                  <td className="border-l border-slate-100 dark:border-slate-800">
+                  <td
+                    className={cellTdClass(1)}
+                    onMouseDown={() => handleCellMouseDown(rIdx, 1)}
+                    onMouseEnter={() => handleCellMouseEnter(rIdx, 1)}
+                  >
                     <EditableCell
                       ref={registerRef(rIdx, 1)}
                       kind="select"
@@ -357,9 +451,14 @@ export function BulkStockGrid({ onSaved }: Props) {
                       onKeyDown={(e) =>
                         onKey(e, { row: rIdx, col: 1 }, empty, row.category === "")
                       }
+                      onFocus={() => handleCellFocus(rIdx, 1)}
                     />
                   </td>
-                  <td className="border-l border-slate-100 dark:border-slate-800">
+                  <td
+                    className={cellTdClass(2)}
+                    onMouseDown={() => handleCellMouseDown(rIdx, 2)}
+                    onMouseEnter={() => handleCellMouseEnter(rIdx, 2)}
+                  >
                     <EditableCell
                       ref={registerRef(rIdx, 2)}
                       kind="number"
@@ -376,9 +475,14 @@ export function BulkStockGrid({ onSaved }: Props) {
                         onKey(e, { row: rIdx, col: 2 }, empty, row.quantity === "")
                       }
                       onPaste={(e) => handlePaste(e, rIdx, 2)}
+                      onFocus={() => handleCellFocus(rIdx, 2)}
                     />
                   </td>
-                  <td className="border-l border-slate-100 dark:border-slate-800">
+                  <td
+                    className={cellTdClass(3)}
+                    onMouseDown={() => handleCellMouseDown(rIdx, 3)}
+                    onMouseEnter={() => handleCellMouseEnter(rIdx, 3)}
+                  >
                     <EditableCell
                       ref={registerRef(rIdx, 3)}
                       kind="text"
@@ -390,9 +494,14 @@ export function BulkStockGrid({ onSaved }: Props) {
                         onKey(e, { row: rIdx, col: 3 }, empty, row.unit === "")
                       }
                       onPaste={(e) => handlePaste(e, rIdx, 3)}
+                      onFocus={() => handleCellFocus(rIdx, 3)}
                     />
                   </td>
-                  <td className="border-l border-slate-100 dark:border-slate-800">
+                  <td
+                    className={cellTdClass(4)}
+                    onMouseDown={() => handleCellMouseDown(rIdx, 4)}
+                    onMouseEnter={() => handleCellMouseEnter(rIdx, 4)}
+                  >
                     <EditableCell
                       ref={registerRef(rIdx, 4)}
                       kind="number"
@@ -408,6 +517,7 @@ export function BulkStockGrid({ onSaved }: Props) {
                         onKey(e, { row: rIdx, col: 4 }, empty, row.minThreshold === "")
                       }
                       onPaste={(e) => handlePaste(e, rIdx, 4)}
+                      onFocus={() => handleCellFocus(rIdx, 4)}
                     />
                   </td>
                   <td className="text-center">

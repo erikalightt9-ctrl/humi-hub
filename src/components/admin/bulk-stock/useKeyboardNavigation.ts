@@ -5,26 +5,34 @@ export type CellPos = { row: number; col: number };
 export function useKeyboardNavigation(opts: {
   rowCount: number;
   colCount: number;
-  focusCell: (pos: CellPos) => void;
+  moveTo: (pos: CellPos, extend: boolean) => void;
   onEnterAtLastCell: () => void;
   onBackspaceEmptyRow: (row: number) => void;
+  onCopy: () => boolean; // returns true when handled (preventDefault)
 }) {
-  const { rowCount, colCount, focusCell, onEnterAtLastCell, onBackspaceEmptyRow } = opts;
+  const { rowCount, colCount, moveTo, onEnterAtLastCell, onBackspaceEmptyRow, onCopy } = opts;
 
   return useCallback(
     (e: React.KeyboardEvent<HTMLElement>, pos: CellPos, isEmptyRow: boolean, isCellEmpty: boolean) => {
       const { row, col } = pos;
       const lastRow = rowCount - 1;
       const lastCol = colCount - 1;
+      const extend = e.shiftKey;
+
+      // Copy (TSV) for multi-cell selection — handled in grid via onCopy
+      if ((e.ctrlKey || e.metaKey) && (e.key === "c" || e.key === "C")) {
+        if (onCopy()) e.preventDefault();
+        return;
+      }
 
       if (e.key === "Tab") {
         e.preventDefault();
         if (e.shiftKey) {
-          if (col > 0) focusCell({ row, col: col - 1 });
-          else if (row > 0) focusCell({ row: row - 1, col: lastCol });
+          if (col > 0) moveTo({ row, col: col - 1 }, false);
+          else if (row > 0) moveTo({ row: row - 1, col: lastCol }, false);
         } else {
-          if (col < lastCol) focusCell({ row, col: col + 1 });
-          else if (row < lastRow) focusCell({ row: row + 1, col: 0 });
+          if (col < lastCol) moveTo({ row, col: col + 1 }, false);
+          else if (row < lastRow) moveTo({ row: row + 1, col: 0 }, false);
           else onEnterAtLastCell();
         }
         return;
@@ -35,34 +43,35 @@ export function useKeyboardNavigation(opts: {
         if (row === lastRow && col === lastCol) {
           onEnterAtLastCell();
         } else if (row < lastRow) {
-          focusCell({ row: row + 1, col });
+          moveTo({ row: row + 1, col }, false);
         }
         return;
       }
 
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        if (row > 0) focusCell({ row: row - 1, col });
+        if (row > 0) moveTo({ row: row - 1, col }, extend);
         return;
       }
 
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        if (row < lastRow) focusCell({ row: row + 1, col });
+        if (row < lastRow) moveTo({ row: row + 1, col }, extend);
         return;
       }
 
       if (e.key === "ArrowLeft") {
         const target = e.currentTarget as HTMLInputElement | HTMLSelectElement;
-        if ("selectionStart" in target && target.selectionStart !== 0) return;
+        if (!extend && "selectionStart" in target && target.selectionStart !== 0) return;
         e.preventDefault();
-        if (col > 0) focusCell({ row, col: col - 1 });
+        if (col > 0) moveTo({ row, col: col - 1 }, extend);
         return;
       }
 
       if (e.key === "ArrowRight") {
         const target = e.currentTarget as HTMLInputElement | HTMLSelectElement;
         if (
+          !extend &&
           "selectionStart" in target &&
           target.selectionStart !== null &&
           target.value &&
@@ -71,7 +80,7 @@ export function useKeyboardNavigation(opts: {
           return;
         }
         e.preventDefault();
-        if (col < lastCol) focusCell({ row, col: col + 1 });
+        if (col < lastCol) moveTo({ row, col: col + 1 }, extend);
         return;
       }
 
@@ -80,6 +89,6 @@ export function useKeyboardNavigation(opts: {
         onBackspaceEmptyRow(row);
       }
     },
-    [rowCount, colCount, focusCell, onEnterAtLastCell, onBackspaceEmptyRow]
+    [rowCount, colCount, moveTo, onEnterAtLastCell, onBackspaceEmptyRow, onCopy]
   );
 }

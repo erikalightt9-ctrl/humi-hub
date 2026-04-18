@@ -1,12 +1,13 @@
 "use client";
 
-import { forwardRef, KeyboardEvent, ChangeEvent, ClipboardEvent } from "react";
+import { forwardRef, KeyboardEvent, ChangeEvent, ClipboardEvent, FocusEvent } from "react";
 
 type BaseProps = {
   value: string;
   onChange: (value: string) => void;
   onKeyDown: (e: KeyboardEvent<HTMLElement>) => void;
   onPaste?: (e: ClipboardEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onFocus?: (e: FocusEvent<HTMLInputElement | HTMLSelectElement>) => void;
   invalid?: boolean;
   placeholder?: string;
   className?: string;
@@ -23,7 +24,7 @@ const baseInput =
 
 export const EditableCell = forwardRef<HTMLInputElement | HTMLSelectElement, Props>(
   function EditableCell(props, ref) {
-    const { value, onChange, onKeyDown, onPaste, invalid, placeholder, className = "" } = props;
+    const { value, onChange, onKeyDown, onPaste, onFocus, invalid, placeholder, className = "" } = props;
 
     const invalidCls = invalid ? "ring-2 ring-red-400 bg-red-50 dark:bg-red-950/30" : "";
     const combined = `${baseInput} ${invalidCls} ${className}`.trim();
@@ -36,6 +37,7 @@ export const EditableCell = forwardRef<HTMLInputElement | HTMLSelectElement, Pro
           onChange={(e: ChangeEvent<HTMLSelectElement>) => onChange(e.target.value)}
           onKeyDown={onKeyDown}
           onPaste={onPaste}
+          onFocus={onFocus}
           className={combined}
         >
           <option value="" disabled hidden>{placeholder ?? "Select..."}</option>
@@ -58,6 +60,7 @@ export const EditableCell = forwardRef<HTMLInputElement | HTMLSelectElement, Pro
         onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
         onKeyDown={onKeyDown}
         onPaste={onPaste}
+        onFocus={onFocus}
         className={combined}
       />
     );
