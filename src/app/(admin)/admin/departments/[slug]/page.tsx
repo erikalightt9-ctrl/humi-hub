@@ -1287,7 +1287,6 @@ export default function AdminDepartmentDetailPage() {
         </div>
         <div className="flex gap-2 shrink-0">
           <RippleButton className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm transition">Edit</RippleButton>
-          <RippleButton onClick={() => setShowAddModal(true)} className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow active:scale-95 transition text-sm font-medium">Add Member</RippleButton>
         </div>
       </motion.div>
 
