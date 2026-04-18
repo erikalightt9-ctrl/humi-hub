@@ -1105,7 +1105,7 @@ function InventoryTab() {
           })}
           {([
             { name: "Vehicle Fuel & Maintenance", icon: "⛽", desc: "Fuel logs & maintenance requests", href: "/admin/admin/fuel-requests",   bg: "bg-yellow-50 border-yellow-200" },
-            { name: "Office Supplies",            icon: "🛒", desc: "Pantry & office consumables",      href: "/admin/admin/pantry",          bg: "bg-sky-50 border-sky-200" },
+            { name: "Office Supplies",            icon: "🛒", desc: "Office consumables",               href: "/admin/admin/pantry",          bg: "bg-sky-50 border-sky-200" },
             { name: "Medicine",                   icon: "💊", desc: "First aid & medical supplies",     href: "/admin/admin/medicine",        bg: "bg-pink-50 border-pink-200" },
             { name: "Vehicle & Fuel",             icon: "🚗", desc: "Vehicle maintenance & fuel",       href: "/admin/admin/car-maintenance", bg: "bg-slate-50 border-slate-200" },
             { name: "Maintenance Supplies",       icon: "🔧", desc: "Tools & maintenance materials",    href: "/admin/admin/maintenance",     bg: "bg-orange-50 border-orange-200" },
