@@ -421,18 +421,22 @@ export default function StockroomPage() {
               <button
                 key={cat}
                 onClick={() => setFilterCat(filterCat === cat ? "All" : cat)}
-                className={`border rounded-2xl p-4 text-left transition-all hover:shadow-md ${CAT_COLORS[cat]} ${
+                className={`border rounded-2xl p-4 text-left transition-all hover:shadow-md h-36 flex flex-col justify-between ${CAT_COLORS[cat]} ${
                   filterCat === cat ? "ring-2 ring-indigo-500 ring-offset-1" : ""
                 }`}
               >
-                <div className="text-3xl mb-2">{CAT_ICONS[cat]}</div>
-                <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-tight">{cat}</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{count}</p>
-                {lowCnt > 0 && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-0.5 flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" /> {lowCnt} low
-                  </p>
-                )}
+                <div>
+                  <div className="text-3xl mb-2">{CAT_ICONS[cat]}</div>
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-tight">{cat}</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">{count}</p>
+                  {lowCnt > 0 && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-0.5 flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" /> {lowCnt} low
+                    </p>
+                  )}
+                </div>
               </button>
             );
           })}
@@ -453,10 +457,12 @@ export default function StockroomPage() {
             { name: "Suppliers",               icon: "🚚", desc: "Vendor & supplier directory",   href: "/admin/admin/suppliers",      bg: "bg-indigo-50 border-indigo-200 dark:bg-indigo-950/40 dark:border-indigo-800" },
           ] as const).map((mod) => (
             <a key={mod.name} href={mod.href}
-              className={`${mod.bg} border rounded-2xl p-4 hover:shadow-md hover:scale-[1.02] transition-all duration-150 block`}>
-              <div className="text-3xl mb-2">{mod.icon}</div>
-              <p className="text-sm font-semibold text-slate-800 dark:text-white">{mod.name}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{mod.desc}</p>
+              className={`${mod.bg} border rounded-2xl p-4 hover:shadow-md hover:scale-[1.02] transition-all duration-150 block h-36 flex flex-col justify-between`}>
+              <div className="text-3xl">{mod.icon}</div>
+              <div>
+                <p className="text-sm font-semibold text-slate-800 dark:text-white">{mod.name}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{mod.desc}</p>
+              </div>
             </a>
           ))}
         </div>

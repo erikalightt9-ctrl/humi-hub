@@ -1090,12 +1090,16 @@ function InventoryTab() {
             const low   = stat?.lowStock ?? 0;
             return (
               <button key={cat.name} onClick={() => setFilterCat(filterCat === cat.api ? "All" : cat.api)}
-                className={`${cat.bg} ${cat.border} border rounded-2xl p-4 text-left hover:shadow-md hover:scale-[1.02] transition-all duration-150 ${filterCat === cat.api ? "ring-2 ring-indigo-500 ring-offset-1" : ""}`}>
-                <div className="text-3xl mb-2">{cat.icon}</div>
-                <p className="text-xs font-semibold text-slate-700 leading-snug">{cat.name}</p>
-                <p className="text-2xl font-bold text-slate-900 mt-1 leading-none">{count}</p>
-                <p className="text-xs text-slate-500 mt-0.5">items</p>
-                {low > 0 && <p className="text-xs text-amber-600 font-semibold mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3 shrink-0" />{low} low stock</p>}
+                className={`${cat.bg} ${cat.border} border rounded-2xl p-4 text-left hover:shadow-md hover:scale-[1.02] transition-all duration-150 h-36 flex flex-col justify-between ${filterCat === cat.api ? "ring-2 ring-indigo-500 ring-offset-1" : ""}`}>
+                <div>
+                  <div className="text-3xl mb-2">{cat.icon}</div>
+                  <p className="text-xs font-semibold text-slate-700 leading-snug">{cat.name}</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900 leading-none">{count}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">items</p>
+                  {low > 0 && <p className="text-xs text-amber-600 font-semibold mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3 shrink-0" />{low} low stock</p>}
+                </div>
               </button>
             );
           })}
@@ -1116,10 +1120,12 @@ function InventoryTab() {
             { name: "Suppliers",              icon: "🚚", desc: "Vendor & supplier directory",   href: "/admin/admin/suppliers",      bg: "bg-indigo-50 border-indigo-200" },
           ] as const).map((mod) => (
             <Link key={mod.name} href={mod.href}
-              className={`${mod.bg} border rounded-2xl p-4 hover:shadow-md hover:scale-[1.02] transition-all duration-150 block`}>
-              <div className="text-2xl mb-2">{mod.icon}</div>
-              <p className="text-sm font-semibold text-slate-800">{mod.name}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{mod.desc}</p>
+              className={`${mod.bg} border rounded-2xl p-4 hover:shadow-md hover:scale-[1.02] transition-all duration-150 block h-36 flex flex-col justify-between`}>
+              <div className="text-2xl">{mod.icon}</div>
+              <div>
+                <p className="text-sm font-semibold text-slate-800">{mod.name}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{mod.desc}</p>
+              </div>
             </Link>
           ))}
         </div>
