@@ -1,1 +1,1 @@
-ALTER TABLE inventory_items ALTER COLUMN category_id DROP NOT NULL;
+ALTER TABLE "inventory_items" ALTER COLUMN "categoryId" DROP NOT NULL;
