@@ -1145,9 +1145,8 @@ function InventoryTab() {
       {loadingData ? (
         <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-indigo-400" /></div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-10">
-          <Package className="h-10 w-10 text-slate-300 mx-auto mb-2" />
-          <p className="text-sm text-slate-500">{items.length === 0 ? "No stock items yet." : "No items match your search."}</p>
+        <div className="text-center py-4">
+          <p className="text-sm text-slate-400">{items.length === 0 ? "No stock items yet." : "No items match your search."}</p>
         </div>
       ) : (
         <div className="border border-slate-200 rounded-2xl overflow-hidden">
