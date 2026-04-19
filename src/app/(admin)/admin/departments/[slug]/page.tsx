@@ -1135,10 +1135,6 @@ function InventoryTab() {
             <XIcon className="h-3 w-3" /> Clear filter
           </button>
         )}
-        <button onClick={() => setShowBulk(v => !v)}
-          className={`flex items-center gap-1.5 px-4 py-2.5 text-sm rounded-xl font-medium border transition-colors shrink-0 ${showBulk ? "bg-indigo-50 border-indigo-200 text-indigo-700" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
-          <TableProperties className="h-4 w-4" /> Add Stock {showBulk ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-        </button>
       </div>
 
       {/* Table */}
@@ -1178,15 +1174,13 @@ function InventoryTab() {
       )}
 
       {/* ── Bulk Stock Entry ── */}
-      {showBulk && (
-        <div className="border-t border-slate-200 pt-5 space-y-3">
-          <div>
-            <h2 className="text-base font-bold text-slate-900">Bulk Stock Entry</h2>
-            <p className="text-sm text-slate-500">Spreadsheet-style grid for fast encoding. Paste from Excel/Sheets to import many rows at once.</p>
-          </div>
-          <BulkStockGrid />
-        </div>
-      )}
+      <div className="border-t border-slate-200 pt-4 space-y-3">
+        <button onClick={() => setShowBulk(v => !v)}
+          className={`flex items-center gap-1.5 px-4 py-2.5 text-sm rounded-xl font-medium border transition-colors ${showBulk ? "bg-indigo-50 border-indigo-200 text-indigo-700" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
+          <TableProperties className="h-4 w-4" /> Add Stock {showBulk ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </button>
+        {showBulk && <BulkStockGrid />}
+      </div>
     </div>
   );
 }
