@@ -9,8 +9,9 @@ import {
   Monitor, Package, UserCheck, Wrench, Trash2, Archive,
   ChevronRight, Search, X as XIcon,
   Users, Calendar, TrendingUp, PhoneCall, Briefcase,
-  ClipboardList, Clock,
+  ClipboardList, Clock, TableProperties, ChevronDown, ChevronUp,
 } from "lucide-react";
+import { BulkStockGrid } from "@/components/admin/bulk-stock/BulkStockGrid";
 
 /* ------------------------------------------------------------------ */
 /*  Department config                                                  */
@@ -988,6 +989,7 @@ function InventoryTab() {
   const [form, setForm]           = useState(EMPTY_STOCK_FORM);
   const [saving, setSaving]       = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [showBulk, setShowBulk]   = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1139,6 +1141,10 @@ function InventoryTab() {
             <XIcon className="h-3 w-3" /> Clear filter
           </button>
         )}
+        <button onClick={() => setShowBulk(v => !v)}
+          className={`flex items-center gap-1.5 px-4 py-2.5 text-sm rounded-xl font-medium border transition-colors shrink-0 ${showBulk ? "bg-indigo-50 border-indigo-200 text-indigo-700" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
+          <TableProperties className="h-4 w-4" /> Bulk Entry {showBulk ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </button>
         <button onClick={() => { setForm(EMPTY_STOCK_FORM); setShowModal(true); setFormError(null); }}
           className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-xl font-medium transition-colors shrink-0">
           <Plus className="h-4 w-4" /> Add Stock
@@ -1179,6 +1185,17 @@ function InventoryTab() {
           <div className="px-4 py-2.5 border-t border-slate-100 text-xs text-slate-400">
             Showing {filtered.length} of {items.length} items
           </div>
+        </div>
+      )}
+
+      {/* ── Bulk Stock Entry ── */}
+      {showBulk && (
+        <div className="border-t border-slate-200 pt-5 space-y-3">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Bulk Stock Entry</h2>
+            <p className="text-sm text-slate-500">Spreadsheet-style grid for fast encoding. Paste from Excel/Sheets to import many rows at once.</p>
+          </div>
+          <BulkStockGrid />
         </div>
       )}
     </div>
