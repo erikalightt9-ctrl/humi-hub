@@ -1110,7 +1110,6 @@ function InventoryTab() {
             { name: "Medicine",                   icon: "💊", desc: "First aid & medical supplies",       href: "/admin/admin/medicine",          bg: "bg-pink-50 border-pink-200" },
             { name: "Cleaning Supplies",          icon: "🧹", desc: "Janitorial & cleaning materials",    href: "/admin/admin/cleaning",          bg: "bg-blue-50 border-blue-200" },
             { name: "Vehicle Fuel & Maintenance", icon: "⛽", desc: "Fuel logs & maintenance requests",   href: "/admin/admin/fuel-requests",     bg: "bg-yellow-50 border-yellow-200" },
-            { name: "Maintenance Supplies",       icon: "🔧", desc: "Tools & maintenance materials",      href: "/admin/admin/maintenance",       bg: "bg-orange-50 border-orange-200" },
             { name: "Repair Logs",                icon: "🛠️", desc: "Track repairs & service logs",     href: "/admin/admin/repair-logs",       bg: "bg-red-50 border-red-200" },
           ] as const).map((mod) => (
             <Link key={mod.name} href={mod.href}
