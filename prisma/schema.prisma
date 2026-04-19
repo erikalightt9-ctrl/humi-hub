@@ -1315,12 +1315,17 @@ model Organization {
   adminAssets          AdminAsset[]
   adminCarMaintenance  AdminCarMaintenance[]
   adminFuelLogs        AdminFuelLog[]
+  adminVehicleLogs     AdminVehicleLog[]
   adminPantryItems     AdminPantryItem[]
   adminMaintenanceItems AdminMaintenanceItem[]
   adminStockItems      AdminStockItem[]
   adminRepairLogs      AdminRepairLog[]
   adminSuppliers       AdminSupplier[]
   adminEquipment       AdminEquipment[]
+  inventoryCategories  InventoryCategory[]
+  inventoryItems       InventoryItem[]
+  stockMovements       StockMovement[]
+  inventoryAuditLogs   InventoryAuditLog[]
   tenantUsers          TenantUser[]
   tenantRoles          TenantRole[]
 
@@ -3083,6 +3088,31 @@ model AdminFuelLog {
   @@map("admin_fuel_logs")
 }
 
+model AdminVehicleLog {
+  id             String    @id
+  organizationId String
+  plateNumber    String    @db.VarChar(50)
+  vehicleType    String    @db.VarChar(100)
+  logType        String    @db.VarChar(20)  // FUEL | MAINTENANCE
+  logDate        DateTime? @db.Date
+  description    String?
+  liters         Decimal?  @db.Decimal(6, 2)
+  pricePerLiter  Decimal?  @db.Decimal(8, 2)
+  totalAmount    Decimal?  @db.Decimal(10, 2)
+  amount         Decimal?  @db.Decimal(10, 2)
+  status         String    @default("PENDING") @db.VarChar(20)
+  performedBy    String?   @db.VarChar(150)
+  lastEditedBy   String?   @db.VarChar(200)
+  lastEditedAt   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, logType])
+  @@map("admin_vehicle_logs")
+}
+
 model AdminPantryItem {
   id             String   @id
   organizationId String
@@ -3133,6 +3163,7 @@ model AdminStockItem {
   location       String?  @db.VarChar(200)
   supplier       String?  @db.VarChar(200)
   notes          String?
+  createdBy      String?  @db.VarChar(30)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -3140,6 +3171,87 @@ model AdminStockItem {
 
   @@index([organizationId, category])
   @@map("admin_stock_items")
+}
+
+/* ================================================================
+   Inventory v2 — Category → Item → Stock Movement ledger
+   ================================================================ */
+
+model InventoryCategory {
+  id             String   @id
+  organizationId String
+  name           String   @db.VarChar(150)
+  description    String?
+  icon           String?  @db.VarChar(10)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items        InventoryItem[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("inventory_categories")
+}
+
+model InventoryItem {
+  id             String   @id
+  organizationId String
+  categoryId     String?
+  name           String   @db.VarChar(200)
+  sku            String?  @db.VarChar(100)
+  unit           String   @default("pcs") @db.VarChar(50)
+  description    String?
+  minThreshold   Decimal  @default(0) @db.Decimal(10, 2)
+  totalStock     Decimal  @default(0) @db.Decimal(10, 2)
+  location       String?  @db.VarChar(200)
+  createdBy      String?  @db.VarChar(30)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category     InventoryCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  movements    StockMovement[]
+
+  @@unique([organizationId, sku])
+  @@index([organizationId, categoryId])
+  @@map("inventory_items")
+}
+
+model StockMovement {
+  id             String   @id
+  organizationId String
+  itemId         String
+  type           String   @db.VarChar(20)  // IN | OUT | ADJUST
+  quantity       Decimal  @db.Decimal(10, 2)
+  unitCost       Decimal? @db.Decimal(12, 2)
+  supplier       String?  @db.VarChar(200)
+  note           String?
+  userId         String?  @db.VarChar(30)
+  createdAt      DateTime @default(now())
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  item         InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, itemId])
+  @@index([organizationId, createdAt])
+  @@map("stock_movements")
+}
+
+model InventoryAuditLog {
+  id             String   @id
+  organizationId String
+  actorId        String?  @db.VarChar(30)
+  action         String   @db.VarChar(50)   // e.g. category.create, item.delete, stock.in
+  targetType     String   @db.VarChar(30)   // category | item | movement
+  targetId       String?  @db.VarChar(30)
+  payload        Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@map("inventory_audit_logs")
 }
 
 model AdminRepairLog {
@@ -3154,6 +3266,8 @@ model AdminRepairLog {
   cost           Decimal?          @db.Decimal(10, 2)
   technician     String?           @db.VarChar(200)
   notes          String?
+  lastEditedBy   String?           @db.VarChar(200)
+  lastEditedAt   DateTime?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @default(now())
 

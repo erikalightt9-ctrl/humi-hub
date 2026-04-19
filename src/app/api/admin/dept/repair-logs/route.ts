@@ -75,10 +75,11 @@ export async function PATCH(request: NextRequest) {
     const parsed = schema.safeParse(await request.json());
     if (!parsed.success) return NextResponse.json({ success: false, data: null, error: parsed.error.message }, { status: 400 });
 
+    const editorName = (token as { name?: string; email?: string })?.name || (token as { name?: string; email?: string })?.email || "Admin";
     const { dateReported, dateResolved, ...rest } = parsed.data;
     const updated = await prisma.adminRepairLog.update({
       where: { id },
-      data: { ...rest, dateReported: new Date(dateReported), dateResolved: dateResolved ? new Date(dateResolved) : null, updatedAt: new Date() },
+      data: { ...rest, dateReported: new Date(dateReported), dateResolved: dateResolved ? new Date(dateResolved) : null, lastEditedBy: editorName, lastEditedAt: new Date(), updatedAt: new Date() },
     });
     return NextResponse.json({ success: true, data: updated, error: null });
   } catch (err) {

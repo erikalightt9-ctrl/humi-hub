@@ -9,8 +9,9 @@ import {
   Monitor, Package, UserCheck, Wrench, Trash2, Archive,
   ChevronRight, Search, X as XIcon,
   Users, Calendar, TrendingUp, PhoneCall, Briefcase,
-  ClipboardList, Clock,
+  ClipboardList, Clock, TableProperties, ChevronDown, ChevronUp,
 } from "lucide-react";
+import { BulkStockGrid } from "@/components/admin/bulk-stock/BulkStockGrid";
 
 /* ------------------------------------------------------------------ */
 /*  Department config                                                  */
@@ -25,7 +26,7 @@ interface DeptConfig {
 }
 
 const DEPARTMENTS: DeptConfig[] = [
-  { slug: "administration",        name: "Administration",          description: "Office management, compliance, policies",     emoji: "🏢",  activities: ["Office compliance review completed", "Company policy updated", "Stockroom inventory audited"] },
+  { slug: "administration",        name: "Office Admin",            description: "Office management, compliance, policies",     emoji: "🏢",  activities: ["Office compliance review completed", "Company policy updated", "Stockroom inventory audited"] },
   { slug: "human-resources",       name: "Human Resources",         description: "Recruitment, employee relations, benefits",   emoji: "🧑‍💼", activities: ["New employee onboarding completed", "Recruitment drive launched", "Benefits review submitted"] },
   { slug: "finance-payroll",       name: "Finance & Payroll",       description: "Budgeting, payroll, financial reports",       emoji: "💵",  activities: ["Payroll processed for this month", "Budget report submitted", "Government contributions filed"] },
   { slug: "operations",            name: "Operations",              description: "Daily operations and workflow",               emoji: "⚙️",  activities: ["Weekly ops review conducted", "New workflow process approved", "SLA targets updated"] },
@@ -967,7 +968,6 @@ function CrmTab() {
 /* ------------------------------------------------------------------ */
 
 const STOCK_CATEGORIES = [
-  { name: "Cleaning Supplies",    icon: "🧹", bg: "bg-blue-50",   border: "border-blue-200",   api: "Cleaning Supplies"    },
   { name: "Pantry Supplies",      icon: "🍱", bg: "bg-green-50",  border: "border-green-200",  api: "Pantry Supplies"      },
   { name: "Maintenance Supplies", icon: "🔧", bg: "bg-orange-50", border: "border-orange-200", api: "Maintenance Supplies" },
   { name: "Assets (Appliances, Equipment, Furniture & Fixtures)", icon: "📦", bg: "bg-purple-50", border: "border-purple-200", api: "Assets" },
@@ -988,6 +988,7 @@ function InventoryTab() {
   const [form, setForm]           = useState(EMPTY_STOCK_FORM);
   const [saving, setSaving]       = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [showBulk, setShowBulk]   = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1077,28 +1078,48 @@ function InventoryTab() {
         </div>
       )}
 
-      {/* Category Cards */}
+      {/* Category + Module Cards — unified grid so no orphan row */}
       {loadingData ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {STOCK_CATEGORIES.map(c => <div key={c.name} className="h-28 rounded-2xl bg-slate-100 animate-pulse" />)}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[...STOCK_CATEGORIES, ...Array(8)].map((_, i) => <div key={i} className="h-[72px] rounded-2xl bg-slate-100 animate-pulse" />)}
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {STOCK_CATEGORIES.map(cat => {
             const stat  = stats?.byCategory.find(s => s.category === cat.api);
             const count = stat?.count    ?? 0;
             const low   = stat?.lowStock ?? 0;
             return (
               <button key={cat.name} onClick={() => setFilterCat(filterCat === cat.api ? "All" : cat.api)}
-                className={`${cat.bg} ${cat.border} border rounded-2xl p-4 text-left hover:shadow-md hover:scale-[1.02] transition-all duration-150 ${filterCat === cat.api ? "ring-2 ring-indigo-500 ring-offset-1" : ""}`}>
-                <div className="text-3xl mb-2">{cat.icon}</div>
-                <p className="text-xs font-semibold text-slate-700 leading-snug">{cat.name}</p>
-                <p className="text-2xl font-bold text-slate-900 mt-1 leading-none">{count}</p>
-                <p className="text-xs text-slate-500 mt-0.5">items</p>
-                {low > 0 && <p className="text-xs text-amber-600 font-semibold mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3 shrink-0" />{low} low stock</p>}
+                className={`${cat.bg} ${cat.border} border rounded-2xl px-3 py-2 text-left hover:shadow-md hover:scale-[1.02] transition-all duration-150 h-[72px] flex flex-col justify-between ${filterCat === cat.api ? "ring-2 ring-indigo-500 ring-offset-1" : ""}`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{cat.icon}</span>
+                  <p className="text-xs font-semibold text-slate-700 leading-snug">{cat.name}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-bold text-slate-900 leading-none">{count}</p>
+                  <p className="text-xs text-slate-500">items</p>
+                  {low > 0 && <p className="text-xs text-amber-600 font-semibold flex items-center gap-0.5"><AlertCircle className="h-3 w-3 shrink-0" />{low} low</p>}
+                </div>
               </button>
             );
           })}
+          {([
+            { name: "Office Supplies",            icon: "🛒", desc: "Office consumables",                 href: "/admin/admin/pantry",            bg: "bg-sky-50 border-sky-200" },
+            { name: "Medicine",                   icon: "💊", desc: "First aid & medical supplies",       href: "/admin/admin/medicine",          bg: "bg-pink-50 border-pink-200" },
+            { name: "Cleaning Supplies",          icon: "🧹", desc: "Janitorial & cleaning materials",    href: "/admin/admin/cleaning",          bg: "bg-blue-50 border-blue-200" },
+            { name: "Vehicle Fuel & Maintenance", icon: "⛽", desc: "Fuel logs & maintenance requests",   href: "/admin/admin/fuel-requests",     bg: "bg-yellow-50 border-yellow-200" },
+            { name: "Repair Logs",                icon: "🛠️", desc: "Track repairs & service logs",     href: "/admin/admin/repair-logs",       bg: "bg-red-50 border-red-200" },
+          ] as const).map((mod) => (
+            <Link key={mod.name} href={mod.href}
+              className={`${mod.bg} border rounded-2xl px-3 py-2 hover:shadow-md hover:scale-[1.02] transition-all duration-150 flex items-center gap-3 h-[72px]`}>
+              <div className="text-2xl shrink-0">{mod.icon}</div>
+              <div>
+                <p className="text-xs font-semibold text-slate-800 leading-tight">{mod.name}</p>
+                <p className="text-[11px] text-slate-500 mt-0.5 leading-tight">{mod.desc}</p>
+              </div>
+            </Link>
+          ))}
         </div>
       )}
 
@@ -1114,19 +1135,14 @@ function InventoryTab() {
             <XIcon className="h-3 w-3" /> Clear filter
           </button>
         )}
-        <button onClick={() => { setForm(EMPTY_STOCK_FORM); setShowModal(true); setFormError(null); }}
-          className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-xl font-medium transition-colors shrink-0">
-          <Plus className="h-4 w-4" /> Add Stock
-        </button>
       </div>
 
       {/* Table */}
       {loadingData ? (
         <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-indigo-400" /></div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-10">
-          <Package className="h-10 w-10 text-slate-300 mx-auto mb-2" />
-          <p className="text-sm text-slate-500">{items.length === 0 ? "No stock items yet." : "No items match your search."}</p>
+        <div className="text-center py-4">
+          <p className="text-sm text-slate-400">{items.length === 0 ? "No stock items yet." : "No items match your search."}</p>
         </div>
       ) : (
         <div className="border border-slate-200 rounded-2xl overflow-hidden">
@@ -1156,6 +1172,15 @@ function InventoryTab() {
           </div>
         </div>
       )}
+
+      {/* ── Bulk Stock Entry ── */}
+      <div className="border-t border-slate-200 pt-4 space-y-3">
+        <button onClick={() => setShowBulk(v => !v)}
+          className={`flex items-center gap-1.5 px-4 py-2.5 text-sm rounded-xl font-medium border transition-colors ${showBulk ? "bg-indigo-50 border-indigo-200 text-indigo-700" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
+          <TableProperties className="h-4 w-4" /> Add Stock {showBulk ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </button>
+        {showBulk && <BulkStockGrid />}
+      </div>
     </div>
   );
 }
@@ -1194,6 +1219,9 @@ export default function AdminDepartmentDetailPage() {
   const [deptName, setDeptName]   = useState(dept?.name ?? "");
   const [deptDesc, setDeptDesc]   = useState(dept?.description ?? "");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName]   = useState(dept?.name ?? "");
+  const [editDesc, setEditDesc]   = useState(dept?.description ?? "");
 
   const loadMembers = useCallback(() => {
     if (!dept) return;
@@ -1263,6 +1291,40 @@ export default function AdminDepartmentDetailPage() {
         />
       )}
 
+      {/* Edit Department Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowEditModal(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h2 className="text-base font-semibold text-slate-900">Edit Department</h2>
+              <button onClick={() => setShowEditModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
+                <XIcon className="h-4 w-4 text-slate-500" />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Department Name</label>
+                <input value={editName} onChange={e => setEditName(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Description</label>
+                <input value={editDesc} onChange={e => setEditDesc(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+              <button onClick={() => setShowEditModal(false)} className="px-4 py-2.5 text-sm border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100">Cancel</button>
+              <button
+                onClick={() => { setDeptName(editName); setDeptDesc(editDesc); setShowEditModal(false); }}
+                className="px-5 py-2.5 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium"
+              >Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Back */}
       <Link href="/admin/departments" className="text-indigo-600 hover:underline text-sm">
         ← Back to Departments
@@ -1286,40 +1348,52 @@ export default function AdminDepartmentDetailPage() {
           </div>
         </div>
         <div className="flex gap-2 shrink-0">
-          <RippleButton className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm transition">Edit</RippleButton>
-          <RippleButton onClick={() => setShowAddModal(true)} className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow active:scale-95 transition text-sm font-medium">Add Member</RippleButton>
+          <RippleButton onClick={() => { setEditName(deptName); setEditDesc(deptDesc); setShowEditModal(true); }} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm transition">Edit</RippleButton>
         </div>
       </motion.div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard label="Total Members" value={members.length} accent="text-indigo-600" />
-        <StatCard label="Active"        value={active}         accent="text-green-600" />
-        <StatCard label="On Leave"      value={onLeave}        accent="text-amber-600" />
-        <StatCard label="Inactive"      value={inactive}       accent="text-slate-400" />
-      </div>
+      {/* Stats — hidden for Administration (inventory-focused dept) */}
+      {!isAdmin && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <StatCard label="Total Members" value={members.length} accent="text-indigo-600" />
+          <StatCard label="Active"        value={active}         accent="text-green-600" />
+          <StatCard label="On Leave"      value={onLeave}        accent="text-amber-600" />
+          <StatCard label="Inactive"      value={inactive}       accent="text-slate-400" />
+        </div>
+      )}
 
-      {/* Tabs */}
-      <div className="flex gap-3 flex-wrap">
-        {TABS.map((t) => (
-          <motion.button
-            key={t}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-full text-sm capitalize transition ${
-              tab === t
-                ? "bg-indigo-600 text-white shadow"
-                : "bg-white border border-slate-200 hover:bg-slate-50 text-slate-600"
-            }`}
-          >
-            {t === "payroll"    ? "💵 Payroll Runs"
-              : t === "assets"    ? "💻 IT Assets"
-              : t === "hr"        ? "👥 HR Overview"
-              : t === "crm"       ? "📈 Sales & CRM"
-              : t === "inventory" ? "📦 Inventory"
-              : t}
-          </motion.button>
-        ))}
+      {/* Tabs — icon cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {TABS.map((t) => {
+          const cfg = {
+            members:   { label: "Members",      icon: <Users         className="h-5 w-5" /> },
+            activity:  { label: "Activity",     icon: <ClipboardList className="h-5 w-5" /> },
+            settings:  { label: "Settings",     icon: <Briefcase     className="h-5 w-5" /> },
+            payroll:   { label: "Payroll Runs", icon: <DollarSign    className="h-5 w-5" /> },
+            assets:    { label: "IT Assets",    icon: <Monitor       className="h-5 w-5" /> },
+            hr:        { label: "HR Overview",  icon: <UserCheck     className="h-5 w-5" /> },
+            crm:       { label: "Sales & CRM",  icon: <TrendingUp    className="h-5 w-5" /> },
+            inventory: { label: "Inventory",    icon: <Package       className="h-5 w-5" /> },
+          }[t] ?? { label: t, icon: <ClipboardList className="h-5 w-5" /> };
+
+          const active = tab === t;
+          return (
+            <motion.button
+              key={t}
+              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.02 }}
+              onClick={() => setTab(t)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all border ${
+                active
+                  ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-transparent shadow"
+                  : "bg-white border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 text-slate-700"
+              }`}
+            >
+              <span className={`${active ? "text-white" : "text-indigo-500"}`}>{cfg.icon}</span>
+              {cfg.label}
+            </motion.button>
+          );
+        })}
       </div>
 
       {/* Content */}
@@ -1332,33 +1406,19 @@ export default function AdminDepartmentDetailPage() {
         {/* ── Members ── */}
         {tab === "members" && (
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Search members..."
-                className="flex-1 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <RippleButton
-                onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow text-sm font-medium whitespace-nowrap active:scale-95 transition"
-              >
-                <Plus className="h-4 w-4" /> Add Employee
-              </RippleButton>
-            </div>
+            <input
+              type="text"
+              placeholder="Search members..."
+              className="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 gap-3">
                 <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center">
                   <Users className="h-6 w-6 text-slate-300" />
                 </div>
                 <p className="text-sm text-slate-400">No members in this department yet.</p>
-                <RippleButton
-                  onClick={() => setShowAddModal(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow text-sm font-medium active:scale-95 transition"
-                >
-                  <Plus className="h-4 w-4" /> Add First Employee
-                </RippleButton>
               </div>
             ) : (
               <div className="space-y-2">
@@ -1441,7 +1501,6 @@ export default function AdminDepartmentDetailPage() {
             </div>
             <div className="flex items-center gap-3 pt-2">
               <RippleButton className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition">Save Changes</RippleButton>
-              <RippleButton className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition">Delete Department</RippleButton>
             </div>
           </div>
         )}

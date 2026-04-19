@@ -1,213 +1,315 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Loader2, Fuel, CheckCircle, XCircle, Clock, MessageSquare, X, Car } from "lucide-react";
+import { Car, Fuel, Wrench, Plus, Loader2, Pencil, X, Check, Clock, ChevronDown } from "lucide-react";
 
-type FuelRequest = {
+type Tab = "fuel" | "maintenance";
+
+type VLog = {
   id: string;
-  date: string;
-  vehicleInfo: string | null;
-  odometer: number | null;
-  liters: number;
-  purpose: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
-  reviewNote: string | null;
-  reviewedAt: string | null;
+  plateNumber: string;
+  vehicleType: string;
+  logType: string;
+  logDate: string | null;
+  description: string | null;
+  liters: number | null;
+  pricePerLiter: number | null;
+  totalAmount: number | null;
+  status: string;
+  performedBy: string | null;
+  lastEditedBy: string | null;
+  lastEditedAt: string | null;
   createdAt: string;
-  employee: { id: string; firstName: string; lastName: string; employeeNumber: string };
 };
 
-const STATUS_BADGE: Record<FuelRequest["status"], { label: string; icon: React.ComponentType<{ className?: string }>; className: string }> = {
-  PENDING:  { label: "Pending",  icon: Clock,        className: "bg-amber-50 text-amber-700 border border-amber-200"  },
-  APPROVED: { label: "Approved", icon: CheckCircle,  className: "bg-green-50 text-green-700 border border-green-200"  },
-  REJECTED: { label: "Rejected", icon: XCircle,      className: "bg-red-50 text-red-700 border border-red-200"        },
+const FIELD = "border border-slate-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 w-full";
+
+const STATUS_OPTS = ["PENDING", "COMPLETED", "CANCELLED"];
+const STATUS_STYLE: Record<string, string> = {
+  PENDING:   "bg-amber-50 text-amber-700 border-amber-200",
+  COMPLETED: "bg-green-50 text-green-700 border-green-200",
+  CANCELLED: "bg-slate-100 text-slate-500 border-slate-200",
 };
 
-export default function AdminFuelRequestsPage() {
-  const [requests, setRequests]   = useState<FuelRequest[]>([]);
-  const [total, setTotal]         = useState(0);
-  const [loading, setLoading]     = useState(true);
-  const [statusFilter, setStatusFilter] = useState("");
-  const [reviewing, setReviewing] = useState<{ id: string; action: "APPROVED" | "REJECTED" } | null>(null);
-  const [reviewNote, setReviewNote] = useState("");
-  const [saving, setSaving]       = useState(false);
-  const [message, setMessage]     = useState<{ type: "success" | "error"; text: string } | null>(null);
+const today = () => new Date().toISOString().split("T")[0];
 
-  const fetchRequests = useCallback(async () => {
+const emptyFuel = () => ({ plateNumber: "", vehicleType: "", logDate: today(), pricePerLiter: "", liters: "", totalAmount: "", status: "PENDING", performedBy: "" });
+const emptyMaint = () => ({ plateNumber: "", vehicleType: "", logDate: today(), description: "", status: "PENDING" });
+
+export default function VehicleMaintenancePage() {
+  const [tab, setTab]           = useState<Tab>("fuel");
+  const [logs, setLogs]         = useState<VLog[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Record<string, string>>({});
+  const [saving, setSaving]     = useState(false);
+  const [showAdd, setShowAdd]   = useState(false);
+  const [addForm, setAddForm]   = useState<Record<string, string>>(emptyFuel());
+  const [addSaving, setAddSaving] = useState(false);
+  const [error, setError]       = useState<string | null>(null);
+
+  const load = useCallback(async () => {
     setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (statusFilter) params.set("status", statusFilter);
-      const res  = await fetch(`/api/admin/hr/fuel-requests?${params}`);
-      const json = await res.json();
-      if (json.success) { setRequests(json.data.data); setTotal(json.data.total); }
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter]);
+    const res  = await fetch(`/api/admin/dept/vehicle-logs?logType=${tab === "fuel" ? "FUEL" : "MAINTENANCE"}`);
+    const json = await res.json();
+    if (json.success) setLogs(json.data);
+    setLoading(false);
+  }, [tab]);
 
-  useEffect(() => { fetchRequests(); }, [fetchRequests]);
+  useEffect(() => { load(); setEditingId(null); setShowAdd(false); setError(null); }, [load]);
 
-  const handleReview = async () => {
-    if (!reviewing) return;
-    setSaving(true);
-    setMessage(null);
-    try {
-      const res = await fetch("/api/admin/hr/fuel-requests", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: reviewing.id, status: reviewing.action, reviewNote: reviewNote || undefined }),
+  const startEdit = (log: VLog) => {
+    setEditingId(log.id);
+    if (tab === "fuel") {
+      setEditForm({
+        plateNumber:   log.plateNumber,
+        vehicleType:   log.vehicleType,
+        logDate:       log.logDate?.split("T")[0] ?? today(),
+        pricePerLiter: log.pricePerLiter?.toString() ?? "",
+        liters:        log.liters?.toString() ?? "",
+        totalAmount:   log.totalAmount?.toString() ?? "",
+        status:        log.status,
+        performedBy:   log.performedBy ?? "",
       });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error);
-      setMessage({ type: "success", text: `Request ${reviewing.action.toLowerCase()} successfully.` });
-      setReviewing(null);
-      setReviewNote("");
-      fetchRequests();
-    } catch (e) {
-      setMessage({ type: "error", text: e instanceof Error ? e.message : "Failed to save" });
-    } finally {
-      setSaving(false);
+    } else {
+      setEditForm({
+        plateNumber: log.plateNumber,
+        vehicleType: log.vehicleType,
+        logDate:     log.logDate?.split("T")[0] ?? today(),
+        description: log.description ?? "",
+        status:      log.status,
+      });
     }
+    setError(null);
   };
 
-  const pending  = requests.filter((r) => r.status === "PENDING").length;
-  const approved = requests.filter((r) => r.status === "APPROVED").length;
-  const rejected = requests.filter((r) => r.status === "REJECTED").length;
+  const setEF = (k: string, v: string) => setEditForm((p) => {
+    const next = { ...p, [k]: v };
+    if ((k === "liters" || k === "pricePerLiter") && tab === "fuel") {
+      const l = parseFloat(k === "liters" ? v : p.liters || "0") || 0;
+      const pp = parseFloat(k === "pricePerLiter" ? v : p.pricePerLiter || "0") || 0;
+      next.totalAmount = (l * pp).toFixed(2);
+    }
+    return next;
+  });
+
+  const setAF = (k: string, v: string) => setAddForm((p) => {
+    const next = { ...p, [k]: v };
+    if ((k === "liters" || k === "pricePerLiter") && tab === "fuel") {
+      const l = parseFloat(k === "liters" ? v : p.liters || "0") || 0;
+      const pp = parseFloat(k === "pricePerLiter" ? v : p.pricePerLiter || "0") || 0;
+      next.totalAmount = (l * pp).toFixed(2);
+    }
+    return next;
+  });
+
+  const saveEdit = async () => {
+    setSaving(true); setError(null);
+    try {
+      const body = tab === "fuel"
+        ? { plateNumber: editForm.plateNumber, vehicleType: editForm.vehicleType, logType: "FUEL", logDate: editForm.logDate || undefined, pricePerLiter: parseFloat(editForm.pricePerLiter) || undefined, liters: parseFloat(editForm.liters) || undefined, totalAmount: parseFloat(editForm.totalAmount) || undefined, status: editForm.status, performedBy: editForm.performedBy || undefined }
+        : { plateNumber: editForm.plateNumber, vehicleType: editForm.vehicleType, logType: "MAINTENANCE", logDate: editForm.logDate || undefined, description: editForm.description || undefined, status: editForm.status };
+      const res  = await fetch(`/api/admin/dept/vehicle-logs?id=${editingId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setEditingId(null);
+      load();
+    } catch (e) { setError(e instanceof Error ? e.message : "Failed to save"); }
+    finally { setSaving(false); }
+  };
+
+  const saveAdd = async () => {
+    setAddSaving(true); setError(null);
+    try {
+      const body = tab === "fuel"
+        ? { plateNumber: addForm.plateNumber, vehicleType: addForm.vehicleType, logType: "FUEL", logDate: addForm.logDate || undefined, pricePerLiter: parseFloat(addForm.pricePerLiter) || undefined, liters: parseFloat(addForm.liters) || undefined, totalAmount: parseFloat(addForm.totalAmount) || undefined, status: addForm.status, performedBy: addForm.performedBy || undefined }
+        : { plateNumber: addForm.plateNumber, vehicleType: addForm.vehicleType, logType: "MAINTENANCE", logDate: addForm.logDate || undefined, description: addForm.description || undefined, status: addForm.status };
+      if (!addForm.plateNumber || !addForm.vehicleType) throw new Error("Plate number and vehicle type are required.");
+      const res  = await fetch("/api/admin/dept/vehicle-logs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setShowAdd(false);
+      setAddForm(tab === "fuel" ? emptyFuel() : emptyMaint());
+      load();
+    } catch (e) { setError(e instanceof Error ? e.message : "Failed to save"); }
+    finally { setAddSaving(false); }
+  };
+
+  const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" }) : "—";
+  const fmtAmt  = (n: number | null) => n != null ? `₱${Number(n).toLocaleString("en-PH", { minimumFractionDigits: 2 })}` : "—";
+  const fmtNum  = (n: number | null) => n != null ? Number(n).toLocaleString() : "—";
+  const fmtTs   = (s: string | null) => s ? new Date(s).toLocaleString("en-PH", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : null;
 
   return (
-    <div className="p-6 space-y-5 max-w-5xl">
+    <div className="p-6 max-w-7xl space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <div className="h-8 w-8 rounded-lg bg-teal-600 flex items-center justify-center">
-              <Fuel className="h-4 w-4 text-white" />
-            </div>
-            <h1 className="text-xl font-bold text-slate-900">Fuel Requests</h1>
-          </div>
-          <p className="text-sm text-slate-500">Review and approve driver fuel/gas requests</p>
+      <div className="flex items-center gap-3">
+        <div className="h-9 w-9 rounded-xl bg-yellow-500 flex items-center justify-center shrink-0">
+          <Car className="h-5 w-5 text-white" />
         </div>
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <Car className="h-4 w-4" />
-          <span>{total} total requests</span>
+        <div>
+          <h1 className="text-xl font-bold text-slate-900">Vehicle Fuel &amp; Maintenance</h1>
+          <p className="text-sm text-slate-500">Fuel consumption logs and maintenance records</p>
         </div>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: "Pending",  count: pending,  color: "bg-amber-50 border-amber-200 text-amber-700",  icon: Clock },
-          { label: "Approved", count: approved, color: "bg-green-50 border-green-200 text-green-700",  icon: CheckCircle },
-          { label: "Rejected", count: rejected, color: "bg-red-50 border-red-200 text-red-700",        icon: XCircle },
-        ].map(({ label, count, color, icon: Icon }) => (
-          <div key={label} className={`rounded-xl border p-3 flex items-center gap-3 ${color}`}>
-            <Icon className="h-5 w-5 shrink-0" />
-            <div>
-              <p className="text-lg font-bold leading-none">{count}</p>
-              <p className="text-xs mt-0.5 opacity-80">{label}</p>
-            </div>
-          </div>
+      {/* Tabs */}
+      <div className="flex gap-1 bg-slate-100 rounded-xl p-1 w-fit">
+        {([["fuel", "Fuel Logs", Fuel], ["maintenance", "Maintenance Logs", Wrench]] as const).map(([key, label, Icon]) => (
+          <button key={key} onClick={() => setTab(key)}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+            <Icon className="h-4 w-4" />{label}
+          </button>
         ))}
       </div>
 
-      {/* Filter */}
-      <div className="flex gap-3">
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
-        >
-          <option value="">All statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="APPROVED">Approved</option>
-          <option value="REJECTED">Rejected</option>
-        </select>
-      </div>
+      {/* Error */}
+      {error && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
 
-      {/* Feedback */}
-      {message && (
-        <div className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm border ${
-          message.type === "success"
-            ? "bg-green-50 border-green-200 text-green-700"
-            : "bg-red-50 border-red-200 text-red-700"
-        }`}>
-          {message.type === "success" ? <CheckCircle className="h-4 w-4 shrink-0" /> : <XCircle className="h-4 w-4 shrink-0" />}
-          {message.text}
-          <button className="ml-auto" onClick={() => setMessage(null)}><X className="h-3.5 w-3.5" /></button>
+      {/* Add Row Form */}
+      {showAdd && (
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+          <p className="text-sm font-semibold text-slate-700">New {tab === "fuel" ? "Fuel" : "Maintenance"} Entry</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div><label className="text-xs text-slate-500 mb-1 block">Vehicle Type *</label><input className={FIELD} placeholder="e.g. Van, Truck" value={addForm.vehicleType} onChange={e => setAF("vehicleType", e.target.value)} /></div>
+            <div><label className="text-xs text-slate-500 mb-1 block">Plate Number *</label><input className={FIELD} placeholder="ABC 123" value={addForm.plateNumber} onChange={e => setAF("plateNumber", e.target.value)} /></div>
+            <div><label className="text-xs text-slate-500 mb-1 block">Date</label><input type="date" className={FIELD} value={addForm.logDate} onChange={e => setAF("logDate", e.target.value)} /></div>
+            {tab === "fuel" ? (<>
+              <div><label className="text-xs text-slate-500 mb-1 block">Price / Liter (₱)</label><input type="number" min="0" step="0.01" className={FIELD} value={addForm.pricePerLiter} onChange={e => setAF("pricePerLiter", e.target.value)} /></div>
+              <div><label className="text-xs text-slate-500 mb-1 block">Liters</label><input type="number" min="0" step="0.01" className={FIELD} value={addForm.liters} onChange={e => setAF("liters", e.target.value)} /></div>
+              <div><label className="text-xs text-slate-500 mb-1 block">Total Amount (₱)</label><input type="number" min="0" step="0.01" className={FIELD} value={addForm.totalAmount} onChange={e => setAF("totalAmount", e.target.value)} /></div>
+              <div><label className="text-xs text-slate-500 mb-1 block">Driver</label><input className={FIELD} value={addForm.performedBy} onChange={e => setAF("performedBy", e.target.value)} /></div>
+            </>) : (
+              <div className="col-span-2"><label className="text-xs text-slate-500 mb-1 block">Particulars</label><input className={FIELD} placeholder="Describe the maintenance work" value={addForm.description} onChange={e => setAF("description", e.target.value)} /></div>
+            )}
+            <div><label className="text-xs text-slate-500 mb-1 block">Status</label>
+              <div className="relative"><select className={FIELD + " appearance-none pr-7"} value={addForm.status} onChange={e => setAF("status", e.target.value)}>{STATUS_OPTS.map(s => <option key={s} value={s}>{s.charAt(0)+s.slice(1).toLowerCase()}</option>)}</select><ChevronDown className="absolute right-2 top-2 h-3.5 w-3.5 text-slate-400 pointer-events-none" /></div>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={saveAdd} disabled={addSaving} className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50">{addSaving && <Loader2 className="h-3 w-3 animate-spin" />}Save Entry</button>
+            <button onClick={() => { setShowAdd(false); setError(null); }} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+          </div>
         </div>
       )}
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-slate-500">{logs.length} {tab === "fuel" ? "fuel" : "maintenance"} record{logs.length !== 1 ? "s" : ""}</p>
+          {!showAdd && (
+            <button onClick={() => { setShowAdd(true); setAddForm(tab === "fuel" ? emptyFuel() : emptyMaint()); setError(null); }}
+              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm rounded-xl hover:bg-indigo-700">
+              <Plus className="h-4 w-4" /> Add Entry
+            </button>
+          )}
+        </div>
+
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-teal-500" />
-          </div>
-        ) : requests.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-slate-400">
-            <Fuel className="h-10 w-10 mb-3 opacity-30" />
-            <p className="text-sm font-medium">No fuel requests found</p>
-            <p className="text-xs mt-1">Requests submitted by drivers will appear here</p>
-          </div>
+          <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-indigo-400" /></div>
+        ) : logs.length === 0 ? (
+          <div className="text-center py-8"><p className="text-sm text-slate-400">No {tab === "fuel" ? "fuel" : "maintenance"} logs yet.</p></div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="border border-slate-200 rounded-2xl overflow-hidden">
             <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Employee</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Date</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Vehicle</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Liters</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Purpose</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  {tab === "fuel" ? (
+                    <>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">Vehicle</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">Plate</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">Date</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-slate-500">₱/L</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-slate-500">Liters</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-slate-500">Total</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">Driver</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">Status</th>
+                      <th className="px-4 py-3 w-20" />
+                    </>
+                  ) : (
+                    <>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">Vehicle</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">Plate</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">Date</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">Particulars</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">Status</th>
+                      <th className="px-4 py-3 w-20" />
+                    </>
+                  )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
-                {requests.map((req) => {
-                  const badge = STATUS_BADGE[req.status];
-                  const Icon  = badge.icon;
+              <tbody className="divide-y divide-slate-100">
+                {logs.map((log) => {
+                  const isEditing = editingId === log.id;
                   return (
-                    <tr key={req.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-3">
-                        <p className="font-medium text-slate-800">{req.employee.firstName} {req.employee.lastName}</p>
-                        <p className="text-xs text-slate-400">{req.employee.employeeNumber}</p>
-                      </td>
-                      <td className="px-4 py-3 text-slate-600">{new Date(req.date).toLocaleDateString()}</td>
-                      <td className="px-4 py-3 text-slate-600 text-xs">{req.vehicleInfo ?? "—"}{req.odometer ? ` · ${req.odometer.toLocaleString()} km` : ""}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-slate-800">{req.liters}L</td>
-                      <td className="px-4 py-3 text-slate-600 max-w-[180px] truncate">{req.purpose}</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${badge.className}`}>
-                          <Icon className="h-3 w-3" />
-                          {badge.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {req.status === "PENDING" && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => { setReviewing({ id: req.id, action: "APPROVED" }); setReviewNote(""); }}
-                              className="flex items-center gap-1 px-2.5 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors"
-                            >
-                              <CheckCircle className="h-3 w-3" /> Approve
-                            </button>
-                            <button
-                              onClick={() => { setReviewing({ id: req.id, action: "REJECTED" }); setReviewNote(""); }}
-                              className="flex items-center gap-1 px-2.5 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
-                            >
-                              <XCircle className="h-3 w-3" /> Reject
-                            </button>
-                          </div>
-                        )}
-                        {req.status !== "PENDING" && req.reviewNote && (
-                          <span className="inline-flex items-center gap-1 text-xs text-slate-400">
-                            <MessageSquare className="h-3 w-3" />
-                            {req.reviewNote}
-                          </span>
-                        )}
-                      </td>
+                    <tr key={log.id} className={`hover:bg-slate-50 transition-colors ${isEditing ? "bg-indigo-50/40" : ""}`}>
+                      {isEditing ? (
+                        tab === "fuel" ? (
+                          <>
+                            <td className="px-2 py-2"><input className={FIELD} value={editForm.vehicleType} onChange={e => setEF("vehicleType", e.target.value)} /></td>
+                            <td className="px-2 py-2"><input className={FIELD} value={editForm.plateNumber} onChange={e => setEF("plateNumber", e.target.value)} /></td>
+                            <td className="px-2 py-2"><input type="date" className={FIELD} value={editForm.logDate} onChange={e => setEF("logDate", e.target.value)} /></td>
+                            <td className="px-2 py-2"><input type="number" step="0.01" className={FIELD} value={editForm.pricePerLiter} onChange={e => setEF("pricePerLiter", e.target.value)} /></td>
+                            <td className="px-2 py-2"><input type="number" step="0.01" className={FIELD} value={editForm.liters} onChange={e => setEF("liters", e.target.value)} /></td>
+                            <td className="px-2 py-2"><input type="number" step="0.01" className={FIELD} value={editForm.totalAmount} onChange={e => setEF("totalAmount", e.target.value)} /></td>
+                            <td className="px-2 py-2"><input className={FIELD} value={editForm.performedBy} onChange={e => setEF("performedBy", e.target.value)} /></td>
+                            <td className="px-2 py-2"><div className="relative"><select className={FIELD + " appearance-none pr-6"} value={editForm.status} onChange={e => setEF("status", e.target.value)}>{STATUS_OPTS.map(s => <option key={s} value={s}>{s}</option>)}</select><ChevronDown className="absolute right-1.5 top-2 h-3 w-3 text-slate-400 pointer-events-none" /></div></td>
+                            <td className="px-2 py-2">
+                              <div className="flex gap-1">
+                                <button onClick={saveEdit} disabled={saving} className="p-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50">{saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}</button>
+                                <button onClick={() => setEditingId(null)} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100"><X className="h-3.5 w-3.5" /></button>
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="px-2 py-2"><input className={FIELD} value={editForm.vehicleType} onChange={e => setEF("vehicleType", e.target.value)} /></td>
+                            <td className="px-2 py-2"><input className={FIELD} value={editForm.plateNumber} onChange={e => setEF("plateNumber", e.target.value)} /></td>
+                            <td className="px-2 py-2"><input type="date" className={FIELD} value={editForm.logDate} onChange={e => setEF("logDate", e.target.value)} /></td>
+                            <td className="px-2 py-2"><input className={FIELD} value={editForm.description} onChange={e => setEF("description", e.target.value)} /></td>
+                            <td className="px-2 py-2"><div className="relative"><select className={FIELD + " appearance-none pr-6"} value={editForm.status} onChange={e => setEF("status", e.target.value)}>{STATUS_OPTS.map(s => <option key={s} value={s}>{s}</option>)}</select><ChevronDown className="absolute right-1.5 top-2 h-3 w-3 text-slate-400 pointer-events-none" /></div></td>
+                            <td className="px-2 py-2">
+                              <div className="flex gap-1">
+                                <button onClick={saveEdit} disabled={saving} className="p-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50">{saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}</button>
+                                <button onClick={() => setEditingId(null)} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100"><X className="h-3.5 w-3.5" /></button>
+                              </div>
+                            </td>
+                          </>
+                        )
+                      ) : (
+                        tab === "fuel" ? (
+                          <>
+                            <td className="px-4 py-3 font-medium text-slate-900">{log.vehicleType}</td>
+                            <td className="px-4 py-3 text-slate-600">{log.plateNumber}</td>
+                            <td className="px-4 py-3 text-slate-500">{fmtDate(log.logDate)}</td>
+                            <td className="px-4 py-3 text-right text-slate-600">{log.pricePerLiter ? `₱${Number(log.pricePerLiter).toFixed(2)}` : "—"}</td>
+                            <td className="px-4 py-3 text-right text-slate-600">{fmtNum(log.liters)}L</td>
+                            <td className="px-4 py-3 text-right font-semibold text-slate-900">{fmtAmt(log.totalAmount)}</td>
+                            <td className="px-4 py-3 text-slate-500">{log.performedBy ?? "—"}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ${STATUS_STYLE[log.status] ?? STATUS_STYLE.PENDING}`}>
+                                <Clock className="h-3 w-3" />{log.status.charAt(0)+log.status.slice(1).toLowerCase()}
+                              </span>
+                              {log.lastEditedBy && <p className="text-xs text-slate-400 mt-0.5">by {log.lastEditedBy} · {fmtTs(log.lastEditedAt)}</p>}
+                            </td>
+                            <td className="px-4 py-3"><button onClick={() => startEdit(log)} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"><Pencil className="h-3.5 w-3.5" /></button></td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="px-4 py-3 font-medium text-slate-900">{log.vehicleType}</td>
+                            <td className="px-4 py-3 text-slate-600">{log.plateNumber}</td>
+                            <td className="px-4 py-3 text-slate-500">{fmtDate(log.logDate)}</td>
+                            <td className="px-4 py-3 text-slate-700">{log.description ?? "—"}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ${STATUS_STYLE[log.status] ?? STATUS_STYLE.PENDING}`}>
+                                <Clock className="h-3 w-3" />{log.status.charAt(0)+log.status.slice(1).toLowerCase()}
+                              </span>
+                              {log.lastEditedBy && <p className="text-xs text-slate-400 mt-0.5">by {log.lastEditedBy} · {fmtTs(log.lastEditedAt)}</p>}
+                            </td>
+                            <td className="px-4 py-3"><button onClick={() => startEdit(log)} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"><Pencil className="h-3.5 w-3.5" /></button></td>
+                          </>
+                        )
+                      )}
                     </tr>
                   );
                 })}
@@ -216,45 +318,6 @@ export default function AdminFuelRequestsPage() {
           </div>
         )}
       </div>
-
-      {/* Review Modal */}
-      {reviewing && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-slate-800">
-                {reviewing.action === "APPROVED" ? "Approve Request" : "Reject Request"}
-              </h2>
-              <button onClick={() => setReviewing(null)}><X className="h-4 w-4 text-slate-400" /></button>
-            </div>
-            <div>
-              <label className="block text-xs text-slate-500 mb-1">Review Note (optional)</label>
-              <textarea
-                rows={3}
-                value={reviewNote}
-                onChange={(e) => setReviewNote(e.target.value)}
-                placeholder="Add a note..."
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
-              />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <button onClick={() => setReviewing(null)} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-                Cancel
-              </button>
-              <button
-                onClick={handleReview}
-                disabled={saving}
-                className={`flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg transition-colors disabled:opacity-50 ${
-                  reviewing.action === "APPROVED" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
-                }`}
-              >
-                {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                {reviewing.action === "APPROVED" ? "Approve" : "Reject"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -61,7 +61,7 @@ const MODULE_NAV: ReadonlyArray<NavItem> = [
   { href: "/admin/enrollees",  label: "Tasks",      icon: CheckSquare,   moduleKey: "module_lms" },
   { href: "/admin/revenue",    label: "Revenue",    icon: DollarSign,    moduleKey: "module_lms" },
   { href: "/admin/departments", label: "Departments",  icon: Building2,  moduleKey: "module_hr" },
-  { href: "/admin/admin",       label: "Office Admin", icon: Briefcase,  moduleKey: "module_admin" },
+  { href: "/admin/admin/inventory", label: "Office Admin", icon: Briefcase, moduleKey: "module_admin" },
 ];
 
 const SETTINGS_NAV: ReadonlyArray<NavItem> = [

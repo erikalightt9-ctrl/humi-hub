@@ -2,41 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Archive,
-  Fuel,
-  Wrench,
-  Sofa,
-  ShoppingBag,
-  Pill,
-  Car,
-  ClipboardList,
-  Truck,
-  PackageSearch,
-} from "lucide-react";
+import { ShoppingBag, TableProperties } from "lucide-react";
 
 const TABS = [
-  { label: "Overview",                href: "/admin/admin",                  icon: LayoutDashboard },
-  { label: "Stockroom",               href: "/admin/admin/stockroom",        icon: PackageSearch },
-  { label: "Inventory",               href: "/admin/admin/assets",           icon: Archive },
-  { label: "Fuel Requests",           href: "/admin/admin/fuel-requests",    icon: Fuel },
-  { label: "Maintenance Supplies",    href: "/admin/admin/maintenance",      icon: Wrench },
-  { label: "Appliances & Furniture",  href: "/admin/admin/equipment",        icon: Sofa },
-  { label: "Office Supplies",         href: "/admin/admin/pantry",           icon: ShoppingBag },
-  { label: "Medicine",                href: "/admin/admin/medicine",         icon: Pill },
-  { label: "Vehicle & Fuel",          href: "/admin/admin/car-maintenance",  icon: Car },
-  { label: "Repair Logs",             href: "/admin/admin/repair-logs",      icon: ClipboardList },
-  { label: "Suppliers",               href: "/admin/admin/suppliers",        icon: Truck },
+  { label: "Bulk Entry", href: "/admin/admin/stockroom/bulk", icon: TableProperties },
 ];
 
 export default function AdminDeptLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const isActive = (href: string) => {
-    if (href === "/admin/admin") return pathname === "/admin/admin";
-    return pathname.startsWith(href);
-  };
+  const isActive = (href: string) => pathname.startsWith(href);
 
   return (
     <div className="flex flex-col min-h-full">
