@@ -318,7 +318,8 @@ export function BulkStockGrid({ onSaved }: Props) {
     return { valid, invalid, incomplete };
   }, [rows, rowErrors]);
 
-  const canSave = stats.valid > 0 && stats.invalid === 0 && !saving;
+  const hasAnyData = rows.some((r) => !isRowEmpty(r));
+  const canSave = hasAnyData && !saving;
 
   const validPayload = useMemo(
     () =>
@@ -372,6 +373,10 @@ export function BulkStockGrid({ onSaved }: Props) {
 
   const handleSave = useCallback(() => {
     if (!canSave) return;
+    if (validPayload.length === 0) {
+      setBanner({ kind: "error", text: "No valid rows to save. Fill in Item Name, Category, and Quantity for each row." });
+      return;
+    }
     if (validPayload.length > PREVIEW_THRESHOLD) {
       setPreviewOpen(true);
       return;
