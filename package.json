@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && ([ -z \"$DATABASE_URL\" ] || npx prisma migrate deploy) && next build",
+    "build": "prisma generate && ([ -z \"$DATABASE_URL\" ] || (npx prisma db execute --file prisma/clear-failed-migration.sql 2>/dev/null || true; npx prisma migrate deploy)) && next build",
     "build:migrate": "prisma migrate deploy && prisma generate && next build",
     "start": "next start",
     "db:migrate": "prisma migrate dev",
