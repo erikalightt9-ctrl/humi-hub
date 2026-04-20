@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   Package, AlertTriangle, FolderTree, ArrowUpRight, ArrowDownRight,
-  Activity, Loader2, Plus, SlidersHorizontal,
+  Activity, Loader2, Plus, SlidersHorizontal, ChevronRight,
 } from "lucide-react";
 
 type DashData = {
@@ -62,20 +62,12 @@ export default function InventoryDashboardPage() {
             Overview of categories, stock levels, and recent activity
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Link
-            href="/admin/admin/inventory/categories"
-            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm rounded-xl font-medium transition-colors shadow-sm border border-slate-200 dark:border-slate-700"
-          >
-            <FolderTree className="h-4 w-4" /> Manage Categories
-          </Link>
-          <Link
-            href="/admin/admin/stockroom/bulk"
-            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-xl font-medium transition-colors shadow-sm"
-          >
-            <Plus className="h-4 w-4" /> Add Stocks
-          </Link>
-        </div>
+        <Link
+          href="/admin/admin/inventory/categories"
+          className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-xl font-medium transition-colors shadow-sm"
+        >
+          <Plus className="h-4 w-4" /> New Category
+        </Link>
       </div>
 
       {/* KPI cards */}
@@ -105,13 +97,16 @@ export default function InventoryDashboardPage() {
               <Link
                 key={c.id}
                 href={`/admin/admin/inventory/categories/${c.id}`}
-                className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 hover:shadow-md hover:border-indigo-300 transition-all"
+                className="group rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 hover:shadow-md hover:border-indigo-300 transition-all"
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xl">{c.icon ?? "📋"}</span>
-                  <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{c.name}</p>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xl">{c.icon ?? "📋"}</span>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{c.name}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-400 transition-colors shrink-0" />
                 </div>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">{c.itemCount}</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">{c.itemCount} <span className="text-sm font-normal text-slate-400">items</span></p>
                 <div className="flex items-center gap-3 mt-1 text-[11px]">
                   {c.lowStock > 0 && <span className="text-amber-600 dark:text-amber-400">{c.lowStock} low</span>}
                   {c.outOfStock > 0 && <span className="text-red-600 dark:text-red-400">{c.outOfStock} out</span>}

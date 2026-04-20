@@ -16,6 +16,7 @@ const rowSchema = z.object({
 });
 
 const bulkSchema = z.object({
+  categoryId: z.string().min(1).optional(),
   rows: z.array(rowSchema).min(1).max(500),
 });
 
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
           data: {
             id: itemId,
             organizationId: guard.tenantId,
-            categoryId: r.categoryId ?? null,
+            categoryId: r.categoryId ?? parsed.data.categoryId ?? null,
             name: r.name.trim(),
             unit: r.unit.trim() || "pcs",
             minThreshold: r.minThreshold,
