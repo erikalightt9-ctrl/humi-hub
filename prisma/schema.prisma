@@ -2008,6 +2008,7 @@ enum TaskStatus {
   TODO
   IN_PROGRESS
   DONE
+  BLOCKED
 }
 
 enum TaskPriority {
@@ -2017,20 +2018,25 @@ enum TaskPriority {
 }
 
 model OrganizationTask {
-  id             String       @id @default(cuid())
-  organizationId String
-  title          String       @db.VarChar(200)
-  description    String?      @db.Text
-  status         TaskStatus   @default(TODO)
-  priority       TaskPriority @default(MEDIUM)
-  dueDate        DateTime?
-  assigneeName   String?      @db.VarChar(100)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  id               String       @id @default(cuid())
+  organizationId   String
+  title            String       @db.VarChar(200)
+  description      String?      @db.Text
+  status           TaskStatus   @default(TODO)
+  priority         TaskPriority @default(MEDIUM)
+  dueDate          DateTime?
+  assigneeName     String?      @db.VarChar(100)
+  assigneeId       String?      @db.VarChar(100)
+  startedAt        DateTime?
+  completedAt      DateTime?
+  timeSpentMinutes Int?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId, status])
   @@index([organizationId, dueDate])
+  @@index([assigneeId])
   @@map("organization_tasks")
 }
 

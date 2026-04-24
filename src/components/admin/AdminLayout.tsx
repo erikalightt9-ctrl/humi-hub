@@ -20,6 +20,7 @@ import {
   Briefcase,
   UserCheck,
   Building2,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/shared/NotificationBell";
@@ -45,7 +46,8 @@ interface NavItem {
 
 /** Items always visible regardless of enabled modules */
 const STATIC_NAV: ReadonlyArray<NavItem> = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin",            label: "Dashboard",   icon: LayoutDashboard, exact: true },
+  { href: "/admin/operations", label: "Operations",  icon: Activity },
 ];
 
 /** Items visible only to tenant admins / super admins (not plain tenant_users) */
@@ -61,7 +63,8 @@ const MODULE_NAV: ReadonlyArray<NavItem> = [
   { href: "/admin/trainers",   label: "Trainers",   icon: UserCog,       moduleKey: "module_lms" },
   { href: "/admin/enrollees",  label: "Tasks",      icon: CheckSquare,   moduleKey: "module_lms" },
   { href: "/admin/revenue",    label: "Revenue",    icon: DollarSign,    moduleKey: "module_lms" },
-  { href: "/admin/departments", label: "Departments",  icon: Building2,  moduleKey: "module_hr" },
+  { href: "/admin/departments", label: "Departments",  icon: Building2,    moduleKey: "module_hr" },
+  { href: "/admin/work",       label: "Work Tracker", icon: CheckSquare,  moduleKey: "module_hr" },
   { href: "/admin/admin/inventory", label: "Office Admin", icon: Briefcase, moduleKey: "module_admin" },
 ];
 
