@@ -1383,6 +1383,12 @@ model TenantTrainer {
   @@map("tenant_trainers")
 }
 
+enum UserRole {
+  ADMIN
+  EXECUTIVE
+  MANAGER
+}
+
 model CorporateManager {
   id                  String       @id @default(cuid())
   organizationId      String
@@ -1390,6 +1396,7 @@ model CorporateManager {
   email               String
   passwordHash        String
   name                String
+  userRole            UserRole     @default(ADMIN)
   role                String       @default("manager")
   department          String?
   phone               String?

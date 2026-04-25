@@ -27,6 +27,7 @@ declare module "next-auth" {
       portalRole: string | null;
       permissions: string[] | null;
       humiAdminPermissions: HumiAdminPermissions | null;
+      userRole: string | null;
     };
   }
 }
@@ -46,5 +47,6 @@ declare module "next-auth/jwt" {
     portalRole: string | null;
     permissions: string[] | null;
     humiAdminPermissions: HumiAdminPermissions | null;
+    userRole: string | null;
   }
 }

@@ -17,6 +17,8 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { MODULE_KEYS, MODULES } from "@/lib/modules";
 import type { ModuleKey } from "@/lib/modules";
@@ -28,6 +30,8 @@ import {
   emptyPermissions,
 } from "@/lib/role-permissions";
 import type { RolePermissions, SectionKey } from "@/lib/role-permissions";
+import { ROLE_CONFIG } from "@/lib/rbac";
+import type { UserRole } from "@/lib/rbac";
 
 /* ================================================================== */
 /*  Types                                                               */
@@ -248,6 +252,384 @@ function UserModal({ user, roles, onClose, onSaved }: UserModalProps) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  Team Tab (CorporateManager RBAC roles)                             */
+/* ================================================================== */
+
+interface TeamMember {
+  id:                 string;
+  name:               string;
+  email:              string;
+  userRole:           UserRole;
+  department:         string | null;
+  phone:              string | null;
+  isActive:           boolean;
+  isTenantAdmin:      boolean;
+  mustChangePassword: boolean;
+  createdAt:          string;
+}
+
+const USER_ROLES: UserRole[] = ["ADMIN", "EXECUTIVE", "MANAGER"];
+
+function AddMemberModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+  const [name,       setName]       = useState("");
+  const [email,      setEmail]      = useState("");
+  const [password,   setPassword]   = useState("");
+  const [showPw,     setShowPw]     = useState(false);
+  const [userRole,   setUserRole]   = useState<UserRole>("MANAGER");
+  const [department, setDepartment] = useState("");
+  const [saving,     setSaving]     = useState(false);
+  const [error,      setError]      = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true); setError(null);
+    try {
+      const res  = await fetch("/api/admin/team", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), email: email.trim(), password, userRole, department }),
+      });
+      const json = await res.json() as { success: boolean; error?: string };
+      if (!json.success) { setError(json.error ?? "Failed to create"); return; }
+      onSaved(); onClose();
+    } catch { setError("Unexpected error"); }
+    finally { setSaving(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Add Team Member</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><XCircle className="h-5 w-5" /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+          {error && (
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">
+              <XCircle className="h-4 w-4 shrink-0" />{error}
+            </div>
+          )}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Full Name <span className="text-red-500">*</span></label>
+            <input value={name} onChange={e => setName(e.target.value)} required placeholder="Juan dela Cruz"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="user@company.com"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Temporary Password <span className="text-red-500">*</span></label>
+            <div className="relative">
+              <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required
+                placeholder="Min. 8 characters"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <button type="button" onClick={() => setShowPw(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <p className="text-xs text-gray-400">The user will be prompted to change this on first login.</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Role</label>
+            <div className="grid grid-cols-3 gap-2">
+              {USER_ROLES.map(r => (
+                <button key={r} type="button" onClick={() => setUserRole(r)}
+                  className={`py-2 rounded-xl text-sm font-medium border transition-colors ${
+                    userRole === r
+                      ? `${ROLE_CONFIG[r].badgeClass} border-transparent`
+                      : "bg-gray-100 border-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}>
+                  {ROLE_CONFIG[r].label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400">{ROLE_CONFIG[userRole].description}</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Department</label>
+            <input value={department} onChange={e => setDepartment(e.target.value)} placeholder="e.g. Finance, HR"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+        </form>
+        <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+          <button type="button" onClick={onClose} disabled={saving}
+            className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 disabled:opacity-50">
+            Cancel
+          </button>
+          <button onClick={handleSubmit} disabled={saving}
+            className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2">
+            {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+            Add Member
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditRoleModal({
+  member, onClose, onSaved,
+}: { member: TeamMember; onClose: () => void; onSaved: () => void }) {
+  const [userRole,   setUserRole]   = useState<UserRole>(member.userRole);
+  const [department, setDepartment] = useState(member.department ?? "");
+  const [saving,     setSaving]     = useState(false);
+  const [error,      setError]      = useState<string | null>(null);
+
+  async function handleSave() {
+    setSaving(true); setError(null);
+    try {
+      const res  = await fetch(`/api/admin/team/${member.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userRole, department }),
+      });
+      const json = await res.json() as { success: boolean; error?: string };
+      if (!json.success) { setError(json.error ?? "Failed to save"); return; }
+      onSaved(); onClose();
+    } catch { setError("Unexpected error"); }
+    finally { setSaving(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Edit {member.name}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><XCircle className="h-5 w-5" /></button>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{error}</p>}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Role</label>
+            <div className="grid grid-cols-3 gap-2">
+              {USER_ROLES.map(r => (
+                <button key={r} type="button" onClick={() => setUserRole(r)}
+                  className={`py-2 rounded-xl text-sm font-medium border transition-colors ${
+                    userRole === r
+                      ? `${ROLE_CONFIG[r].badgeClass} border-transparent`
+                      : "bg-gray-100 border-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}>
+                  {ROLE_CONFIG[r].label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400">{ROLE_CONFIG[userRole].description}</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Department</label>
+            <input value={department} onChange={e => setDepartment(e.target.value)} placeholder="e.g. Finance, HR"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+        </div>
+        <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+          <button type="button" onClick={onClose} disabled={saving}
+            className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 disabled:opacity-50">
+            Cancel
+          </button>
+          <button onClick={() => void handleSave()} disabled={saving}
+            className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2">
+            {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TeamTab() {
+  const [members,   setMembers]   = useState<TeamMember[]>([]);
+  const [total,     setTotal]     = useState(0);
+  const [page,      setPage]      = useState(1);
+  const [search,    setSearch]    = useState("");
+  const [loading,   setLoading]   = useState(true);
+  const [showAdd,   setShowAdd]   = useState(false);
+  const [editMember, setEditMember] = useState<TeamMember | null>(null);
+  const [actionId,  setActionId]  = useState<string | null>(null);
+
+  const fetchMembers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const qs  = new URLSearchParams({ page: String(page), ...(search ? { search } : {}) });
+      const res  = await fetch(`/api/admin/team?${qs}`);
+      const json = await res.json() as { success: boolean; data: { members: TeamMember[]; total: number } };
+      if (json.success) { setMembers(json.data.members); setTotal(json.data.total); }
+    } finally { setLoading(false); }
+  }, [page, search]);
+
+  useEffect(() => { void fetchMembers(); }, [fetchMembers]);
+
+  async function toggleActive(m: TeamMember) {
+    setActionId(m.id);
+    try {
+      await fetch(`/api/admin/team/${m.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !m.isActive }),
+      });
+      void fetchMembers();
+    } finally { setActionId(null); }
+  }
+
+  async function handleDelete(m: TeamMember) {
+    if (!confirm(`Remove "${m.name}" from the team?`)) return;
+    setActionId(m.id);
+    try {
+      await fetch(`/api/admin/team/${m.id}`, { method: "DELETE" });
+      void fetchMembers();
+    } finally { setActionId(null); }
+  }
+
+  const totalPages = Math.ceil(total / 20);
+
+  return (
+    <div className="bg-white p-6 rounded-2xl shadow space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Admin Team</h2>
+          <p className="text-sm text-gray-400">Manage who has access to this portal and their permission level.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <input
+              className="pl-9 pr-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-52"
+              placeholder="Search name or email…"
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+            />
+          </div>
+          <button onClick={() => setShowAdd(true)}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">
+            <UserPlus className="h-4 w-4" /> Add Member
+          </button>
+        </div>
+      </div>
+
+      {/* Role legend */}
+      <div className="flex flex-wrap gap-2">
+        {USER_ROLES.map(r => (
+          <span key={r} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${ROLE_CONFIG[r].badgeClass}`}>
+            {ROLE_CONFIG[r].label}
+            <span className="opacity-75">— {ROLE_CONFIG[r].description}</span>
+          </span>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-gray-500 border-b border-gray-100">
+              <th className="pb-3 font-medium">Member</th>
+              <th className="pb-3 font-medium">Role</th>
+              <th className="pb-3 font-medium">Department</th>
+              <th className="pb-3 font-medium">Status</th>
+              <th className="pb-3" />
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={5} className="text-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-300" />
+              </td></tr>
+            ) : members.length === 0 ? (
+              <tr><td colSpan={5} className="text-center py-12 text-gray-400">
+                <UserPlus className="h-8 w-8 mx-auto mb-2 text-gray-200" />
+                <p className="font-medium text-gray-500">No team members yet</p>
+              </td></tr>
+            ) : members.map(m => (
+              <tr key={m.id} className="border-t border-gray-50 hover:bg-gray-50/50 transition-colors">
+                <td className="py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold text-xs shrink-0">
+                      {m.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 flex items-center gap-1.5">
+                        {m.name}
+                        {m.isTenantAdmin && (
+                          <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-semibold">Owner</span>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-400">{m.email}</p>
+                      {m.mustChangePassword && (
+                        <span className="inline-flex items-center gap-1 text-xs text-amber-600">
+                          <KeyRound className="h-3 w-3" />Must change password
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </td>
+                <td className="py-3">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${ROLE_CONFIG[m.userRole].badgeClass}`}>
+                    {ROLE_CONFIG[m.userRole].label}
+                  </span>
+                </td>
+                <td className="py-3 text-gray-500">{m.department ?? "—"}</td>
+                <td className="py-3">
+                  {m.isActive ? (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+                      <CheckCircle2 className="h-3 w-3" /> Active
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                      <XCircle className="h-3 w-3" /> Inactive
+                    </span>
+                  )}
+                </td>
+                <td className="py-3">
+                  <div className="flex items-center justify-end gap-1">
+                    <button onClick={() => setEditMember(m)} disabled={actionId === m.id}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title="Edit role">
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => void toggleActive(m)} disabled={actionId === m.id}
+                      className={`p-1.5 rounded-lg transition-colors ${m.isActive ? "text-gray-400 hover:text-amber-600 hover:bg-amber-50" : "text-gray-400 hover:text-emerald-600 hover:bg-emerald-50"}`}
+                      title={m.isActive ? "Deactivate" : "Activate"}>
+                      {actionId === m.id ? <Loader2 className="h-4 w-4 animate-spin" /> : m.isActive ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
+                    </button>
+                    {!m.isTenantAdmin && (
+                      <button onClick={() => void handleDelete(m)} disabled={actionId === m.id}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Remove">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {total > 20 && (
+        <div className="flex items-center justify-between text-sm text-gray-500 pt-2 border-t border-gray-100">
+          <span>Showing {(page - 1) * 20 + 1}–{Math.min(page * 20, total)} of {total}</span>
+          <div className="flex items-center gap-2">
+            <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}
+              className="p-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 disabled:opacity-40 transition-colors">
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span>{page} / {totalPages}</span>
+            <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}
+              className="p-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 disabled:opacity-40 transition-colors">
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showAdd && <AddMemberModal onClose={() => setShowAdd(false)} onSaved={() => void fetchMembers()} />}
+      {editMember && <EditRoleModal member={editMember} onClose={() => setEditMember(null)} onSaved={() => void fetchMembers()} />}
     </div>
   );
 }
@@ -955,7 +1337,7 @@ function RolesTab() {
 /* ================================================================== */
 
 export default function UsersRolesPage() {
-  const [activeTab, setActiveTab] = useState<"users" | "roles">("users");
+  const [activeTab, setActiveTab] = useState<"team" | "users" | "roles">("team");
   const [roles,     setRoles]     = useState<TenantRole[]>([]);
 
   useEffect(() => {
@@ -973,36 +1355,31 @@ export default function UsersRolesPage() {
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">Users &amp; Roles</h1>
         <p className="text-gray-500 text-sm mt-0.5">
-          Manage users, roles, and permissions
+          Manage your admin team, portal users, and permission roles
         </p>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-3">
-        <button
-          onClick={() => setActiveTab("users")}
-          className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-            activeTab === "users"
-              ? "bg-indigo-600 text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          Users
-        </button>
-        <button
-          onClick={() => setActiveTab("roles")}
-          className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-            activeTab === "roles"
-              ? "bg-indigo-600 text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          Roles &amp; Permissions
-        </button>
+        {(["team", "users", "roles"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+              activeTab === tab
+                ? "bg-indigo-600 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {tab === "team" ? "Admin Team" : tab === "users" ? "Portal Users" : "Roles & Permissions"}
+          </button>
+        ))}
       </div>
 
       {/* Content */}
-      {activeTab === "users" ? <UsersTab roles={roles} /> : <RolesTab />}
+      {activeTab === "team"  && <TeamTab />}
+      {activeTab === "users" && <UsersTab roles={roles} />}
+      {activeTab === "roles" && <RolesTab />}
     </div>
   );
 }

@@ -26,9 +26,10 @@ export function requireSuperAdmin(token: JWT | null): GuardResult {
   return { ok: true, tenantId: defaultTenantId };
 }
 
-/** Guard for /api/admin/* routes — accepts either:
- *  - a Super Admin (isSuperAdmin = true) → scoped to DEFAULT_TENANT_ID
- *  - a Tenant Admin (isTenantAdmin = true) → scoped to their own tenantId */
+/** Guard for /api/admin/* routes — accepts:
+ *  - Super Admin (isSuperAdmin = true) → scoped to DEFAULT_TENANT_ID
+ *  - Tenant Admin (isTenantAdmin = true) → scoped to their tenantId
+ *  - Corporate team member with explicit userRole (ADMIN/EXECUTIVE/MANAGER) */
 export function requireAdmin(token: JWT | null): GuardResult {
   if (!token?.id) return { ok: false, response: unauthorized() };
 
@@ -45,7 +46,20 @@ export function requireAdmin(token: JWT | null): GuardResult {
     return { ok: true, tenantId: token.tenantId as string };
   }
 
+  // Corporate team member (EXECUTIVE / MANAGER) — same data scope, UI gates permissions
+  if (token.userRole && token.tenantId) {
+    return { ok: true, tenantId: token.tenantId as string };
+  }
+
   return { ok: false, response: unauthorized() };
+}
+
+/** True only when the authenticated user holds the ADMIN role (or is a super/tenant admin).
+ *  Use this for write operations that EXECUTIVE / MANAGER should not perform. */
+export function isAdminRole(token: JWT | null): boolean {
+  if (!token) return false;
+  if (token.isSuperAdmin || token.isTenantAdmin) return true;
+  return token.userRole === "ADMIN";
 }
 
 /** Guard for /api/corporate/* routes — any corporate or tenant_admin user. */
