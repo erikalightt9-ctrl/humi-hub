@@ -9,6 +9,7 @@ import {
   AlertCircle, LogOut, RefreshCw, ShieldCheck, ShieldX, Navigation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/shared/NotificationBell";
 
 /* ─ Leaflet map loaded only client-side ─────────────────────────── */
 const LeafletMap = dynamic(
@@ -236,12 +237,18 @@ export default function EmployeeAttendancePage() {
             {new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}
           </p>
         </div>
-        <button
-          onClick={() => signOut({ callbackUrl: "/employee/login" })}
-          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors"
-        >
-          <LogOut className="h-4 w-4" />Sign out
-        </button>
+        <div className="flex items-center gap-1">
+          {/* NotificationBell uses dark-bg styles; wrap with color override for light header */}
+          <div className="[&_button]:text-gray-400 [&_button:hover]:text-gray-700 [&_span.absolute]:top-0 [&_span.absolute]:right-0">
+            <NotificationBell />
+          </div>
+          <button
+            onClick={() => signOut({ callbackUrl: "/employee/login" })}
+            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors ml-1"
+          >
+            <LogOut className="h-4 w-4" />Sign out
+          </button>
+        </div>
       </div>
 
       <div className="max-w-lg mx-auto p-4 space-y-4 pb-10">

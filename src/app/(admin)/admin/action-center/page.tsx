@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   CheckCircle2, XCircle, Clock, Loader2, RefreshCw,
-  ClipboardList, DollarSign, Wrench, ChevronDown, AlertCircle,
+  ClipboardList, DollarSign, Wrench, ChevronDown, AlertCircle, Sparkles,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -348,6 +348,9 @@ export default function ActionCenterPage() {
   const [error,    setError]    = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<Date>(new Date());
 
+  const [aiSummary,      setAiSummary]      = useState<string | null>(null);
+  const [aiLoading,      setAiLoading]      = useState(false);
+
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     setError(null);
@@ -365,6 +368,18 @@ export default function ActionCenterPage() {
   }, []);
 
   useEffect(() => { void load(); }, [load]);
+
+  // Load AI summary after main data is available (non-blocking)
+  useEffect(() => {
+    setAiLoading(true);
+    fetch("/api/admin/ai-insights/action-center")
+      .then((r) => r.json())
+      .then((j: { success: boolean; data?: { summary: string } }) => {
+        if (j.success && j.data?.summary) setAiSummary(j.data.summary);
+      })
+      .catch(() => {})
+      .finally(() => setAiLoading(false));
+  }, []);
 
   /* ── Action handlers ──────────────────────────────────────────── */
   async function handleLeaveAction(id: string, action: "APPROVED" | "REJECTED", note?: string) {
@@ -445,6 +460,22 @@ export default function ActionCenterPage() {
           </button>
         </div>
       </div>
+
+      {/* AI Summary */}
+      {(aiLoading || aiSummary) && (
+        <div className="bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-200 rounded-2xl px-5 py-4 flex items-start gap-3">
+          <div className="h-8 w-8 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+            <Sparkles className="h-4 w-4 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wide mb-1">AI Summary</p>
+            {aiLoading
+              ? <div className="flex items-center gap-2 text-sm text-indigo-500"><Loader2 className="h-3.5 w-3.5 animate-spin" />Analysing pending items…</div>
+              : <p className="text-sm text-slate-700 leading-relaxed">{aiSummary}</p>
+            }
+          </div>
+        </div>
+      )}
 
       {/* All-done banner */}
       {d.total === 0 && (

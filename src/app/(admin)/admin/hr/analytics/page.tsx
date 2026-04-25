@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   BarChart3, Users, CalendarDays, DollarSign,
-  Loader2, RefreshCw, TrendingUp,
+  Loader2, RefreshCw, TrendingUp, Sparkles,
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -97,6 +97,9 @@ export default function HrAnalyticsPage() {
   const [loading, setLoading]   = useState(true);
   const [lastSync, setLastSync] = useState<Date | null>(null);
 
+  const [aiNarrative, setAiNarrative]   = useState<string | null>(null);
+  const [aiLoading,   setAiLoading]     = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -114,6 +117,17 @@ export default function HrAnalyticsPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    setAiLoading(true);
+    fetch("/api/admin/ai-insights/hr")
+      .then((r) => r.json())
+      .then((j: { success: boolean; data?: { narrative: string } }) => {
+        if (j.success && j.data?.narrative) setAiNarrative(j.data.narrative);
+      })
+      .catch(() => {})
+      .finally(() => setAiLoading(false));
+  }, []);
 
   const activeCount   = data?.headcount.find((h) => h.status === "ACTIVE")?.count ?? 0;
   const totalLeave    = data?.leaveByType.reduce((s, r) => s + r.days, 0) ?? 0;
@@ -293,6 +307,22 @@ export default function HrAnalyticsPage() {
                 ))}
               </div>
             </div>
+
+            {/* AI Narrative */}
+            {(aiLoading || aiNarrative) && (
+              <div className="bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-xl px-5 py-4 flex items-start gap-3">
+                <div className="h-8 w-8 rounded-xl bg-violet-600 flex items-center justify-center shrink-0 mt-0.5">
+                  <Sparkles className="h-4 w-4 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-violet-700 uppercase tracking-wide mb-1">AI Narrative</p>
+                  {aiLoading
+                    ? <div className="flex items-center gap-2 text-sm text-violet-500"><Loader2 className="h-3.5 w-3.5 animate-spin" />Generating workforce insight…</div>
+                    : <p className="text-sm text-gray-700 leading-relaxed">{aiNarrative}</p>
+                  }
+                </div>
+              </div>
+            )}
           </>
         ) : null}
       </div>
