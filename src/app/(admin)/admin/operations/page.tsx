@@ -257,9 +257,11 @@ export default function OperationsDashboardPage() {
         <Widget
           title="Pending Approvals"
           icon={<Clock className="h-4 w-4 text-violet-600" />}
+          href="/admin/action-center"
+          linkLabel="Review all →"
         >
           <div className="mt-2 space-y-2">
-            <Link href="/admin/hr/leave" className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
+            <Link href="/admin/action-center" className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
               <span className="flex items-center gap-2 text-xs text-slate-700">
                 <Calendar className="h-4 w-4 text-slate-400" /> Leave Requests
               </span>
@@ -267,7 +269,7 @@ export default function OperationsDashboardPage() {
                 {data.pendingLeave}
               </span>
             </Link>
-            <Link href="/admin/hr/payroll" className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
+            <Link href="/admin/action-center" className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
               <span className="flex items-center gap-2 text-xs text-slate-700">
                 <DollarSign className="h-4 w-4 text-slate-400" /> Draft Payroll Runs
               </span>

@@ -2,10 +2,14 @@ import type { ActorType } from "@prisma/client";
 import type { JWT } from "next-auth/jwt";
 
 const ROLE_TO_ACTOR_TYPE: Readonly<Record<string, ActorType>> = {
-  admin: "ADMIN",
-  student: "STUDENT",
-  trainer: "TRAINER",
-  corporate: "CORPORATE_MANAGER",
+  admin:        "ADMIN",
+  humi_admin:   "HUMI_ADMIN",
+  student:      "STUDENT",
+  trainer:      "TRAINER",
+  corporate:    "CORPORATE_MANAGER",
+  tenant_admin: "CORPORATE_MANAGER",
+  tenant_user:  "CORPORATE_MANAGER",
+  employee:     "EMPLOYEE",
 };
 
 export interface ActorIdentity {

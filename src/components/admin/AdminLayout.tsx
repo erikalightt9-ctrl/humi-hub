@@ -21,6 +21,7 @@ import {
   UserCheck,
   Building2,
   Activity,
+  Inbox,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/shared/NotificationBell";
@@ -46,8 +47,9 @@ interface NavItem {
 }
 
 const STATIC_NAV: ReadonlyArray<NavItem> = [
-  { href: "/admin",            label: "Dashboard",   icon: LayoutDashboard, exact: true },
-  { href: "/admin/operations", label: "Operations",  icon: Activity },
+  { href: "/admin",               label: "Dashboard",     icon: LayoutDashboard, exact: true },
+  { href: "/admin/operations",    label: "Operations",    icon: Activity },
+  { href: "/admin/action-center", label: "Action Center", icon: Inbox },
 ];
 
 const ADMIN_ONLY_NAV: ReadonlyArray<NavItem> = [
