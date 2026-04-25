@@ -1,5 +1,6 @@
--- Clears the failed migration record so prisma migrate deploy can re-apply it cleanly.
--- Safe to run multiple times: only deletes unfinished (failed) records.
+-- Clears ALL failed (unfinished, not rolled-back) migration records so
+-- prisma migrate deploy can re-attempt them cleanly.
+-- Safe to run multiple times: only targets unfinished rows.
 DELETE FROM "_prisma_migrations"
-WHERE migration_name = '20260419000002_inventory_item_category_optional'
-  AND finished_at IS NULL;
+WHERE finished_at IS NULL
+  AND rolled_back_at IS NULL;
