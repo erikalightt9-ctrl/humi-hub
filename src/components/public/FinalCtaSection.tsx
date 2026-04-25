@@ -1,42 +1,53 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Play } from "lucide-react";
+import { CalendarCheck, ArrowRight } from "lucide-react";
 
 export function FinalCtaSection() {
   return (
-    <section className="py-20 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">
-          Start Your Training Platform Today
-        </h2>
-        <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
-          Launch your branded training center in minutes. Manage students,
-          courses, payments, and analytics in one place — no technical skills
-          required.
+    <section className="relative bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 py-24 overflow-hidden">
+
+      {/* Background glows */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 right-1/4 w-80 h-80 bg-white/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-indigo-400/10 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+
+        <p className="text-sm font-semibold uppercase tracking-widest text-blue-300 mb-4">
+          Ready when you are
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button
-            asChild
-            size="lg"
-            className="bg-white text-blue-900 hover:bg-blue-50 font-bold text-base px-8 py-6 shadow-lg"
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-[1.1] mb-6">
+          Stop managing chaos.<br className="hidden sm:block" />
+          Start running your business.
+        </h2>
+
+        <p className="text-blue-200/80 text-lg max-w-xl mx-auto mb-10">
+          Join 500+ companies that chose one platform over five. Get your team
+          set up today — no contracts, no setup fees, no risk.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <Link
+            href="/contact"
+            className="inline-flex items-center gap-2 bg-white text-blue-900 font-bold text-base px-8 py-4 rounded-xl shadow-lg hover:bg-blue-50 transition-colors w-full sm:w-auto justify-center"
           >
-            <Link href="/contact">
-              Start Your Training Platform Today <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-          <Button
-            asChild
-            size="lg"
-            variant="outline"
-            className="border-white/30 text-white hover:bg-white/10 font-semibold text-base px-8 py-6"
+            <CalendarCheck className="h-5 w-5" />
+            Book a Demo
+          </Link>
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-2 border border-white/30 text-white font-semibold text-base px-8 py-4 rounded-xl hover:bg-white/10 transition-colors w-full sm:w-auto justify-center"
           >
-            <Link href="/contact">
-              <Play className="mr-2 h-4 w-4" />
-              Book a Demo
-            </Link>
-          </Button>
+            Start Free
+            <ArrowRight className="h-5 w-5" />
+          </Link>
         </div>
+
+        <p className="text-blue-300/60 text-sm mt-6">
+          Free plan available · No credit card required · Cancel anytime
+        </p>
+
       </div>
     </section>
   );
