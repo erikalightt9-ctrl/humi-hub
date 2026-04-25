@@ -6,6 +6,7 @@ import { ProblemSolutionSection } from "@/components/public/ProblemSolutionSecti
 import { FeatureHighlightsSection } from "@/components/public/FeatureHighlightsSection";
 import { HowItWorksNewSection } from "@/components/public/HowItWorksNewSection";
 import { PricingTeaserSection } from "@/components/public/PricingTeaserSection";
+import { LandingTestimonialsSection } from "@/components/public/LandingTestimonialsSection";
 import { NicheSection } from "@/components/public/NicheSection";
 import { TargetAudienceSection } from "@/components/public/TargetAudienceSection";
 import { ValuePropositionSection } from "@/components/public/ValuePropositionSection";
@@ -46,7 +47,10 @@ export default function HomePage() {
       {/* 6. Pricing Teaser — 3-tier cards */}
       <PricingTeaserSection />
 
-      {/* 7. Niche — platform identity, industries served, business pillars */}
+      {/* 7. Testimonials — dark background quote cards */}
+      <LandingTestimonialsSection />
+
+      {/* 8. Niche — platform identity, industries served, business pillars */}
       <NicheSection />
 
       {/* 3. Target Audience — who it's for (6 industry cards) */}
