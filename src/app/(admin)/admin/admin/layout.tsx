@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, TableProperties } from "lucide-react";
+import { ShoppingBag, Package } from "lucide-react";
 
 const TABS = [
-  { label: "Bulk Entry", href: "/admin/admin/stockroom/bulk", icon: TableProperties },
+  { label: "Inventory", href: "/admin/admin/inventory", icon: Package },
 ];
 
 export default function AdminDeptLayout({ children }: { children: React.ReactNode }) {

@@ -118,12 +118,17 @@ export async function proxy(request: NextRequest) {
   }
 
   // ── Admin route protection ───────────────────────────────────────────────
-  // Allows both platform admins (role === "admin") and tenant admins (isTenantAdmin === true)
+  // Allows: platform super-admin, tenant admins, and corporate team members
+  // with an explicit userRole (EXECUTIVE / MANAGER / ADMIN).
   const isAdminRoute = pathname.startsWith("/admin") && !pathname.startsWith("/admin/login");
   const isAdminApi = pathname.startsWith("/api/admin");
 
   if (isAdminRoute || isAdminApi) {
-    const isAuthorized = token && (token.role === "admin" || token.isTenantAdmin === true);
+    const isAuthorized =
+      token &&
+      (token.role === "admin" ||
+        token.isTenantAdmin === true ||
+        (token.userRole != null && token.tenantId != null));
     if (!isAuthorized) {
       if (isAdminApi) {
         return NextResponse.json({ success: false, data: null, error: "Unauthorized" }, { status: 401 });

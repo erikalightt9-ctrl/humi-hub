@@ -9,9 +9,8 @@ import {
   Monitor, Package, UserCheck, Wrench, Trash2, Archive,
   ChevronRight, Search, X as XIcon,
   Users, Calendar, TrendingUp, PhoneCall, Briefcase,
-  ClipboardList, Clock, TableProperties, ChevronDown, ChevronUp,
+  ClipboardList, Clock,
 } from "lucide-react";
-import { BulkStockGrid } from "@/components/admin/bulk-stock/BulkStockGrid";
 
 /* ------------------------------------------------------------------ */
 /*  Department config                                                  */
@@ -964,223 +963,145 @@ function CrmTab() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Stockroom Section — always visible on Administration page          */
+/*  Inventory Management — unified category-first module               */
 /* ------------------------------------------------------------------ */
 
-const STOCK_CATEGORIES = [
-  { name: "Pantry Supplies",      icon: "🍱", bg: "bg-green-50",  border: "border-green-200",  api: "Pantry Supplies"      },
-  { name: "Maintenance Supplies", icon: "🔧", bg: "bg-orange-50", border: "border-orange-200", api: "Maintenance Supplies" },
-  { name: "Assets (Appliances, Equipment, Furniture & Fixtures)", icon: "📦", bg: "bg-purple-50", border: "border-purple-200", api: "Assets" },
-  { name: "Stockroom Stocks",     icon: "🏪", bg: "bg-teal-50",   border: "border-teal-200",   api: "Stockroom Stocks"     },
+type InvCategory = {
+  id: string;
+  name: string;
+  icon: string | null;
+  description: string | null;
+  itemCount: number;
+  lowStock: number;
+  outOfStock: number;
+};
+
+const SPECIALIZED_MODULES = [
+  { name: "Vehicle Fuel & Maintenance", icon: "⛽", desc: "Fuel logs & maintenance requests", href: "/admin/admin/fuel-requests", bg: "bg-yellow-50 border-yellow-200" },
+  { name: "Repair Logs",                icon: "🛠️", desc: "Track repairs & service logs",    href: "/admin/admin/repair-logs",   bg: "bg-red-50 border-red-200" },
 ] as const;
 
-type StockItem = { id: string; name: string; category: string; quantity: number; unit: string; minThreshold: number; updatedAt: string };
-
-const EMPTY_STOCK_FORM = { name: "", category: "Stockroom Stocks", quantity: "0", unit: "pcs", minThreshold: "0" };
-
 function InventoryTab() {
-  const [items, setItems]         = useState<StockItem[]>([]);
-  const [stats, setStats]         = useState<{ total: number; totalLow: number; byCategory: { category: string; count: number; lowStock: number }[] } | null>(null);
-  const [loadingData, setLoading] = useState(true);
-  const [search, setSearch]       = useState("");
-  const [filterCat, setFilterCat] = useState<string>("All");
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm]           = useState(EMPTY_STOCK_FORM);
-  const [saving, setSaving]       = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [showBulk, setShowBulk]   = useState(false);
+  const [categories, setCategories] = useState<InvCategory[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const loadCategories = useCallback(async () => {
     setLoading(true);
-    const [ir, sr] = await Promise.all([
-      fetch("/api/admin/dept/stock").then(r => r.json()),
-      fetch("/api/admin/dept/stock?stats=1").then(r => r.json()),
-    ]);
-    if (ir.success) setItems(ir.data);
-    if (sr.success) setStats(sr.data);
-    setLoading(false);
+    setError(null);
+    try {
+      let catRes  = await fetch("/api/admin/inventory/categories").then(r => r.json());
+      if (catRes.success && Array.isArray(catRes.data) && catRes.data.length === 0) {
+        await fetch("/api/admin/inventory/seed-defaults", { method: "POST" });
+        catRes = await fetch("/api/admin/inventory/categories").then(r => r.json());
+      }
+      if (!catRes.success) throw new Error(catRes.error ?? "Failed to load categories");
+
+      const dashRes = await fetch("/api/admin/inventory/dashboard").then(r => r.json());
+      const byId = new Map<string, { itemCount: number; lowStock: number; outOfStock: number }>();
+      if (dashRes.success && Array.isArray(dashRes.data?.categories)) {
+        for (const c of dashRes.data.categories as Array<{ id: string; itemCount: number; lowStock: number; outOfStock: number }>) {
+          byId.set(c.id, { itemCount: c.itemCount, lowStock: c.lowStock, outOfStock: c.outOfStock });
+        }
+      }
+
+      const merged: InvCategory[] = (catRes.data as Array<{ id: string; name: string; icon: string | null; description: string | null }>).map((c) => ({
+        id: c.id,
+        name: c.name,
+        icon: c.icon,
+        description: c.description,
+        itemCount: byId.get(c.id)?.itemCount ?? 0,
+        lowStock:  byId.get(c.id)?.lowStock  ?? 0,
+        outOfStock: byId.get(c.id)?.outOfStock ?? 0,
+      }));
+      setCategories(merged);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load inventory");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
-
-  const handleAdd = async () => {
-    if (!form.name.trim()) { setFormError("Item name is required."); return; }
-    setSaving(true); setFormError(null);
-    try {
-      const res  = await fetch("/api/admin/dept/stock", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, quantity: parseFloat(form.quantity) || 0, minThreshold: parseFloat(form.minThreshold) || 0 }),
-      });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error);
-      setShowModal(false); setForm(EMPTY_STOCK_FORM); load();
-    } catch (e) { setFormError(e instanceof Error ? e.message : "Failed"); }
-    finally { setSaving(false); }
-  };
-
-  const filtered = items.filter(i =>
-    (filterCat === "All" || i.category === filterCat) &&
-    i.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const inputCls = "w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white";
-
-  const getStatus = (qty: number, min: number) => {
-    if (qty === 0)         return { label: "Out of Stock", cls: "bg-red-100 text-red-700" };
-    if (min > 0 && qty <= min) return { label: "Low Stock",    cls: "bg-amber-100 text-amber-700" };
-    return                      { label: "In Stock",    cls: "bg-emerald-100 text-emerald-700" };
-  };
+  useEffect(() => { loadCategories(); }, [loadCategories]);
 
   return (
     <div className="space-y-5">
-      {/* Add Stock Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h2 className="text-base font-semibold text-slate-900">Add Stock Item</h2>
-              <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
-                <XIcon className="h-4 w-4 text-slate-500" />
-              </button>
-            </div>
-            <div className="px-6 py-5 space-y-3">
-              {formError && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2">{formError}</p>}
-              <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Item Name *</label>
-                <input value={form.name} onChange={e => setForm(p => ({...p, name: e.target.value}))} placeholder="e.g. Dishwashing liquid" className={inputCls} />
-              </div>
-              <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Category</label>
-                <select value={form.category} onChange={e => setForm(p => ({...p, category: e.target.value}))} className={inputCls}>
-                  {STOCK_CATEGORIES.map(c => <option key={c.api} value={c.api}>{c.name}</option>)}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Quantity</label>
-                  <input type="number" min="0" value={form.quantity} onChange={e => setForm(p => ({...p, quantity: e.target.value}))} className={inputCls} />
-                </div>
-                <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Unit</label>
-                  <input value={form.unit} onChange={e => setForm(p => ({...p, unit: e.target.value}))} placeholder="pcs, kg, liters" className={inputCls} />
-                </div>
-              </div>
-              <div><label className="block text-xs font-semibold text-slate-600 mb-1.5">Min Threshold</label>
-                <input type="number" min="0" value={form.minThreshold} onChange={e => setForm(p => ({...p, minThreshold: e.target.value}))} className={inputCls} />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2.5 text-sm border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100">Cancel</button>
-              <button onClick={handleAdd} disabled={saving}
-                className="flex items-center gap-2 px-5 py-2.5 text-sm bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-xl font-medium">
-                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                {saving ? "Saving…" : "Add Item"}
-              </button>
-            </div>
-          </div>
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="text-base font-bold text-slate-900">Inventory Management</h2>
+          <p className="text-xs text-slate-500 mt-0.5">Unified categories — each opens its own bulk-entry workspace.</p>
+        </div>
+        <Link
+          href="/admin/admin/inventory"
+          className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-xl font-medium border border-slate-200 text-slate-600 hover:bg-slate-50"
+        >
+          <Package className="h-3.5 w-3.5" /> Full dashboard
+        </Link>
+      </div>
+
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 shrink-0" /> {error}
         </div>
       )}
 
-      {/* Category + Module Cards — unified grid so no orphan row */}
-      {loadingData ? (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[...STOCK_CATEGORIES, ...Array(8)].map((_, i) => <div key={i} className="h-[72px] rounded-2xl bg-slate-100 animate-pulse" />)}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {STOCK_CATEGORIES.map(cat => {
-            const stat  = stats?.byCategory.find(s => s.category === cat.api);
-            const count = stat?.count    ?? 0;
-            const low   = stat?.lowStock ?? 0;
-            return (
-              <button key={cat.name} onClick={() => setFilterCat(filterCat === cat.api ? "All" : cat.api)}
-                className={`${cat.bg} ${cat.border} border rounded-2xl px-3 py-2 text-left hover:shadow-md hover:scale-[1.02] transition-all duration-150 h-[72px] flex flex-col justify-between ${filterCat === cat.api ? "ring-2 ring-indigo-500 ring-offset-1" : ""}`}>
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">{cat.icon}</span>
-                  <p className="text-xs font-semibold text-slate-700 leading-snug">{cat.name}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <p className="text-lg font-bold text-slate-900 leading-none">{count}</p>
-                  <p className="text-xs text-slate-500">items</p>
-                  {low > 0 && <p className="text-xs text-amber-600 font-semibold flex items-center gap-0.5"><AlertCircle className="h-3 w-3 shrink-0" />{low} low</p>}
-                </div>
-              </button>
-            );
-          })}
-          {([
-            { name: "Office Supplies",            icon: "🛒", desc: "Office consumables",                 href: "/admin/admin/pantry",            bg: "bg-sky-50 border-sky-200" },
-            { name: "Medicine",                   icon: "💊", desc: "First aid & medical supplies",       href: "/admin/admin/medicine",          bg: "bg-pink-50 border-pink-200" },
-            { name: "Cleaning Supplies",          icon: "🧹", desc: "Janitorial & cleaning materials",    href: "/admin/admin/cleaning",          bg: "bg-blue-50 border-blue-200" },
-            { name: "Vehicle Fuel & Maintenance", icon: "⛽", desc: "Fuel logs & maintenance requests",   href: "/admin/admin/fuel-requests",     bg: "bg-yellow-50 border-yellow-200" },
-            { name: "Repair Logs",                icon: "🛠️", desc: "Track repairs & service logs",     href: "/admin/admin/repair-logs",       bg: "bg-red-50 border-red-200" },
-          ] as const).map((mod) => (
-            <Link key={mod.name} href={mod.href}
-              className={`${mod.bg} border rounded-2xl px-3 py-2 hover:shadow-md hover:scale-[1.02] transition-all duration-150 flex items-center gap-3 h-[72px]`}>
-              <div className="text-2xl shrink-0">{mod.icon}</div>
-              <div>
-                <p className="text-xs font-semibold text-slate-800 leading-tight">{mod.name}</p>
-                <p className="text-[11px] text-slate-500 mt-0.5 leading-tight">{mod.desc}</p>
-              </div>
-            </Link>
+      {loading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-[92px] rounded-2xl bg-slate-100 animate-pulse" />
           ))}
         </div>
-      )}
-
-      {/* Search + Add */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search items…"
-            className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        </div>
-        {filterCat !== "All" && (
-          <button onClick={() => setFilterCat("All")} className="flex items-center gap-1 px-3 py-2.5 text-xs border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50">
-            <XIcon className="h-3 w-3" /> Clear filter
-          </button>
-        )}
-      </div>
-
-      {/* Table */}
-      {loadingData ? (
-        <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-indigo-400" /></div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-4">
-          <p className="text-sm text-slate-400">{items.length === 0 ? "No stock items yet." : "No items match your search."}</p>
-        </div>
       ) : (
-        <div className="border border-slate-200 rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>{["Item Name", "Category", "Quantity", "Status", "Last Updated"].map(h => (
-                <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-500">{h}</th>
-              ))}</tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filtered.map(item => {
-                const s = getStatus(Number(item.quantity), Number(item.minThreshold));
-                return (
-                  <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-slate-900">{item.name}</td>
-                    <td className="px-4 py-3 text-slate-500 text-xs">{item.category}</td>
-                    <td className="px-4 py-3 font-semibold text-slate-900">{Number(item.quantity).toLocaleString()} <span className="text-xs font-normal text-slate-400">{item.unit}</span></td>
-                    <td className="px-4 py-3"><span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.cls}`}>{s.label}</span></td>
-                    <td className="px-4 py-3 text-xs text-slate-400">{new Date(item.updatedAt).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <div className="px-4 py-2.5 border-t border-slate-100 text-xs text-slate-400">
-            Showing {filtered.length} of {items.length} items
+        <>
+          {/* Primary categories (DB-driven) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {categories.map((c) => (
+              <Link
+                key={c.id}
+                href={`/admin/admin/inventory/categories/${c.id}`}
+                className="group rounded-2xl border border-slate-200 bg-white px-3 py-3 hover:shadow-md hover:border-indigo-300 hover:scale-[1.02] transition-all duration-150"
+              >
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xl">{c.icon ?? "📋"}</span>
+                    <p className="text-xs font-semibold text-slate-800 truncate">{c.name}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-400 transition-colors shrink-0" />
+                </div>
+                <p className="text-lg font-bold text-slate-900 tabular-nums leading-none">
+                  {c.itemCount} <span className="text-xs font-normal text-slate-400">items</span>
+                </p>
+                <div className="flex items-center gap-2 mt-1 text-[11px]">
+                  {c.lowStock > 0 && <span className="text-amber-600 font-semibold">{c.lowStock} low</span>}
+                  {c.outOfStock > 0 && <span className="text-red-600 font-semibold">{c.outOfStock} out</span>}
+                  {c.lowStock === 0 && c.outOfStock === 0 && <span className="text-emerald-600">all good</span>}
+                </div>
+              </Link>
+            ))}
           </div>
-        </div>
-      )}
 
-      {/* ── Bulk Stock Entry ── */}
-      <div className="border-t border-slate-200 pt-4 space-y-3">
-        <button onClick={() => setShowBulk(v => !v)}
-          className={`flex items-center gap-1.5 px-4 py-2.5 text-sm rounded-xl font-medium border transition-colors ${showBulk ? "bg-indigo-50 border-indigo-200 text-indigo-700" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
-          <TableProperties className="h-4 w-4" /> Add Stock {showBulk ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-        </button>
-        {showBulk && <BulkStockGrid />}
-      </div>
+          {/* Specialized modules (non-inventory workflows) */}
+          <div className="pt-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-2">Specialized modules</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {SPECIALIZED_MODULES.map((mod) => (
+                <Link
+                  key={mod.name}
+                  href={mod.href}
+                  className={`${mod.bg} border rounded-2xl px-3 py-3 hover:shadow-md hover:scale-[1.02] transition-all duration-150 flex items-center gap-3`}
+                >
+                  <div className="text-2xl shrink-0">{mod.icon}</div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 leading-tight truncate">{mod.name}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5 leading-tight">{mod.desc}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

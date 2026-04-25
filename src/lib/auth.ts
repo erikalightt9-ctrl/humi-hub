@@ -703,6 +703,7 @@ export const authOptions: NextAuthOptions = {
           isSuperAdmin: false,
           isTenantAdmin: manager.isTenantAdmin,
           mustChangePassword: manager.mustChangePassword,
+          userRole: manager.userRole as string,
         };
       },
     }),
@@ -747,6 +748,8 @@ export const authOptions: NextAuthOptions = {
         // orgSubdomain stored for Edge middleware cross-tenant guard (avoids DB in middleware)
         token.orgSubdomain =
           (user as typeof user & { orgSubdomain?: string | null }).orgSubdomain ?? null;
+        token.userRole =
+          (user as typeof user & { userRole?: string | null }).userRole ?? null;
       }
       return token;
     },
@@ -776,6 +779,8 @@ export const authOptions: NextAuthOptions = {
           (token.isHumiAdmin as boolean) ?? false;
         session.user.humiAdminPermissions =
           (token.humiAdminPermissions as import("@/types/next-auth").HumiAdminPermissions | null) ?? null;
+        (user as typeof user & { userRole: string | null }).userRole =
+          (token.userRole as string | null) ?? null;
       }
       return session;
     },

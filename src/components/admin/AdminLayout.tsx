@@ -20,6 +20,9 @@ import {
   Briefcase,
   UserCheck,
   Building2,
+  Activity,
+  Inbox,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/shared/NotificationBell";
@@ -28,9 +31,11 @@ import { AdminProfileDropdown } from "@/components/admin/AdminProfileDropdown";
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 import { signOut, useSession } from "next-auth/react";
 import type { ModuleKey } from "@/lib/modules";
+import { canAccessNav, ROLE_CONFIG } from "@/lib/rbac";
+import type { UserRole } from "@/lib/rbac";
 
 /* ------------------------------------------------------------------ */
-/*  Navigation — always-visible + module-gated items                   */
+/*  Navigation definitions                                              */
 /* ------------------------------------------------------------------ */
 
 interface NavItem {
@@ -39,28 +44,29 @@ interface NavItem {
   readonly icon: React.ComponentType<{ className?: string }>;
   readonly exact?: boolean;
   readonly moduleKey?: ModuleKey;
-  /** If set, only show this item when the tenant's industry matches one of these values */
   readonly industries?: string[];
 }
 
-/** Items always visible regardless of enabled modules */
 const STATIC_NAV: ReadonlyArray<NavItem> = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin",               label: "Dashboard",     icon: LayoutDashboard, exact: true },
+  { href: "/admin/operations",    label: "Operations",    icon: Activity },
+  { href: "/admin/action-center", label: "Action Center", icon: Inbox },
 ];
 
-/** Items visible only to tenant admins / super admins (not plain tenant_users) */
 const ADMIN_ONLY_NAV: ReadonlyArray<NavItem> = [
   { href: "/admin/users-roles", label: "Users & Roles", icon: UserCheck },
 ];
 
-/** Module-gated nav items — shown only when the module is enabled */
 const MODULE_NAV: ReadonlyArray<NavItem> = [
+  { href: "/admin/training-center", label: "Training Center", icon: GraduationCap, moduleKey: "module_lms" },
   { href: "/admin/courses",    label: "Courses",    icon: BookOpen,      moduleKey: "module_lms" },
   { href: "/admin/students",   label: "Students",   icon: Users,         moduleKey: "module_lms", industries: ["training_center"] },
   { href: "/admin/trainers",   label: "Trainers",   icon: UserCog,       moduleKey: "module_lms" },
   { href: "/admin/enrollees",  label: "Tasks",      icon: CheckSquare,   moduleKey: "module_lms" },
   { href: "/admin/revenue",    label: "Revenue",    icon: DollarSign,    moduleKey: "module_lms" },
-  { href: "/admin/departments", label: "Departments",  icon: Building2,  moduleKey: "module_hr" },
+  { href: "/admin/departments",  label: "Departments",  icon: Building2,    moduleKey: "module_hr" },
+  { href: "/admin/work",        label: "Work Tracker", icon: CheckSquare,  moduleKey: "module_hr" },
+  { href: "/admin/hr/analytics", label: "HR Analytics", icon: BarChart3,   moduleKey: "module_hr" },
   { href: "/admin/admin/inventory", label: "Office Admin", icon: Briefcase, moduleKey: "module_admin" },
 ];
 
@@ -76,14 +82,16 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: session } = useSession();
+
   const isSuperAdmin  = (session?.user as { isSuperAdmin?: boolean })?.isSuperAdmin === true;
   const isTenantAdmin = (session?.user as { isTenantAdmin?: boolean })?.isTenantAdmin === true;
   const isTenantUser  = (session?.user as { isTenantUser?: boolean })?.isTenantUser  === true;
   const userPermissions: string[] | null =
     (session?.user as { permissions?: string[] | null })?.permissions ?? null;
+  const userRole = (session?.user as { userRole?: string | null })?.userRole as UserRole | null ?? null;
 
   const [enabledModules, setEnabledModules] = useState<Partial<Record<ModuleKey, boolean>>>({
-    module_lms: true, // optimistic default for LMS
+    module_lms: true,
   });
   const [tenantIndustry, setTenantIndustry] = useState<string | null>(null);
 
@@ -100,9 +108,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   const visibleNav: NavItem[] = [
-    ...STATIC_NAV,
+    ...STATIC_NAV.filter((item) => canAccessNav(userRole, item.href)),
     ...MODULE_NAV.filter((item) => {
-      // Tenant users only see modules in their permissions list
+      // Role gate first
+      if (!canAccessNav(userRole, item.href)) return false;
+      // Module/permission gate
       if (isTenantUser && userPermissions !== null) {
         if (item.moduleKey && !userPermissions.includes(item.moduleKey)) return false;
       } else {
@@ -111,19 +121,22 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       if (item.industries && !item.industries.includes(tenantIndustry ?? "")) return false;
       return true;
     }),
-    // Portal Users management — visible to tenant admins and super admins only
-    ...(isTenantAdmin || isSuperAdmin ? ADMIN_ONLY_NAV : []),
-    ...SETTINGS_NAV,
+    // Users & Roles — ADMIN role only
+    ...(canAccessNav(userRole, "/admin/users-roles") && (isTenantAdmin || isSuperAdmin)
+      ? ADMIN_ONLY_NAV
+      : []),
+    ...SETTINGS_NAV.filter((item) => canAccessNav(userRole, item.href)),
   ];
 
   function isActive({ href, exact }: NavItem) {
     return exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
   }
 
+  const roleCfg = userRole ? ROLE_CONFIG[userRole] : null;
+
   return (
     <div className="flex h-screen bg-ds-bg overflow-hidden">
 
-      {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/60 md:hidden"
@@ -158,6 +171,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <X className="h-4 w-4" />
           </button>
         </div>
+
+        {/* Role badge */}
+        {roleCfg && (
+          <div className="px-5 py-2 border-b border-white/10">
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${roleCfg.badgeClass}`}>
+              {roleCfg.label}
+            </span>
+          </div>
+        )}
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
@@ -223,7 +245,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <Menu className="h-5 w-5" />
           </button>
 
-          {/* Logo — mobile only */}
           <div className="flex items-center gap-2 font-bold text-sm text-white md:hidden">
             <GraduationCap className="h-5 w-5 text-ds-primary" />
             HUMI Hub Admin
@@ -243,9 +264,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {/* Mobile bottom nav */}
       <AdminMobileNav />
-
       <ChatWidgetEnhanced role="admin" currentPage={pathname} />
     </div>
   );

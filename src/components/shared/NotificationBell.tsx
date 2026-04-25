@@ -88,6 +88,8 @@ export function NotificationBell() {
     ? "/trainer/notifications"
     : pathname?.includes("/corporate")
     ? "/corporate/notifications"
+    : pathname?.includes("/employee")
+    ? "/employee/notifications"
     : "/student/notifications";
 
   return (

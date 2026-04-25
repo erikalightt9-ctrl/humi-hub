@@ -7,6 +7,7 @@ const TABS = [
   { label: "Dashboard",           href: "/admin/hr" },
   { label: "Employees",           href: "/admin/hr/employees" },
   { label: "Payroll",             href: "/admin/hr/payroll" },
+  { label: "🔴 Live",            href: "/admin/hr/live" },
   { label: "Attendance",          href: "/admin/hr/attendance" },
   { label: "Leave Requests",      href: "/admin/hr/leave" },
   { label: "Gov. Contrib. Rules", href: "/admin/hr/gov-contrib-rules" },

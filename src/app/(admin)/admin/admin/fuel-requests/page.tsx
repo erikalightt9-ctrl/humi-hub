@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Car, Fuel, Wrench, Plus, Loader2, Pencil, X, Check, Clock, ChevronDown } from "lucide-react";
+import { Car, Fuel, Wrench, Loader2, Pencil, X, Check, Clock, ChevronDown } from "lucide-react";
 
 type Tab = "fuel" | "maintenance";
 
@@ -33,9 +33,6 @@ const STATUS_STYLE: Record<string, string> = {
 
 const today = () => new Date().toISOString().split("T")[0];
 
-const emptyFuel = () => ({ plateNumber: "", vehicleType: "", logDate: today(), pricePerLiter: "", liters: "", totalAmount: "", status: "PENDING", performedBy: "" });
-const emptyMaint = () => ({ plateNumber: "", vehicleType: "", logDate: today(), description: "", status: "PENDING" });
-
 export default function VehicleMaintenancePage() {
   const [tab, setTab]           = useState<Tab>("fuel");
   const [logs, setLogs]         = useState<VLog[]>([]);
@@ -43,9 +40,6 @@ export default function VehicleMaintenancePage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, string>>({});
   const [saving, setSaving]     = useState(false);
-  const [showAdd, setShowAdd]   = useState(false);
-  const [addForm, setAddForm]   = useState<Record<string, string>>(emptyFuel());
-  const [addSaving, setAddSaving] = useState(false);
   const [error, setError]       = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -56,7 +50,7 @@ export default function VehicleMaintenancePage() {
     setLoading(false);
   }, [tab]);
 
-  useEffect(() => { load(); setEditingId(null); setShowAdd(false); setError(null); }, [load]);
+  useEffect(() => { load(); setEditingId(null); setError(null); }, [load]);
 
   const startEdit = (log: VLog) => {
     setEditingId(log.id);
@@ -93,16 +87,6 @@ export default function VehicleMaintenancePage() {
     return next;
   });
 
-  const setAF = (k: string, v: string) => setAddForm((p) => {
-    const next = { ...p, [k]: v };
-    if ((k === "liters" || k === "pricePerLiter") && tab === "fuel") {
-      const l = parseFloat(k === "liters" ? v : p.liters || "0") || 0;
-      const pp = parseFloat(k === "pricePerLiter" ? v : p.pricePerLiter || "0") || 0;
-      next.totalAmount = (l * pp).toFixed(2);
-    }
-    return next;
-  });
-
   const saveEdit = async () => {
     setSaving(true); setError(null);
     try {
@@ -116,23 +100,6 @@ export default function VehicleMaintenancePage() {
       load();
     } catch (e) { setError(e instanceof Error ? e.message : "Failed to save"); }
     finally { setSaving(false); }
-  };
-
-  const saveAdd = async () => {
-    setAddSaving(true); setError(null);
-    try {
-      const body = tab === "fuel"
-        ? { plateNumber: addForm.plateNumber, vehicleType: addForm.vehicleType, logType: "FUEL", logDate: addForm.logDate || undefined, pricePerLiter: parseFloat(addForm.pricePerLiter) || undefined, liters: parseFloat(addForm.liters) || undefined, totalAmount: parseFloat(addForm.totalAmount) || undefined, status: addForm.status, performedBy: addForm.performedBy || undefined }
-        : { plateNumber: addForm.plateNumber, vehicleType: addForm.vehicleType, logType: "MAINTENANCE", logDate: addForm.logDate || undefined, description: addForm.description || undefined, status: addForm.status };
-      if (!addForm.plateNumber || !addForm.vehicleType) throw new Error("Plate number and vehicle type are required.");
-      const res  = await fetch("/api/admin/dept/vehicle-logs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error);
-      setShowAdd(false);
-      setAddForm(tab === "fuel" ? emptyFuel() : emptyMaint());
-      load();
-    } catch (e) { setError(e instanceof Error ? e.message : "Failed to save"); }
-    finally { setAddSaving(false); }
   };
 
   const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" }) : "—";
@@ -166,43 +133,10 @@ export default function VehicleMaintenancePage() {
       {/* Error */}
       {error && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
 
-      {/* Add Row Form */}
-      {showAdd && (
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-          <p className="text-sm font-semibold text-slate-700">New {tab === "fuel" ? "Fuel" : "Maintenance"} Entry</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            <div><label className="text-xs text-slate-500 mb-1 block">Vehicle Type *</label><input className={FIELD} placeholder="e.g. Van, Truck" value={addForm.vehicleType} onChange={e => setAF("vehicleType", e.target.value)} /></div>
-            <div><label className="text-xs text-slate-500 mb-1 block">Plate Number *</label><input className={FIELD} placeholder="ABC 123" value={addForm.plateNumber} onChange={e => setAF("plateNumber", e.target.value)} /></div>
-            <div><label className="text-xs text-slate-500 mb-1 block">Date</label><input type="date" className={FIELD} value={addForm.logDate} onChange={e => setAF("logDate", e.target.value)} /></div>
-            {tab === "fuel" ? (<>
-              <div><label className="text-xs text-slate-500 mb-1 block">Price / Liter (₱)</label><input type="number" min="0" step="0.01" className={FIELD} value={addForm.pricePerLiter} onChange={e => setAF("pricePerLiter", e.target.value)} /></div>
-              <div><label className="text-xs text-slate-500 mb-1 block">Liters</label><input type="number" min="0" step="0.01" className={FIELD} value={addForm.liters} onChange={e => setAF("liters", e.target.value)} /></div>
-              <div><label className="text-xs text-slate-500 mb-1 block">Total Amount (₱)</label><input type="number" min="0" step="0.01" className={FIELD} value={addForm.totalAmount} onChange={e => setAF("totalAmount", e.target.value)} /></div>
-              <div><label className="text-xs text-slate-500 mb-1 block">Driver</label><input className={FIELD} value={addForm.performedBy} onChange={e => setAF("performedBy", e.target.value)} /></div>
-            </>) : (
-              <div className="col-span-2"><label className="text-xs text-slate-500 mb-1 block">Particulars</label><input className={FIELD} placeholder="Describe the maintenance work" value={addForm.description} onChange={e => setAF("description", e.target.value)} /></div>
-            )}
-            <div><label className="text-xs text-slate-500 mb-1 block">Status</label>
-              <div className="relative"><select className={FIELD + " appearance-none pr-7"} value={addForm.status} onChange={e => setAF("status", e.target.value)}>{STATUS_OPTS.map(s => <option key={s} value={s}>{s.charAt(0)+s.slice(1).toLowerCase()}</option>)}</select><ChevronDown className="absolute right-2 top-2 h-3.5 w-3.5 text-slate-400 pointer-events-none" /></div>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={saveAdd} disabled={addSaving} className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50">{addSaving && <Loader2 className="h-3 w-3 animate-spin" />}Save Entry</button>
-            <button onClick={() => { setShowAdd(false); setError(null); }} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-          </div>
-        </div>
-      )}
-
       {/* Table */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-sm text-slate-500">{logs.length} {tab === "fuel" ? "fuel" : "maintenance"} record{logs.length !== 1 ? "s" : ""}</p>
-          {!showAdd && (
-            <button onClick={() => { setShowAdd(true); setAddForm(tab === "fuel" ? emptyFuel() : emptyMaint()); setError(null); }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm rounded-xl hover:bg-indigo-700">
-              <Plus className="h-4 w-4" /> Add Entry
-            </button>
-          )}
         </div>
 
         {loading ? (

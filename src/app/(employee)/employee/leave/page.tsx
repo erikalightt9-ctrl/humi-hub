@@ -41,6 +41,7 @@ export default function EmployeeLeavePage() {
   const user = session?.user as { name?: string } | undefined;
 
   const [requests, setRequests]     = useState<LeaveRequest[]>([]);
+  const [usedDays, setUsedDays]     = useState<number>(0);
   const [loading, setLoading]       = useState(true);
   const [showForm, setShowForm]     = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -56,8 +57,11 @@ export default function EmployeeLeavePage() {
     setLoading(true);
     try {
       const res  = await fetch("/api/employee/leave");
-      const json = await res.json() as { success: boolean; data: LeaveRequest[] };
-      if (json.success) setRequests(json.data);
+      const json = await res.json() as { success: boolean; data: LeaveRequest[]; usedDays?: number };
+      if (json.success) {
+        setRequests(json.data);
+        setUsedDays(json.usedDays ?? 0);
+      }
     } catch {
       // non-fatal
     } finally {
@@ -128,6 +132,19 @@ export default function EmployeeLeavePage() {
             </Button>
           )}
         </div>
+
+        {/* Leave usage this year */}
+        {!loading && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Leave Used This Year</p>
+              <p className="text-2xl font-bold text-blue-900 leading-tight">
+                {usedDays} <span className="text-sm font-normal text-blue-600">day{usedDays !== 1 ? "s" : ""}</span>
+              </p>
+            </div>
+            <CalendarDays className="h-8 w-8 text-blue-300" />
+          </div>
+        )}
 
         {/* Message */}
         {message && (

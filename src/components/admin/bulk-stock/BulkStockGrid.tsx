@@ -57,6 +57,7 @@ function computeStatus(qty: string, min: string): { label: string; cls: string }
 
 type Props = {
   onSaved?: (count: number) => void;
+  categoryId?: string;
 };
 
 const PREVIEW_THRESHOLD = 20;
@@ -80,7 +81,7 @@ function downloadCsvTemplate(_: string[]) {
   URL.revokeObjectURL(url);
 }
 
-export function BulkStockGrid({ onSaved }: Props) {
+export function BulkStockGrid({ onSaved, categoryId }: Props) {
   const [rows, setRows] = useState<Row[]>(() => Array.from({ length: DEFAULT_ROWS }, makeEmptyRow));
   const [saving, setSaving] = useState(false);
   const [banner, setBanner] = useState<{ kind: "success" | "error"; text: string } | null>(null);
@@ -293,6 +294,7 @@ export function BulkStockGrid({ onSaved }: Props) {
 
     try {
       const body = {
+        ...(categoryId ? { categoryId } : {}),
         rows: validPayload.map((r) => ({
           name: r.name,
           quantity: r.quantity,
