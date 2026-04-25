@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { SaasHeroSection } from "@/components/public/SaasHeroSection";
 import { SocialProofSection } from "@/components/public/SocialProofSection";
+import { ProblemSolutionSection } from "@/components/public/ProblemSolutionSection";
 import { NicheSection } from "@/components/public/NicheSection";
 import { TargetAudienceSection } from "@/components/public/TargetAudienceSection";
 import { ValuePropositionSection } from "@/components/public/ValuePropositionSection";
@@ -30,7 +31,10 @@ export default function HomePage() {
       {/* 2. Social Proof — company marquee + animated stat counters */}
       <SocialProofSection />
 
-      {/* 3. Niche — platform identity, industries served, business pillars */}
+      {/* 3. Problem → Solution — pain/fix pairs + pull quote */}
+      <ProblemSolutionSection />
+
+      {/* 4. Niche — platform identity, industries served, business pillars */}
       <NicheSection />
 
       {/* 3. Target Audience — who it's for (6 industry cards) */}
