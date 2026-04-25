@@ -22,6 +22,7 @@ import {
   Building2,
   Activity,
   Inbox,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/shared/NotificationBell";
@@ -63,8 +64,9 @@ const MODULE_NAV: ReadonlyArray<NavItem> = [
   { href: "/admin/trainers",   label: "Trainers",   icon: UserCog,       moduleKey: "module_lms" },
   { href: "/admin/enrollees",  label: "Tasks",      icon: CheckSquare,   moduleKey: "module_lms" },
   { href: "/admin/revenue",    label: "Revenue",    icon: DollarSign,    moduleKey: "module_lms" },
-  { href: "/admin/departments", label: "Departments",  icon: Building2,    moduleKey: "module_hr" },
-  { href: "/admin/work",       label: "Work Tracker", icon: CheckSquare,  moduleKey: "module_hr" },
+  { href: "/admin/departments",  label: "Departments",  icon: Building2,    moduleKey: "module_hr" },
+  { href: "/admin/work",        label: "Work Tracker", icon: CheckSquare,  moduleKey: "module_hr" },
+  { href: "/admin/hr/analytics", label: "HR Analytics", icon: BarChart3,   moduleKey: "module_hr" },
   { href: "/admin/admin/inventory", label: "Office Admin", icon: Briefcase, moduleKey: "module_admin" },
 ];
 

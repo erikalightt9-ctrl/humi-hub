@@ -22,12 +22,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, data: null, error: "Unauthorized" }, { status: 401 });
     }
 
-    const requests = await prisma.hrLeaveRequest.findMany({
-      where: { employeeId: token.id as string },
-      orderBy: { createdAt: "desc" },
-    });
+    const employeeId = token.id as string;
+    const yearStart  = new Date(new Date().getFullYear(), 0, 1);
+    const yearEnd    = new Date(new Date().getFullYear() + 1, 0, 1);
 
-    return NextResponse.json({ success: true, data: requests, error: null });
+    const [requests, approvedThisYear] = await Promise.all([
+      prisma.hrLeaveRequest.findMany({
+        where: { employeeId },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.hrLeaveRequest.aggregate({
+        where: {
+          employeeId,
+          status:    "APPROVED",
+          startDate: { gte: yearStart, lt: yearEnd },
+        },
+        _sum: { totalDays: true },
+      }),
+    ]);
+
+    const usedDays = Number(approvedThisYear._sum.totalDays ?? 0);
+
+    return NextResponse.json({ success: true, data: requests, usedDays, error: null });
   } catch {
     return NextResponse.json({ success: false, data: null, error: "Internal server error" }, { status: 500 });
   }

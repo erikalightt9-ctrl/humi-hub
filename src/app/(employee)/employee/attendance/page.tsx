@@ -493,9 +493,12 @@ export default function EmployeeAttendancePage() {
         )}
 
         {/* Navigation */}
-        <div className="flex justify-center gap-6 pt-2">
+        <div className="flex justify-center flex-wrap gap-6 pt-2">
           <a href="/employee/leave" className="text-sm text-indigo-600 hover:underline font-medium">
             Leave Requests →
+          </a>
+          <a href="/employee/payslips" className="text-sm text-indigo-600 hover:underline font-medium">
+            My Payslips →
           </a>
           {user?.portalRole === "DRIVER" && (
             <a href="/employee/fuel-requests" className="text-sm text-indigo-600 hover:underline font-medium">
