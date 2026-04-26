@@ -6,20 +6,20 @@ import { XCircle, CheckCircle, ArrowRight } from "lucide-react";
 
 const pairs = [
   {
-    problem: "HR paperwork piles up while training falls behind schedule",
-    solution: "One dashboard manages leave, payroll, and courses simultaneously",
+    problem: "Executives wait days for reports that are already out of date by the time they arrive",
+    solution: "A live command center gives leadership real-time visibility across every department",
   },
   {
-    problem: "Your team uses five separate tools that don't talk to each other",
-    solution: "HUMI Hub unifies every operation into a single control center",
+    problem: "Finance, HR, Sales, and IT each run separate tools that never share data",
+    solution: "All departments feed into one connected operating system — nothing is siloed",
   },
   {
-    problem: "Onboarding new hires takes days of back-and-forth coordination",
-    solution: "Structured onboarding flows get people productive in under an hour",
+    problem: "Department heads have no visibility into what other teams are doing or where work is blocked",
+    solution: "Cross-department dashboards show every team's status, tasks, and outputs in one place",
   },
   {
-    problem: "No visibility into who completed training or why attendance dropped",
-    solution: "Real-time analytics show exactly where your workforce stands",
+    problem: "Strategic decisions are made on incomplete data pulled from five different systems",
+    solution: "Unified data from every corner of the business powers faster, smarter decisions",
   },
 ] as const;
 
@@ -38,10 +38,10 @@ export function ProblemSolutionSection() {
             Sound familiar?
           </p>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-4">
-            Running a business shouldn&apos;t feel like this.
+            Your company deserves better than this.
           </h2>
           <p className="text-slate-500 text-lg max-w-xl mx-auto">
-            Most teams are stitching together workarounds instead of actually growing. HUMI Hub fixes that.
+            Most organisations run on fragmented tools and delayed reports. HUMI Hub replaces all of it.
           </p>
         </div>
 
@@ -91,9 +91,9 @@ export function ProblemSolutionSection() {
         <div className="mt-14 text-center">
           <div className="inline-block bg-slate-900 text-white rounded-2xl px-8 py-5 shadow-lg">
             <p className="text-lg sm:text-xl font-bold leading-snug">
-              &ldquo;We cut tool costs by 60% and onboarding time in half<br className="hidden sm:block" /> within the first month.&rdquo;
+              &ldquo;For the first time, our CEO can see Finance, HR, and Sales<br className="hidden sm:block" /> in one screen — without asking anyone for a report.&rdquo;
             </p>
-            <p className="text-slate-400 text-sm mt-2">— Early customer, Training & Development company</p>
+            <p className="text-slate-400 text-sm mt-2">— COO, mid-size enterprise, 300+ employees</p>
           </div>
         </div>
 

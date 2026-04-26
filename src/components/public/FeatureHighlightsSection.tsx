@@ -1,100 +1,93 @@
 import {
-  GraduationCap,
+  LayoutDashboard,
   Users,
-  BarChart3,
-  ClipboardList,
-  Wallet,
-  Building2,
+  Landmark,
+  TrendingUp,
+  Monitor,
+  GraduationCap,
   Check,
 } from "lucide-react";
 
-/* ------------------------------------------------------------------ */
-/*  Data                                                               */
-/* ------------------------------------------------------------------ */
-
 const features = [
   {
-    icon: GraduationCap,
-    title: "Learning Management",
-    tagline: "Build, assign, and track every course",
-    color: "bg-blue-600",
-    light: "bg-blue-50 border-blue-100",
-    text: "text-blue-600",
+    icon: LayoutDashboard,
+    title: "Executive Command Center",
+    tagline: "Company-wide visibility in one screen",
+    color: "bg-blue-700",
+    text: "text-blue-700",
     points: [
-      "Create modules with quizzes and certificates",
-      "Auto-enroll employees by role or department",
-      "Track completion rates in real time",
-      "Multi-tenant white-label course portals",
+      "Cross-department KPIs updated in real time",
+      "AI-generated operational narratives for leadership",
+      "Pending tasks and approvals across all teams",
+      "Role-based views — executives see everything",
     ],
   },
   {
     icon: Users,
-    title: "HR Operations",
-    tagline: "Leave, attendance, and employee records",
+    title: "HR & People Operations",
+    tagline: "Every people process, fully connected",
     color: "bg-emerald-600",
-    light: "bg-emerald-50 border-emerald-100",
     text: "text-emerald-600",
     points: [
-      "Leave requests with approval workflows",
-      "Attendance tracking with status reports",
-      "Employee profiles and document storage",
-      "Onboarding checklists for new hires",
+      "Leave, attendance, and payroll in one place",
+      "Employee profiles, documents, and onboarding",
+      "Approval workflows that route automatically",
+      "Workforce analytics with AI insights",
     ],
   },
   {
-    icon: Wallet,
-    title: "Payroll",
-    tagline: "Accurate runs, every pay period",
+    icon: Landmark,
+    title: "Finance & Accounting",
+    tagline: "Full financial visibility for leadership",
     color: "bg-violet-600",
-    light: "bg-violet-50 border-violet-100",
     text: "text-violet-600",
     points: [
-      "Automated gross-to-net calculations",
-      "Configurable allowances and deductions",
-      "Printable payslips for every employee",
-      "Payroll run history and audit trail",
+      "Assets, liabilities, and bank account records",
+      "Accounting data accessible to finance users",
+      "Payroll integration with financial reporting",
+      "Revenue and expense tracking by period",
     ],
+    badge: "Coming soon",
   },
   {
-    icon: BarChart3,
-    title: "Analytics & Insights",
-    tagline: "Data your whole team can act on",
+    icon: TrendingUp,
+    title: "Sales & Revenue",
+    tagline: "Pipeline and performance, always visible",
     color: "bg-amber-500",
-    light: "bg-amber-50 border-amber-100",
     text: "text-amber-600",
     points: [
-      "HR, payroll, and training in one view",
-      "AI-generated workforce narratives",
-      "Headcount, leave, and attendance trends",
-      "Export-ready reports for stakeholders",
+      "Sales pipeline tracking by team and rep",
+      "Revenue performance vs. targets",
+      "Deal history and activity logs",
+      "Leadership revenue dashboard",
     ],
+    badge: "Coming soon",
   },
   {
-    icon: ClipboardList,
-    title: "Action Center",
-    tagline: "Nothing slips through the cracks",
+    icon: Monitor,
+    title: "IT & Infrastructure",
+    tagline: "Systems and technical workflows, managed",
     color: "bg-rose-600",
-    light: "bg-rose-50 border-rose-100",
     text: "text-rose-600",
     points: [
-      "Pending approvals surfaced instantly",
-      "AI summary of what needs attention",
+      "IT asset and inventory management",
       "Repair and maintenance request tracking",
-      "Cross-module task visibility",
+      "Infrastructure status visible to executives",
+      "Technical workflow assignment and resolution",
     ],
+    badge: "Coming soon",
   },
   {
-    icon: Building2,
-    title: "Multi-Tenant Platform",
-    tagline: "One hub, unlimited organisations",
-    color: "bg-slate-700",
-    light: "bg-slate-50 border-slate-200",
-    text: "text-slate-700",
+    icon: GraduationCap,
+    title: "Training & Learning",
+    tagline: "Structured development for every role",
+    color: "bg-cyan-600",
+    text: "text-cyan-700",
     points: [
-      "Separate portals per client or division",
-      "Custom branding, logo, and domain",
-      "Role-based access across all tenants",
-      "Instant subdomain provisioning",
+      "Build and assign courses by department or role",
+      "Quizzes, certificates, and completion tracking",
+      "White-label portals for clients and partners",
+      "Learning progress feeds executive dashboard",
     ],
   },
 ] as const;
@@ -111,14 +104,14 @@ export function FeatureHighlightsSection() {
         {/* Header */}
         <div className="text-center mb-14">
           <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 mb-2">
-            Everything in one place
+            One platform. Every department.
           </p>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-4">
-            Six modules. Zero switching.
+            Built for your whole company — not just one team.
           </h2>
           <p className="text-slate-500 text-lg max-w-xl mx-auto">
-            Every tool your team needs to hire, train, pay, and grow — built
-            to work together from day one.
+            Six integrated modules, each purpose-built for its department,
+            all feeding into a single executive view.
           </p>
         </div>
 
@@ -127,18 +120,21 @@ export function FeatureHighlightsSection() {
           {features.map((f) => (
             <div
               key={f.title}
-              className={`border rounded-2xl p-6 bg-white hover:shadow-md transition-shadow`}
+              className="relative border rounded-2xl p-6 bg-white hover:shadow-md transition-shadow"
             >
-              {/* Icon */}
+              {"badge" in f && f.badge && (
+                <span className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-400 px-2 py-0.5 rounded-full">
+                  {f.badge}
+                </span>
+              )}
+
               <div className={`h-11 w-11 rounded-xl ${f.color} flex items-center justify-center mb-4`}>
                 <f.icon className="h-5 w-5 text-white" />
               </div>
 
-              {/* Title */}
               <h3 className="text-lg font-bold text-slate-900 mb-1">{f.title}</h3>
               <p className={`text-sm font-medium ${f.text} mb-4`}>{f.tagline}</p>
 
-              {/* Feature points */}
               <ul className="space-y-2">
                 {f.points.map((pt) => (
                   <li key={pt} className="flex items-start gap-2 text-sm text-slate-600">

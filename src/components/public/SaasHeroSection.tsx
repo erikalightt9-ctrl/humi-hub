@@ -3,81 +3,74 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
   CalendarCheck,
-  Users,
-  BookOpen,
-  TrendingUp,
   Shield,
   Zap,
+  Users,
 } from "lucide-react";
 
-/* ------------------------------------------------------------------ */
-/*  Stats                                                              */
-/* ------------------------------------------------------------------ */
-
 const stats = [
-  { value: "500+",  label: "Companies onboarded" },
-  { value: "12K+",  label: "Active learners"      },
-  { value: "98%",   label: "Customer satisfaction" },
-  { value: "4 min", label: "Average setup time"   },
+  { value: "6",     label: "Departments unified"    },
+  { value: "500+",  label: "Companies onboarded"    },
+  { value: "98%",   label: "Executive satisfaction" },
+  { value: "1",     label: "System for everything"  },
 ] as const;
-
-/* ------------------------------------------------------------------ */
-/*  Trust signals                                                      */
-/* ------------------------------------------------------------------ */
 
 const trust = [
   { icon: Shield, label: "Enterprise-grade security" },
   { icon: Zap,    label: "No credit card required"   },
 ] as const;
 
-/* ------------------------------------------------------------------ */
-/*  Dashboard preview — CSS mock                                       */
-/* ------------------------------------------------------------------ */
+const departments = [
+  { label: "HR & People",  color: "bg-blue-500/20 text-blue-300"    },
+  { label: "Finance",      color: "bg-emerald-500/20 text-emerald-300" },
+  { label: "Sales",        color: "bg-amber-500/20 text-amber-300"   },
+  { label: "IT",           color: "bg-violet-500/20 text-violet-300" },
+  { label: "Operations",   color: "bg-rose-500/20 text-rose-300"     },
+  { label: "Training",     color: "bg-cyan-500/20 text-cyan-300"     },
+] as const;
 
 function DashboardPreview() {
   return (
     <div className="relative mx-auto mt-14 max-w-3xl">
-      {/* Glow */}
       <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/30 to-indigo-500/30 rounded-2xl blur-xl" />
 
-      {/* Window chrome */}
       <div className="relative bg-slate-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
         {/* Title bar */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-slate-950/60">
           <span className="w-3 h-3 rounded-full bg-red-500/80" />
           <span className="w-3 h-3 rounded-full bg-yellow-500/80" />
           <span className="w-3 h-3 rounded-full bg-green-500/80" />
-          <span className="ml-4 text-xs text-slate-400 font-mono">HUMI Hub — Admin Portal</span>
+          <span className="ml-4 text-xs text-slate-400 font-mono">HUMI Hub — Executive Command Center</span>
         </div>
 
-        {/* Mock dashboard body */}
         <div className="p-5 grid grid-cols-3 gap-3">
-          {/* Stat cards */}
+          {/* KPI cards */}
           {[
-            { label: "Active Employees", value: "142", color: "text-blue-400" },
-            { label: "Courses Running",  value: "23",  color: "text-emerald-400" },
-            { label: "Pending Approvals", value: "7",  color: "text-amber-400" },
+            { label: "Revenue (MTD)",      value: "₱2.4M",  color: "text-emerald-400" },
+            { label: "Active Employees",   value: "284",    color: "text-blue-400"    },
+            { label: "Open Tasks",         value: "17",     color: "text-amber-400"   },
           ].map((c) => (
             <div key={c.label} className="bg-slate-800/70 rounded-xl p-4 border border-white/5">
               <p className="text-xs text-slate-400 mb-1">{c.label}</p>
               <p className={`text-2xl font-bold ${c.color}`}>{c.value}</p>
               <div className="mt-2 h-1 bg-slate-700 rounded-full overflow-hidden">
-                <div className={`h-1 rounded-full bg-current ${c.color} opacity-60`} style={{ width: "65%" }} />
+                <div className={`h-1 rounded-full bg-current ${c.color} opacity-60`} style={{ width: "72%" }} />
               </div>
             </div>
           ))}
 
-          {/* Activity feed */}
+          {/* Live activity feed */}
           <div className="col-span-2 bg-slate-800/70 rounded-xl p-4 border border-white/5">
             <p className="text-xs font-semibold text-slate-300 mb-3 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              Live Activity
+              Live Company Activity
             </p>
             <div className="space-y-2">
               {[
-                { label: "Maria S. completed Module 3",   time: "2m ago",  dot: "bg-green-400" },
-                { label: "Leave request approved — Juan", time: "8m ago",  dot: "bg-blue-400"  },
-                { label: "Payroll run processed",         time: "15m ago", dot: "bg-amber-400" },
+                { label: "Finance: Q2 payroll run approved",       time: "1m ago",  dot: "bg-emerald-400" },
+                { label: "Sales: New deal closed — ₱180K",         time: "6m ago",  dot: "bg-amber-400"   },
+                { label: "IT: Server maintenance completed",        time: "12m ago", dot: "bg-violet-400"  },
+                { label: "HR: 3 leave requests pending approval",   time: "18m ago", dot: "bg-blue-400"    },
               ].map((a) => (
                 <div key={a.label} className="flex items-center gap-2.5">
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${a.dot}`} />
@@ -88,17 +81,13 @@ function DashboardPreview() {
             </div>
           </div>
 
-          {/* Module pills */}
+          {/* Department pills */}
           <div className="bg-slate-800/70 rounded-xl p-4 border border-white/5 flex flex-col justify-between">
-            <p className="text-xs font-semibold text-slate-300 mb-2">Modules</p>
+            <p className="text-xs font-semibold text-slate-300 mb-2">Departments</p>
             <div className="space-y-1.5">
-              {[
-                { label: "Training", color: "bg-blue-500/20 text-blue-300" },
-                { label: "HR Ops",   color: "bg-emerald-500/20 text-emerald-300" },
-                { label: "Analytics", color: "bg-violet-500/20 text-violet-300" },
-              ].map((m) => (
-                <span key={m.label} className={`block text-[11px] font-medium px-2 py-1 rounded-lg ${m.color}`}>
-                  {m.label}
+              {departments.map((d) => (
+                <span key={d.label} className={`block text-[11px] font-medium px-2 py-1 rounded-lg ${d.color}`}>
+                  {d.label}
                 </span>
               ))}
             </div>
@@ -109,14 +98,9 @@ function DashboardPreview() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  SaasHeroSection                                                    */
-/* ------------------------------------------------------------------ */
-
 export function SaasHeroSection() {
   return (
     <section className="relative bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 text-white overflow-hidden">
-      {/* Background glows */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl" />
@@ -128,24 +112,24 @@ export function SaasHeroSection() {
         {/* Pill badge */}
         <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-blue-200 text-sm font-medium px-4 py-1.5 rounded-full mb-8 border border-white/15">
           <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          Training + HR Operations, Unified
+          HR · Finance · Sales · IT · Operations · Training
         </div>
 
         {/* Headline */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.1] mb-6 tracking-tight">
-          Train your people.{" "}
+          Every department.{" "}
           <br className="hidden sm:block" />
-          Run your company.{" "}
+          One command center.{" "}
           <span className="bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent">
-            One platform.
+            Full visibility.
           </span>
         </h1>
 
         {/* Subheadline */}
         <p className="text-blue-100/80 text-lg sm:text-xl leading-relaxed mb-10 max-w-2xl mx-auto">
-          HUMI Hub combines structured learning, HR management, and company
-          operations into a single control center — so your people grow and
-          your business runs without the chaos.
+          HUMI Hub is the operating system for your entire company — giving
+          executives real-time visibility across every department, and each
+          team a focused workspace built for their role.
         </p>
 
         {/* CTAs */}
@@ -183,7 +167,6 @@ export function SaasHeroSection() {
           </span>
         </div>
 
-        {/* Dashboard preview */}
         <DashboardPreview />
       </div>
 

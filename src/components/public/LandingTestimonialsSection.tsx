@@ -3,30 +3,30 @@ import { Star } from "lucide-react";
 const testimonials = [
   {
     quote:
-      "We replaced four separate tools with HUMI Hub and cut our monthly software spend by more than half. The training module alone has saved us 10 hours a week in admin.",
-    name: "Rachel T.",
-    title: "Training Director",
-    company: "Apex Learning Group",
-    initials: "RT",
-    color: "bg-blue-600",
+      "Before HUMI Hub, I was waiting three days for a consolidated company report. Now I open one screen and see Finance, HR, and Sales — live. The decision-making speed alone justified the switch.",
+    name: "David R.",
+    title: "CEO",
+    company: "Nexus Group Holdings",
+    initials: "DR",
+    color: "bg-blue-700",
   },
   {
     quote:
-      "Payroll used to take our HR team an entire day. Now it's done in 20 minutes. The approval workflows and payslip generation are exactly what we needed.",
-    name: "Marco L.",
-    title: "Head of HR",
-    company: "Meridian Corporate Services",
-    initials: "ML",
-    color: "bg-emerald-600",
-  },
-  {
-    quote:
-      "As a small business owner, I needed something powerful but not overwhelming. HUMI Hub gives me the visibility of an enterprise system without the enterprise complexity.",
-    name: "Priya S.",
-    title: "Founder & CEO",
-    company: "Fortis Enterprise Solutions",
-    initials: "PS",
+      "Our Finance team was buried in spreadsheets pulled from four different systems. HUMI Hub gives us one source of truth — payroll, expenses, and accounting records all connected. Month-end close went from a week to two days.",
+    name: "Sofia M.",
+    title: "Chief Financial Officer",
+    company: "Meridian Enterprise Corp",
+    initials: "SM",
     color: "bg-violet-600",
+  },
+  {
+    quote:
+      "As COO I need to know what every department is doing without being in every meeting. HUMI Hub's cross-department visibility is exactly that — I see blockers before they become problems.",
+    name: "James K.",
+    title: "Chief Operating Officer",
+    company: "Fortis Solutions Group",
+    initials: "JK",
+    color: "bg-emerald-600",
   },
 ] as const;
 
@@ -50,10 +50,10 @@ export function LandingTestimonialsSection() {
             Real results
           </p>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">
-            Teams that switched. Never looked back.
+            Leaders who finally have the visibility they needed.
           </h2>
           <p className="text-slate-400 text-lg max-w-lg mx-auto">
-            Hear from the people who run their entire operation on HUMI Hub.
+            Hear from the executives and operators who run their entire company on HUMI Hub.
           </p>
         </div>
 
