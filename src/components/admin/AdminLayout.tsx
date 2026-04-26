@@ -15,7 +15,6 @@ import {
   DollarSign,
   Briefcase,
   UserCheck,
-  Building2,
   Activity,
   Inbox,
   BarChart3,
@@ -70,7 +69,6 @@ const NAV_SECTIONS: ReadonlyArray<NavSection> = [
   {
     label: "People & HR",
     items: [
-      { href: "/admin/departments",  label: "Departments",  icon: Building2, moduleKey: "module_hr" },
       { href: "/admin/hr/analytics", label: "HR Analytics", icon: BarChart3, moduleKey: "module_hr" },
     ],
   },

@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   Users, Wallet, GraduationCap, Wrench, TrendingUp,
   RefreshCw, ArrowRight, AlertCircle, Landmark,
+  Briefcase, Activity, Monitor, Package, Lock,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -196,6 +197,95 @@ export default function ExecutiveDashboardPage() {
               accent="bg-rose-600"
               href="/admin/action-center"
             />
+          </div>
+
+          {/* ── Department Gateway ────────────────────────────────────── */}
+          <div>
+            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4">Departments</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+              {([
+                {
+                  label: "Office Admin",
+                  icon: Briefcase,
+                  accent: "bg-slate-600",
+                  desc: "Resources & assets",
+                  href: "/admin/admin/inventory",
+                },
+                {
+                  label: "HR & People",
+                  icon: Users,
+                  accent: "bg-blue-600",
+                  desc: "Employees & leaves",
+                  href: "/admin/hr/analytics",
+                },
+                {
+                  label: "Finance & Payroll",
+                  icon: Landmark,
+                  accent: "bg-violet-600",
+                  desc: "Cash & payroll",
+                  href: "/admin/finance",
+                },
+                {
+                  label: "Operations",
+                  icon: Activity,
+                  accent: "bg-amber-500",
+                  desc: "Tasks & repairs",
+                  href: "/admin/operations",
+                },
+                {
+                  label: "Training",
+                  icon: GraduationCap,
+                  accent: "bg-cyan-600",
+                  desc: "Courses & learners",
+                  href: "/admin/training-center",
+                },
+                {
+                  label: "Sales & Marketing",
+                  icon: TrendingUp,
+                  accent: "bg-emerald-600",
+                  desc: "Pipeline & revenue",
+                  href: null,
+                },
+                {
+                  label: "IT & Systems",
+                  icon: Monitor,
+                  accent: "bg-rose-600",
+                  desc: "Infrastructure",
+                  href: null,
+                },
+                {
+                  label: "Logistics",
+                  icon: Package,
+                  accent: "bg-orange-500",
+                  desc: "Procurement",
+                  href: null,
+                },
+              ] as { label: string; icon: React.ComponentType<{ className?: string }>; accent: string; desc: string; href: string | null }[]).map((dept) => {
+                const card = (
+                  <div
+                    key={dept.label}
+                    className={`bg-white border rounded-2xl p-4 flex flex-col gap-3 transition-shadow ${dept.href ? "hover:shadow-md cursor-pointer" : "opacity-70"}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className={`h-9 w-9 rounded-xl ${dept.accent} flex items-center justify-center shrink-0`}>
+                        <dept.icon className="h-4 w-4 text-white" />
+                      </div>
+                      {!dept.href && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                          <Lock className="h-2.5 w-2.5" />
+                          Soon
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 leading-tight">{dept.label}</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">{dept.desc}</p>
+                    </div>
+                  </div>
+                );
+                return dept.href ? <Link key={dept.label} href={dept.href}>{card}</Link> : card;
+              })}
+            </div>
           </div>
 
           {/* ── Two-column: department cards + activity feed ──────────── */}
