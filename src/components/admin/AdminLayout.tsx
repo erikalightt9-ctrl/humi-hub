@@ -72,7 +72,7 @@ const NAV_SECTIONS: ReadonlyArray<NavSection> = [
           { href: "/admin/training-center", label: "Training",   icon: GraduationCap, moduleKey: "module_lms" },
         ],
       },
-      { href: "/admin/finance",     label: "Finance & Payroll",  icon: Landmark,    moduleKey: "module_accounting" },
+      { href: "/admin/finance",     label: "Finance",            icon: Landmark,    moduleKey: "module_accounting" },
       { href: "/admin/sales",       label: "Sales & Marketing",  icon: TrendingUp,  comingSoon: true               },
       { href: "/admin/it",          label: "IT & Systems",       icon: Monitor,     comingSoon: true               },
     ],

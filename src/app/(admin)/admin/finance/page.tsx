@@ -141,8 +141,8 @@ export default function FinanceOverviewPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">Finance & Accounting</h1>
-          <p className="text-slate-500 text-sm mt-1">Transactions, assets, and liabilities — real-time financial visibility</p>
+          <h1 className="text-2xl font-extrabold text-slate-900">Finance</h1>
+          <p className="text-slate-500 text-sm mt-1">Cash position, receivables, and financial health — real-time</p>
         </div>
         <div className="flex items-center gap-3">
           {lastSync && <p className="text-xs text-slate-400">Updated {lastSync.toLocaleTimeString()}</p>}
