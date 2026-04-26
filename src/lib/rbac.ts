@@ -57,7 +57,6 @@ const NAV_ACCESS: Record<string, UserRole[]> = {
   "/admin/work":               ["ADMIN", "MANAGER"],
   "/admin/admin/inventory":    ["ADMIN", "MANAGER"],
   "/admin/finance":            ["ADMIN", "EXECUTIVE", "MANAGER"],
-  "/admin/accounting":         ["ADMIN", "EXECUTIVE", "MANAGER"],
   "/admin/users-roles":        ["ADMIN"],
   "/admin/settings":           ["ADMIN"],
 };
