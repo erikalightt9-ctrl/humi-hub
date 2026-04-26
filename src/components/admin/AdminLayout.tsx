@@ -5,10 +5,6 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   GraduationCap,
-  LayoutDashboard,
-  BookOpen,
-  Users,
-  UserCog,
   CheckSquare,
   Settings,
   Menu,
@@ -37,7 +33,7 @@ import { canAccessNav, ROLE_CONFIG } from "@/lib/rbac";
 import type { UserRole } from "@/lib/rbac";
 
 /* ------------------------------------------------------------------ */
-/*  Navigation definitions                                              */
+/*  Nav data model                                                     */
 /* ------------------------------------------------------------------ */
 
 interface NavItem {
@@ -47,36 +43,57 @@ interface NavItem {
   readonly exact?: boolean;
   readonly moduleKey?: ModuleKey;
   readonly industries?: string[];
+  readonly adminOnly?: boolean;
 }
 
-const STATIC_NAV: ReadonlyArray<NavItem> = [
-  { href: "/admin",               label: "Dashboard",       icon: LayoutDashboard, exact: true },
-  { href: "/admin/executive",     label: "Command Center",  icon: MonitorDot },
-  { href: "/admin/operations",    label: "Operations",      icon: Activity },
-  { href: "/admin/action-center", label: "Action Center",   icon: Inbox },
+interface NavSection {
+  readonly label: string;
+  readonly items: ReadonlyArray<NavItem>;
+}
+
+const NAV_SECTIONS: ReadonlyArray<NavSection> = [
+  {
+    label: "Overview",
+    items: [
+      { href: "/admin/executive", label: "Command Center", icon: MonitorDot },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { href: "/admin/operations",      label: "Operations",    icon: Activity    },
+      { href: "/admin/action-center",   label: "Action Center", icon: Inbox       },
+      { href: "/admin/work",            label: "Task Manager",  icon: CheckSquare, moduleKey: "module_hr"    },
+      { href: "/admin/admin/inventory", label: "Office Admin",  icon: Briefcase,   moduleKey: "module_admin" },
+    ],
+  },
+  {
+    label: "People & HR",
+    items: [
+      { href: "/admin/departments",  label: "Departments",  icon: Building2, moduleKey: "module_hr" },
+      { href: "/admin/hr/analytics", label: "HR Analytics", icon: BarChart3, moduleKey: "module_hr" },
+    ],
+  },
+  {
+    label: "Learning",
+    items: [
+      { href: "/admin/training-center", label: "Training Center", icon: GraduationCap, moduleKey: "module_lms" },
+      { href: "/admin/enrollees",       label: "Enrollee Tasks",  icon: CheckSquare,   moduleKey: "module_lms" },
+      { href: "/admin/revenue",         label: "LMS Revenue",     icon: DollarSign,    moduleKey: "module_lms" },
+    ],
+  },
+  {
+    label: "Finance",
+    items: [
+      { href: "/admin/finance",    label: "Finance",    icon: Landmark,   moduleKey: "module_accounting" },
+      { href: "/admin/accounting", label: "Accounting", icon: DollarSign, moduleKey: "module_accounting" },
+    ],
+  },
 ];
 
-const ADMIN_ONLY_NAV: ReadonlyArray<NavItem> = [
-  { href: "/admin/users-roles", label: "Users & Roles", icon: UserCheck },
-];
-
-const MODULE_NAV: ReadonlyArray<NavItem> = [
-  { href: "/admin/training-center", label: "Training Center", icon: GraduationCap, moduleKey: "module_lms" },
-  { href: "/admin/courses",    label: "Courses",    icon: BookOpen,      moduleKey: "module_lms" },
-  { href: "/admin/students",   label: "Students",   icon: Users,         moduleKey: "module_lms", industries: ["training_center"] },
-  { href: "/admin/trainers",   label: "Trainers",   icon: UserCog,       moduleKey: "module_lms" },
-  { href: "/admin/enrollees",  label: "Tasks",      icon: CheckSquare,   moduleKey: "module_lms" },
-  { href: "/admin/revenue",    label: "Revenue",    icon: DollarSign,    moduleKey: "module_lms" },
-  { href: "/admin/departments",    label: "Departments",    icon: Building2,  moduleKey: "module_hr" },
-  { href: "/admin/work",          label: "Work Tracker",   icon: CheckSquare, moduleKey: "module_hr" },
-  { href: "/admin/hr/analytics",  label: "HR Analytics",   icon: BarChart3,  moduleKey: "module_hr" },
-  { href: "/admin/finance",       label: "Finance",        icon: Landmark,   moduleKey: "module_accounting" },
-  { href: "/admin/accounting",    label: "Accounting",     icon: DollarSign, moduleKey: "module_accounting" },
-  { href: "/admin/admin/inventory", label: "Office Admin", icon: Briefcase,  moduleKey: "module_admin" },
-];
-
-const SETTINGS_NAV: ReadonlyArray<NavItem> = [
-  { href: "/admin/settings", label: "Settings", icon: Settings },
+const PLATFORM_ITEMS: ReadonlyArray<NavItem> = [
+  { href: "/admin/users-roles", label: "Users & Roles", icon: UserCheck, adminOnly: true },
+  { href: "/admin/settings",    label: "Settings",      icon: Settings,  adminOnly: true },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -88,7 +105,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: session } = useSession();
 
-  const isSuperAdmin  = (session?.user as { isSuperAdmin?: boolean })?.isSuperAdmin === true;
+  const isSuperAdmin  = (session?.user as { isSuperAdmin?: boolean })?.isSuperAdmin  === true;
   const isTenantAdmin = (session?.user as { isTenantAdmin?: boolean })?.isTenantAdmin === true;
   const isTenantUser  = (session?.user as { isTenantUser?: boolean })?.isTenantUser  === true;
   const userPermissions: string[] | null =
@@ -112,32 +129,55 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       .catch(() => {});
   }, []);
 
-  const visibleNav: NavItem[] = [
-    ...STATIC_NAV.filter((item) => canAccessNav(userRole, item.href)),
-    ...MODULE_NAV.filter((item) => {
-      // Role gate first
-      if (!canAccessNav(userRole, item.href)) return false;
-      // Module/permission gate
+  function filterItem(item: NavItem): boolean {
+    if (!canAccessNav(userRole, item.href)) return false;
+    if (item.moduleKey) {
       if (isTenantUser && userPermissions !== null) {
-        if (item.moduleKey && !userPermissions.includes(item.moduleKey)) return false;
+        if (!userPermissions.includes(item.moduleKey)) return false;
       } else {
-        if (item.moduleKey && !enabledModules[item.moduleKey]) return false;
+        if (!enabledModules[item.moduleKey]) return false;
       }
-      if (item.industries && !item.industries.includes(tenantIndustry ?? "")) return false;
-      return true;
-    }),
-    // Users & Roles — ADMIN role only
-    ...(canAccessNav(userRole, "/admin/users-roles") && (isTenantAdmin || isSuperAdmin)
-      ? ADMIN_ONLY_NAV
-      : []),
-    ...SETTINGS_NAV.filter((item) => canAccessNav(userRole, item.href)),
-  ];
+    }
+    if (item.industries && !item.industries.includes(tenantIndustry ?? "")) return false;
+    return true;
+  }
+
+  const visibleSections = NAV_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter(filterItem),
+  })).filter((section) => section.items.length > 0);
+
+  const visiblePlatform = PLATFORM_ITEMS.filter((item) =>
+    canAccessNav(userRole, item.href) && (isTenantAdmin || isSuperAdmin)
+  );
 
   function isActive({ href, exact }: NavItem) {
-    return exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
+    if (exact) return pathname === href;
+    // Special case: /admin/executive should not match /admin
+    return pathname === href || pathname.startsWith(href + "/");
   }
 
   const roleCfg = userRole ? ROLE_CONFIG[userRole] : null;
+
+  const navLink = (item: NavItem) => {
+    const active = isActive(item);
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        onClick={() => setSidebarOpen(false)}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors",
+          active
+            ? "bg-white/20 text-white"
+            : "text-blue-100/80 hover:bg-white/10 hover:text-white",
+        )}
+      >
+        <item.icon className="h-4 w-4 shrink-0" />
+        {item.label}
+      </Link>
+    );
+  };
 
   return (
     <div className="flex h-screen bg-ds-bg overflow-hidden">
@@ -159,7 +199,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         )}
       >
         {/* Brand */}
-        <div className="px-5 py-5 border-b border-white/20 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-white/20 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
               <GraduationCap className="h-4 w-4 text-white" />
@@ -179,46 +219,46 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
         {/* Role badge */}
         {roleCfg && (
-          <div className="px-5 py-2 border-b border-white/10">
+          <div className="px-4 py-2 border-b border-white/10">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${roleCfg.badgeClass}`}>
               {roleCfg.label}
             </span>
           </div>
         )}
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {visibleNav.map((item) => {
-            const active = isActive(item);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
-                  active
-                    ? "bg-white/20 text-white"
-                    : "text-blue-100 hover:bg-white/10 hover:text-white",
-                )}
-              >
-                <item.icon className="h-4 w-4 shrink-0" />
-                {item.label}
-              </Link>
-            );
-          })}
+        {/* Grouped nav */}
+        <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-5">
+          {visibleSections.map((section) => (
+            <div key={section.label}>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-blue-300/50 px-3 mb-1.5">
+                {section.label}
+              </p>
+              <div className="space-y-0.5">
+                {section.items.map(navLink)}
+              </div>
+            </div>
+          ))}
+
+          {/* Platform section */}
+          {visiblePlatform.length > 0 && (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-blue-300/50 px-3 mb-1.5">
+                Platform
+              </p>
+              <div className="space-y-0.5">
+                {visiblePlatform.map(navLink)}
+              </div>
+            </div>
+          )}
         </nav>
 
-        {/* Platform Admin shortcut — superadmin only */}
+        {/* Super-admin shortcut */}
         {isSuperAdmin && (
           <div className="px-3 pb-2 border-t border-white/20 pt-3">
-            <p className="text-[10px] font-semibold text-blue-300 uppercase tracking-widest px-3 mb-1.5">
-              Platform
-            </p>
             <Link
               href="/superadmin"
               onClick={() => setSidebarOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 hover:bg-white/10 hover:text-white transition-colors"
+              className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors"
             >
               <Shield className="h-4 w-4 shrink-0" />
               Multi-Tenant Admin
@@ -228,10 +268,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Sign out */}
-        <div className="px-3 py-4 border-t border-white/20">
+        <div className="px-3 py-3 border-t border-white/20">
           <button
-            onClick={() => signOut({ callbackUrl: "/admin/login" })}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-100 hover:bg-white/10 hover:text-white transition-colors"
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-blue-100/80 hover:bg-white/10 hover:text-white transition-colors"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             Sign Out
