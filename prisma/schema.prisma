@@ -1312,6 +1312,8 @@ model Organization {
   crmTasks      CrmTask[]
   itAssets             ItAsset[]
   itAssetCategories    ItAssetCategory[]
+  itRequests           ItRequest[]
+  crmCampaigns         CrmCampaign[]
   adminAssets          AdminAsset[]
   adminCarMaintenance  AdminCarMaintenance[]
   adminFuelLogs        AdminFuelLog[]
@@ -2658,6 +2660,7 @@ model HrEmployee {
   fuelRequests  HrFuelRequest[]
   documents     HrEmployeeDocument[]
   itAssets             ItAsset[]
+  itRequests           ItRequest[]
   itHistoryAssignee    ItAssetHistoryLog[] @relation("itHistoryAssignee")
   itHistoryPerformer   ItAssetHistoryLog[] @relation("itHistoryPerformer")
 
@@ -3453,6 +3456,7 @@ model ItAsset {
   assignedTo       HrEmployee?         @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
   historyLogs      ItAssetHistoryLog[]
   maintenanceRecords ItMaintenanceRecord[]
+  itRequests       ItRequest[]
 
   @@index([organizationId])
   @@index([organizationId, status])
@@ -3495,4 +3499,102 @@ model ItMaintenanceRecord {
 
   @@index([assetId])
   @@map("it_maintenance_records")
+}
+
+/* ------------------------------------------------------------------ */
+/*  IT Requests                                                         */
+/* ------------------------------------------------------------------ */
+
+enum ItRequestType {
+  SUPPORT
+  ACCESS_REQUEST
+  HARDWARE_ISSUE
+  SOFTWARE_ISSUE
+  NEW_EQUIPMENT
+  OTHER
+}
+
+enum ItRequestPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ItRequestStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+model ItRequest {
+  id             String            @id @default(cuid())
+  organizationId String
+  referenceNo    String            @unique
+  requestType    ItRequestType     @default(SUPPORT)
+  priority       ItRequestPriority @default(MEDIUM)
+  status         ItRequestStatus   @default(OPEN)
+  subject        String
+  description    String            @db.Text
+  submittedById  String
+  assignedToId   String?
+  assetId        String?
+  resolvedAt     DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  submittedBy  HrEmployee   @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  asset        ItAsset?     @relation(fields: [assetId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([submittedById])
+  @@map("it_requests")
+}
+
+/* ------------------------------------------------------------------ */
+/*  CRM Campaigns (Sales & Marketing)                                  */
+/* ------------------------------------------------------------------ */
+
+enum CrmCampaignType {
+  EMAIL
+  SMS
+  SOCIAL_MEDIA
+  EVENT
+  CONTENT
+  OTHER
+}
+
+enum CrmCampaignStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+model CrmCampaign {
+  id             String            @id @default(cuid())
+  organizationId String
+  name           String
+  type           CrmCampaignType   @default(EMAIL)
+  status         CrmCampaignStatus @default(DRAFT)
+  budget         Decimal?          @db.Decimal(12, 2)
+  spent          Decimal?          @db.Decimal(12, 2)
+  startDate      DateTime?
+  endDate        DateTime?
+  description    String?           @db.Text
+  channel        String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@map("crm_campaigns")
 }

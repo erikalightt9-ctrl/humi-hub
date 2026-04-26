@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Users, Wallet, GraduationCap, Wrench, TrendingUp,
-  RefreshCw, ArrowRight, AlertCircle, Landmark,
+  RefreshCw, ArrowRight, AlertCircle, Landmark, Monitor, ShoppingCart,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -17,6 +17,8 @@ interface ExecutiveData {
   finance:    { totalBankBalance: number; bankAccountCount: number; openReceivables: number; openInvoiceCount: number; expensesThisMonth: number };
   training:   { activeCourses: number; activeEnrollments: number };
   operations: { pendingRepairs: number };
+  sales?:     { pipelineValue: number; activeDeals: number; wonThisMonth: number; revenueThisMonth: number };
+  it?:        { openRequests: number };
   activity:   { department: string; label: string; time: string; dot: string }[];
 }
 
@@ -143,7 +145,7 @@ export default function ExecutiveDashboardPage() {
       {data && (
         <>
           {/* ── KPI Grid ──────────────────────────────────────────────── */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
             <KpiCard
               icon={Users}
               label="Active Employees"
@@ -195,6 +197,22 @@ export default function ExecutiveDashboardPage() {
               sub="Pending or in-progress"
               accent="bg-rose-600"
               href="/admin/action-center"
+            />
+            <KpiCard
+              icon={ShoppingCart}
+              label="Pipeline Value"
+              value={peso(data.sales?.pipelineValue ?? 0)}
+              sub={`${data.sales?.activeDeals ?? 0} active deals`}
+              accent="bg-violet-500"
+              href="/admin/sales"
+            />
+            <KpiCard
+              icon={TrendingUp}
+              label="Won This Month"
+              value={String(data.sales?.wonThisMonth ?? 0)}
+              sub={data.sales?.revenueThisMonth ? peso(data.sales.revenueThisMonth) : "No closed deals yet"}
+              accent="bg-emerald-500"
+              href="/admin/sales"
             />
           </div>
 

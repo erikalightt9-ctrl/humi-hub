@@ -106,8 +106,8 @@ export default function SalesDashboardPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Sales Dashboard</h1>
-        <p className="text-sm text-slate-500 mt-1">Overview of your sales pipeline</p>
+        <h1 className="text-2xl font-extrabold text-slate-900">Sales & Marketing</h1>
+        <p className="text-slate-500 text-sm mt-1">Pipeline, contacts, campaigns, and revenue — connected to the operating system</p>
       </div>
 
       {/* KPI Cards */}

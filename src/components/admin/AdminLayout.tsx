@@ -73,8 +73,21 @@ const NAV_SECTIONS: ReadonlyArray<NavSection> = [
         ],
       },
       { href: "/admin/finance",     label: "Finance",            icon: Landmark,    moduleKey: "module_accounting" },
-      { href: "/admin/sales",       label: "Sales & Marketing",  icon: TrendingUp,  comingSoon: true               },
-      { href: "/admin/it",          label: "IT & Systems",       icon: Monitor,     comingSoon: true               },
+      {
+        href: "/admin/sales",       label: "Sales & Marketing",  icon: TrendingUp,
+        children: [
+          { href: "/admin/sales/deals",     label: "Pipeline",   icon: TrendingUp  },
+          { href: "/admin/sales/contacts",  label: "Contacts",   icon: Users       },
+          { href: "/admin/sales/campaigns", label: "Campaigns",  icon: Activity    },
+        ],
+      },
+      {
+        href: "/admin/it",          label: "IT & Systems",       icon: Monitor,
+        children: [
+          { href: "/admin/it/assets",   label: "Assets",      icon: Monitor   },
+          { href: "/admin/it/requests", label: "IT Requests",  icon: Briefcase },
+        ],
+      },
     ],
   },
 ];

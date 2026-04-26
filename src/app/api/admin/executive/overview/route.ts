@@ -39,6 +39,10 @@ export async function GET(request: NextRequest) {
       recentPayroll,
       recentInvoices,
       recentRepairs,
+      salesPipelineAgg,
+      salesWonThisMonth,
+      openItRequests,
+      recentDeals,
     ] = await Promise.all([
       prisma.hrEmployee.count({
         where: { organizationId: tenantId, status: "ACTIVE" },
@@ -120,6 +124,25 @@ export async function GET(request: NextRequest) {
         take: 2,
         select: { itemName: true, status: true, createdAt: true },
       }),
+      prisma.crmDeal.aggregate({
+        where: { organizationId: tenantId, stage: { notIn: ["WON", "LOST"] } },
+        _sum: { value: true },
+        _count: { _all: true },
+      }),
+      prisma.crmDeal.aggregate({
+        where: { organizationId: tenantId, stage: "WON", updatedAt: { gte: monthStart, lt: monthEnd } },
+        _sum: { value: true },
+        _count: { _all: true },
+      }),
+      prisma.itRequest.count({
+        where: { organizationId: tenantId, status: { in: ["OPEN", "IN_PROGRESS"] } },
+      }),
+      prisma.crmDeal.findMany({
+        where: { organizationId: tenantId },
+        orderBy: { updatedAt: "desc" },
+        take: 3,
+        select: { title: true, stage: true, value: true, updatedAt: true },
+      }),
     ]);
 
     const activity = [
@@ -146,6 +169,12 @@ export async function GET(request: NextRequest) {
         label: `Repair: ${r.itemName} (${r.status.toLowerCase()})`,
         time: r.createdAt.toISOString(),
         dot: "bg-rose-400",
+      })),
+      ...recentDeals.map((d) => ({
+        department: "Sales",
+        label: `Deal: ${d.title} — ${d.stage.toLowerCase()}${d.value ? ` · ₱${Number(d.value).toLocaleString()}` : ""}`,
+        time: d.updatedAt.toISOString(),
+        dot: "bg-violet-400",
       })),
     ]
       .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
@@ -176,6 +205,13 @@ export async function GET(request: NextRequest) {
       },
       training:   { activeCourses, activeEnrollments },
       operations: { pendingRepairs },
+      sales: {
+        pipelineValue:    Number(salesPipelineAgg._sum.value ?? 0),
+        activeDeals:      salesPipelineAgg._count._all,
+        wonThisMonth:     salesWonThisMonth._count._all,
+        revenueThisMonth: Number(salesWonThisMonth._sum.value ?? 0),
+      },
+      it: { openRequests: openItRequests },
       activity,
     };
 
