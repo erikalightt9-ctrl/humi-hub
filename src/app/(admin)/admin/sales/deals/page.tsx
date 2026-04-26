@@ -2,7 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Loader2, AlertCircle, Plus, TrendingUp } from "lucide-react";
+import { Loader2, AlertCircle, Plus, TrendingUp, ChevronRight } from "lucide-react";
+
+interface Contact {
+  id: string;
+  name: string;
+}
 
 interface Deal {
   id: string;
@@ -10,13 +15,7 @@ interface Deal {
   stage: string;
   value: number;
   expectedCloseDate: string | null;
-  contact: { id: string; firstName: string; lastName: string } | null;
-}
-
-interface Contact {
-  id: string;
-  firstName: string;
-  lastName: string;
+  contact: { id: string; name: string } | null;
 }
 
 const STAGES = ["NEW_LEAD", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"] as const;
@@ -32,21 +31,38 @@ const STAGE_LABELS: Record<Stage, string> = {
 };
 
 const STAGE_COLORS: Record<Stage, string> = {
-  NEW_LEAD:    "bg-slate-100 border-slate-300 text-slate-700",
-  QUALIFIED:   "bg-blue-50 border-blue-200 text-blue-700",
-  PROPOSAL:    "bg-indigo-50 border-indigo-200 text-indigo-700",
-  NEGOTIATION: "bg-amber-50 border-amber-200 text-amber-700",
-  WON:         "bg-green-50 border-green-200 text-green-700",
-  LOST:        "bg-red-50 border-red-200 text-red-600",
+  NEW_LEAD:    "bg-white border-slate-200",
+  QUALIFIED:   "bg-white border-blue-200",
+  PROPOSAL:    "bg-white border-indigo-200",
+  NEGOTIATION: "bg-white border-amber-200",
+  WON:         "bg-white border-green-200",
+  LOST:        "bg-white border-red-200",
 };
 
 const STAGE_HEADER: Record<Stage, string> = {
-  NEW_LEAD:    "bg-slate-200 text-slate-700",
+  NEW_LEAD:    "bg-slate-100 text-slate-700",
   QUALIFIED:   "bg-blue-100 text-blue-800",
   PROPOSAL:    "bg-indigo-100 text-indigo-800",
   NEGOTIATION: "bg-amber-100 text-amber-800",
   WON:         "bg-green-100 text-green-800",
   LOST:        "bg-red-100 text-red-700",
+};
+
+const STAGE_DOT: Record<Stage, string> = {
+  NEW_LEAD:    "bg-slate-400",
+  QUALIFIED:   "bg-blue-500",
+  PROPOSAL:    "bg-indigo-500",
+  NEGOTIATION: "bg-amber-500",
+  WON:         "bg-green-500",
+  LOST:        "bg-red-500",
+};
+
+/* Standard progression: each stage's natural next and prev */
+const NEXT_STAGE: Partial<Record<Stage, Stage>> = {
+  NEW_LEAD:    "QUALIFIED",
+  QUALIFIED:   "PROPOSAL",
+  PROPOSAL:    "NEGOTIATION",
+  NEGOTIATION: "WON",
 };
 
 const fmt = (n: number) =>
@@ -71,14 +87,17 @@ export default function PipelinePage() {
     setLoading(true);
     setError(null);
     try {
-      const [dealsRes, contactsRes] = await Promise.all([
+      const [pipelineRes, contactsRes] = await Promise.all([
         fetch("/api/admin/sales/pipeline"),
         fetch("/api/admin/sales/contacts?limit=200"),
       ]);
-      const dealsJson    = await dealsRes.json();
+      const pipelineJson = await pipelineRes.json();
       const contactsJson = await contactsRes.json();
-      if (!dealsJson.success) throw new Error(dealsJson.error);
-      setDeals(dealsJson.data);
+      if (!pipelineJson.success) throw new Error(pipelineJson.error);
+      // API returns grouped Record<Stage, Deal[]> — flatten to a single array
+      const grouped = pipelineJson.data as Record<string, Deal[]>;
+      const flat = (Object.values(grouped) as Deal[][]).flat();
+      setDeals(flat);
       if (contactsJson.success) setContacts(contactsJson.data.data ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load pipeline");
@@ -138,12 +157,20 @@ export default function PipelinePage() {
 
   const dealsByStage = (stage: Stage) => deals.filter((d) => d.stage === stage);
 
+  const activeDeals = deals.filter((d) => d.stage !== "LOST" && d.stage !== "WON");
+  const pipelineValue = activeDeals.reduce((sum, d) => sum + Number(d.value), 0);
+  const wonDeals = deals.filter((d) => d.stage === "WON");
+  const wonValue = wonDeals.reduce((sum, d) => sum + Number(d.value), 0);
+
   return (
     <div className="p-6 space-y-6">
+      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900">Sales Pipeline</h1>
-          <p className="text-sm text-slate-500 mt-1">{deals.length} active deals</p>
+          <p className="text-sm text-slate-500 mt-1">
+            {activeDeals.length} active deal{activeDeals.length !== 1 ? "s" : ""} · {fmt(pipelineValue)} in pipeline
+          </p>
         </div>
         <button
           onClick={() => setShowForm((v) => !v)}
@@ -153,9 +180,27 @@ export default function PipelinePage() {
         </button>
       </div>
 
+      {/* Stage flow summary */}
+      <div className="flex items-center gap-1 flex-wrap">
+        {(["NEW_LEAD", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON"] as Stage[]).map((stage, i, arr) => {
+          const count = dealsByStage(stage).length;
+          return (
+            <div key={stage} className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs font-medium text-slate-700 shadow-sm">
+                <span className={`w-2 h-2 rounded-full ${STAGE_DOT[stage]}`} />
+                {STAGE_LABELS[stage]}
+                <span className="ml-0.5 font-bold">{count}</span>
+              </div>
+              {i < arr.length - 1 && <ChevronRight className="h-3.5 w-3.5 text-slate-300" />}
+            </div>
+          );
+        })}
+        <span className="text-xs text-slate-400 ml-2">· Won: {wonDeals.length} ({fmt(wonValue)})</span>
+      </div>
+
       {/* New Deal form */}
       {showForm && (
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
           <h2 className="font-semibold text-slate-800 mb-4">New Deal</h2>
           {formError && (
             <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm">
@@ -164,20 +209,22 @@ export default function PipelinePage() {
           )}
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Title *</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Deal Title *</label>
               <input
                 required
+                placeholder="e.g. ABC Corp — Software License"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Value (₱)</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Deal Value (₱)</label>
               <input
                 type="number"
                 min="0"
                 step="0.01"
+                placeholder="0.00"
                 value={form.value}
                 onChange={(e) => setForm({ ...form, value: e.target.value })}
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -192,7 +239,7 @@ export default function PipelinePage() {
               >
                 <option value="">— No contact —</option>
                 {contacts.map((c) => (
-                  <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>
+                  <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
             </div>
@@ -253,13 +300,20 @@ export default function PipelinePage() {
         <div className="flex gap-4 overflow-x-auto pb-4">
           {STAGES.map((stage) => {
             const stageDeals = dealsByStage(stage);
+            const stageTotal = stageDeals.reduce((s, d) => s + Number(d.value), 0);
+            const nextStage = NEXT_STAGE[stage];
             return (
               <div key={stage} className="flex-shrink-0 w-64">
-                <div className={`rounded-t-lg px-3 py-2 flex items-center justify-between ${STAGE_HEADER[stage]}`}>
-                  <span className="text-xs font-semibold">{STAGE_LABELS[stage]}</span>
-                  <span className="text-xs font-medium opacity-70">{stageDeals.length}</span>
+                <div className={`rounded-t-lg px-3 py-2 ${STAGE_HEADER[stage]}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold">{STAGE_LABELS[stage]}</span>
+                    <span className="text-xs font-medium opacity-70">{stageDeals.length}</span>
+                  </div>
+                  {stageDeals.length > 0 && (
+                    <p className="text-xs opacity-60 mt-0.5">{fmt(stageTotal)}</p>
+                  )}
                 </div>
-                <div className="bg-slate-100 rounded-b-lg p-2 space-y-2 min-h-32">
+                <div className="bg-slate-50 border border-t-0 border-slate-200 rounded-b-lg p-2 space-y-2 min-h-32">
                   {stageDeals.length === 0 ? (
                     <div className="flex items-center justify-center h-20">
                       <p className="text-xs text-slate-400">No deals</p>
@@ -268,18 +322,16 @@ export default function PipelinePage() {
                     stageDeals.map((deal) => (
                       <div
                         key={deal.id}
-                        className={`border rounded-lg p-3 bg-white shadow-sm ${STAGE_COLORS[stage]}`}
+                        className={`border rounded-lg p-3 shadow-sm ${STAGE_COLORS[stage]}`}
                       >
                         <Link
                           href={`/admin/sales/deals/${deal.id}`}
-                          className="block font-medium text-sm hover:text-indigo-700 mb-1"
+                          className="block font-medium text-sm text-slate-800 hover:text-indigo-700 mb-1 leading-snug"
                         >
                           {deal.title}
                         </Link>
                         {deal.contact && (
-                          <p className="text-xs text-slate-500 mb-1">
-                            {deal.contact.firstName} {deal.contact.lastName}
-                          </p>
+                          <p className="text-xs text-slate-500 mb-1">{deal.contact.name}</p>
                         )}
                         <p className="text-xs font-semibold text-indigo-700">{fmt(Number(deal.value))}</p>
                         {deal.expectedCloseDate && (
@@ -287,23 +339,46 @@ export default function PipelinePage() {
                             Close: {new Date(deal.expectedCloseDate).toLocaleDateString("en-PH")}
                           </p>
                         )}
-                        <div className="mt-2 pt-2 border-t border-current border-opacity-20">
-                          <label className="text-xs text-slate-400 mr-1">Move to:</label>
-                          <select
-                            value=""
-                            onChange={(e) => {
-                              if (e.target.value) moveStage(deal.id, e.target.value as Stage);
-                            }}
-                            disabled={movingId === deal.id}
-                            className="text-xs border border-slate-200 rounded px-1 py-0.5 bg-white text-slate-600 focus:outline-none"
-                          >
-                            <option value="">—</option>
-                            {STAGES.filter((s) => s !== stage).map((s) => (
-                              <option key={s} value={s}>{STAGE_LABELS[s]}</option>
-                            ))}
-                          </select>
+                        {/* Standard progression button + full move dropdown */}
+                        <div className="mt-2 pt-2 border-t border-slate-100 flex items-center gap-1.5 flex-wrap">
+                          {nextStage && stage !== "WON" && stage !== "LOST" && (
+                            <button
+                              onClick={() => moveStage(deal.id, nextStage)}
+                              disabled={movingId === deal.id}
+                              className="text-xs px-2 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded hover:bg-indigo-100 disabled:opacity-50"
+                            >
+                              → {STAGE_LABELS[nextStage]}
+                            </button>
+                          )}
+                          {stage !== "WON" && stage !== "LOST" && (
+                            <>
+                              <button
+                                onClick={() => moveStage(deal.id, "WON")}
+                                disabled={movingId === deal.id}
+                                className="text-xs px-2 py-0.5 bg-green-50 border border-green-200 text-green-700 rounded hover:bg-green-100 disabled:opacity-50"
+                              >
+                                Won
+                              </button>
+                              <button
+                                onClick={() => moveStage(deal.id, "LOST")}
+                                disabled={movingId === deal.id}
+                                className="text-xs px-2 py-0.5 bg-red-50 border border-red-200 text-red-600 rounded hover:bg-red-100 disabled:opacity-50"
+                              >
+                                Lost
+                              </button>
+                            </>
+                          )}
+                          {(stage === "WON" || stage === "LOST") && (
+                            <button
+                              onClick={() => moveStage(deal.id, "NEW_LEAD")}
+                              disabled={movingId === deal.id}
+                              className="text-xs px-2 py-0.5 bg-slate-100 border border-slate-200 text-slate-600 rounded hover:bg-slate-200 disabled:opacity-50"
+                            >
+                              Reopen
+                            </button>
+                          )}
                           {movingId === deal.id && (
-                            <Loader2 className="inline h-3 w-3 animate-spin ml-1 text-slate-400" />
+                            <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
                           )}
                         </div>
                       </div>
@@ -316,7 +391,7 @@ export default function PipelinePage() {
         </div>
       )}
 
-      {!loading && deals.length === 0 && (
+      {!loading && deals.length === 0 && !error && (
         <div className="bg-white border border-dashed border-slate-300 rounded-xl p-10 text-center">
           <TrendingUp className="h-10 w-10 text-slate-300 mx-auto mb-3" />
           <p className="text-slate-500 font-medium">No deals yet</p>
